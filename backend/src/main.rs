@@ -1,7 +1,6 @@
 use actix_web::{get, App, HttpResponse, HttpServer};
-use reqwest::Client;
+use rs_llama_cpp::{gpt_params_c, run_inference, str_to_mut_i8};
 
-static OPENAI_API_KEY: &str = "xyz";
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -25,19 +24,25 @@ async fn css() -> HttpResponse {
 
 #[get("/api/testPrompt")]
 async fn test_prompt() -> HttpResponse {
-    let client = Client::new();
-    let prompt = client.get("https://api.openai.com/v1/completions")
-                    .header("Authorization", format!("Bearer {}", OPENAI_API_KEY))
-                    .header("Content-Type", "application/json")
-                    .body("ping");
-    match prompt.send().await {
-        Ok(response) => {
-            HttpResponse::Ok().body(format!("OpenAI Api response: {}", response.text().await.unwrap()))
+    let params: gpt_params_c = {
+        gpt_params_c {
+            model: str_to_mut_i8("models/llama.7b.wizard-1.0.ggml_v3.q5_1.bin"),
+            prompt: str_to_mut_i8("Hello, who are you?"),
+            ..Default::default()
         }
-        Err(e) => {
-            HttpResponse::InternalServerError().body(format!("{}", e))
+    };
+
+    let response = String::new();
+
+    run_inference(params, |token| {
+        println!("{}", token);
+        if token.ends_with("\n") {
+            return false;
         }
-    }
+
+        return true;
+    });
+    return HttpResponse::Ok().body(response);
 }
 
 #[actix_web::main]
