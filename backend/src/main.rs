@@ -1,6 +1,6 @@
 use actix_web::{get, App, HttpResponse, HttpServer};
-use rs_llama_cpp::{gpt_params_c, run_inference, str_to_mut_i8};
-
+use llm::Model;
+use std::io::Write;
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -24,25 +24,42 @@ async fn css() -> HttpResponse {
 
 #[get("/api/testPrompt")]
 async fn test_prompt() -> HttpResponse {
-    let params: gpt_params_c = {
-        gpt_params_c {
-            model: str_to_mut_i8("models/llama.7b.wizard-1.0.ggml_v3.q5_1.bin"),
-            prompt: str_to_mut_i8("Hello, who are you?"),
+
+    // https://github.com/rustformers/llm
+    // https://docs.rs/llm/latest/llm/
+
+    let llama = llm::load::<llm::models::Llama>(
+        // https://huggingface.co/TehVenom/Pygmalion-7b-4bit-Q4_1-GGML/tree/main
+        std::path::Path::new("models/Pygmalion-7b-4bit-Q4_1-GGML-V2.bin"),
+        Default::default(),
+        llm::load_progress_callback_stdout
+    )
+    .unwrap_or_else(|err| panic!("Failed to load model: {err}"));
+    
+    let mut session = llama.start_session(Default::default());
+    let mut x = String::new();
+    println!("Generating ai response...");
+    let res = session.infer::<std::convert::Infallible>(
+        &llama,
+        &mut rand::thread_rng(),
+        &llm::InferenceRequest {
+            prompt: "Hello world in Python",
             ..Default::default()
+        },
+        &mut Default::default(),
+        |t| {
+            x = (x.clone()+t).to_string();
+            print!("{t}");
+            std::io::stdout().flush().unwrap();
+            Ok(())
         }
-    };
-
-    let response = String::new();
-
-    run_inference(params, |token| {
-        println!("{}", token);
-        if token.ends_with("\n") {
-            return false;
-        }
-
-        return true;
-    });
-    return HttpResponse::Ok().body(response);
+    );
+    
+    match res {
+        Ok(result) => println!("\n\nInference stats:\n{result}"),
+        Err(err) => println!("\n{err}"),
+    }
+    return HttpResponse::Ok().body(x);
 }
 
 #[actix_web::main]
