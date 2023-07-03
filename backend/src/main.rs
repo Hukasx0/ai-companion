@@ -52,7 +52,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     let mut base_prompt: String = String::from("Assistant's Persona: Assistant is an artificial intelligence model designed to help the user\n<START>\n");
     let ai_memory: Vec<Message> = Database::get_five_msgs();
     for message in ai_memory {
-        let prefix = if message.ai == "true" { "Assistant" } else { "You" };
+        let prefix = if message.ai == "true" { "Assistant" } else { "user" };
         let text = message.text;
         let formatted_message = format!("{}: {}\n", prefix, text);
         base_prompt += &formatted_message;
