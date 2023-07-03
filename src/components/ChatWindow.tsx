@@ -46,7 +46,7 @@ const ChatWindow = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const get_data = await fetch('http://localhost:3000/api/messages');
+                const get_data = await fetch(`${window.location.href}api/messages`);
                 const data = await get_data.text();
                 const parsedData = JSON.parse(data, (key, value) => {
                     if (key === 'ai') {
@@ -78,7 +78,7 @@ const ChatWindow = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: inputText })
             }   
-            fetch('http://localhost:3000/api/testPrompt', requestOptions)
+            fetch(`${window.location.href}api/testPrompt`, requestOptions)
             .then(response => response.json())
             .then(jdata => setMsgs((prevMsgs) => [
                 ...prevMsgs,
