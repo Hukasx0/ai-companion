@@ -1,6 +1,7 @@
-use actix_web::{get, App, HttpResponse, HttpServer};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use llm::Model;
 use std::io::Write;
+use serde::Deserialize;
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -22,8 +23,13 @@ async fn css() -> HttpResponse {
     HttpResponse::Ok().content_type("text/css").body(include_str!("../../dist/assets/index-4rust.css"))
 }
 
-#[get("/api/testPrompt")]
-async fn test_prompt() -> HttpResponse {
+#[derive(Deserialize)]
+struct ReceivedPrompt {
+    prompt: String,
+}
+
+#[post("/api/testPrompt")]
+async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
 
     // https://github.com/rustformers/llm
     // https://docs.rs/llm/latest/llm/
@@ -43,7 +49,7 @@ async fn test_prompt() -> HttpResponse {
         &llama,
         &mut rand::thread_rng(),
         &llm::InferenceRequest {
-            prompt: "Hello world in Python",
+            prompt: &format!("Assistant's Persona: Assistant is an artificial intelligence model designed to help the user\n<START>\nAssistant: hello user, how can i help you?\nYou: {}\nAssistant:", &received.prompt),
             ..Default::default()
         },
         &mut Default::default(),
@@ -59,7 +65,11 @@ async fn test_prompt() -> HttpResponse {
         Ok(result) => println!("\n\nInference stats:\n{result}"),
         Err(err) => println!("\n{err}"),
     }
-    return HttpResponse::Ok().body(x);
+    let companion_text = x
+    .split("\nAssistant: ")
+    .last()
+    .unwrap_or("");
+    return HttpResponse::Ok().body(format!("{{\n\"id\": 0,\n\"ai\": true,\n\"text\": \"{}\",\n\"date\": \"now\"\n}}", companion_text.to_owned()));
 }
 
 #[actix_web::main]

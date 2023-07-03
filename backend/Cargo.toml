@@ -9,3 +9,5 @@ edition = "2021"
 actix-web = "4.3.1"
 llm = "0.1.1"
 rand = "0.8.5"
+diesel = { version = "2.1.0", features = ["sqlite"] }
+serde = "1.0.164"

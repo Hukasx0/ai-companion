@@ -1,6 +1,6 @@
 interface Message {
     id: number;
-    sent: boolean;
+    ai: boolean;
     text: string;
     date: string;
 }
