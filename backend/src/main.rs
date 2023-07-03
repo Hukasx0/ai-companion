@@ -2,6 +2,8 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use llm::Model;
 use std::io::Write;
 use serde::Deserialize;
+mod database;
+use database::{Database, Message};
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -31,6 +33,8 @@ struct ReceivedPrompt {
 #[post("/api/testPrompt")]
 async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
 
+    Database::add_message(&received.prompt, false);
+
     // https://github.com/rustformers/llm
     // https://docs.rs/llm/latest/llm/
 
@@ -45,11 +49,19 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     let mut session = llama.start_session(Default::default());
     let mut x = String::new();
     println!("Generating ai response...");
+    let mut base_prompt: String = String::from("Assistant's Persona: Assistant is an artificial intelligence model designed to help the user\n<START>\n");
+    let ai_memory: Vec<Message> = Database::get_five_msgs();
+    for message in ai_memory {
+        let prefix = if message.ai == "true" { "Assistant" } else { "You" };
+        let text = message.text;
+        let formatted_message = format!("{}: {}\n", prefix, text);
+        base_prompt += &formatted_message;
+    }
     let res = session.infer::<std::convert::Infallible>(
         &llama,
         &mut rand::thread_rng(),
         &llm::InferenceRequest {
-            prompt: &format!("Assistant's Persona: Assistant is an artificial intelligence model designed to help the user\n<START>\nAssistant: hello user, how can i help you?\nYou: {}\nAssistant:", &received.prompt),
+            prompt: &format!("{}Assistant:", &base_prompt),
             ..Default::default()
         },
         &mut Default::default(),
@@ -69,7 +81,15 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     .split("\nAssistant: ")
     .last()
     .unwrap_or("");
+    Database::add_message(&companion_text, true);
     return HttpResponse::Ok().body(format!("{{\n\"id\": 0,\n\"ai\": true,\n\"text\": \"{}\",\n\"date\": \"now\"\n}}", companion_text.to_owned()));
+}
+
+#[get("/api/messages")]
+async fn get_messages() -> HttpResponse {
+    let messages: Vec<Message> = Database::get_messages();
+    let json = serde_json::to_string(&messages).unwrap();
+    HttpResponse::Ok().body(format!("{}", json))
 }
 
 #[actix_web::main]
@@ -77,6 +97,11 @@ async fn main() -> std::io::Result<()> {
 
     let port: u16 = 3000;
     let hostname: &str = "127.0.0.1";
+
+    match Database::create() {
+        Ok(_) => { println!("Successfully connected to local database"); }
+        Err(e) => { eprintln!("Cannot connect ti SQLite database because of: {}",e); }
+    }
 
     println!("Started Rust backend server at:\n -> http://{}:{}/", hostname, port);
     HttpServer::new(|| {
@@ -86,6 +111,7 @@ async fn main() -> std::io::Result<()> {
             .service(css)
             .service(vite_logo)
             .service(test_prompt)
+            .service(get_messages)
     })
     .bind((hostname, port))?
     .run()

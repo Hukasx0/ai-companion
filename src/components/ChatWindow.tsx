@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./interfaces/MessagesInterface";
 
 const MessagesList = ({ messages }: {messages: Messages}) => {
@@ -41,14 +41,31 @@ const MessagesList = ({ messages }: {messages: Messages}) => {
 
 const ChatWindow = () => {
 
-    const [msgs, setMsgs] = useState([
-            {
-                id: 1,
-                ai: true,
-                text: "hello user, how can i help you?",
-                date: "xyz",
-            },
-    ]);
+    const [msgs, setMsgs] = useState<Messages>([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const get_data = await fetch('http://localhost:3000/api/messages');
+                const data = await get_data.text();
+                const parsedData = JSON.parse(data, (key, value) => {
+                    if (key === 'ai') {
+                        if (value === 'true') {
+                            return true;
+                        } else if (value === 'false') {
+                            return false;
+                        }
+                    }
+                    return value;
+                });
+                setMsgs(parsedData);
+            } catch (error) {
+                console.log('Error while fetching chat messages: ', error);
+            }
+        };
+    
+        fetchData();
+    }, []);
 
     const [inputText, setInputText] = useState('');
 
