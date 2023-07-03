@@ -10,9 +10,14 @@ async fn index() -> HttpResponse {
     HttpResponse::Ok().body(include_str!("../../dist/index.html"))
 }
 
-#[get("/vite.svg")]
-async fn vite_logo() -> HttpResponse {
-    HttpResponse::Ok().content_type("image/svg+xml").body(include_str!("../../dist/vite.svg"))
+#[get("/assets/companion_avatar-4rust.jpg")]
+async fn companion_avatar() -> HttpResponse {
+    HttpResponse::Ok().content_type("image/jpeg").body(&include_bytes!("../../dist/assets/companion_avatar-4rust.jpg")[..])
+}
+
+#[get("/ai_companion_logo.jpg")]
+async fn project_logo() -> HttpResponse {
+    HttpResponse::Ok().content_type("image/jpeg").body(&include_bytes!("../../dist/ai_companion_logo.jpg")[..])
 }
 
 #[get("/assets/index-4rust.js")]
@@ -109,7 +114,8 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(js)
             .service(css)
-            .service(vite_logo)
+            .service(companion_avatar)
+            .service(project_logo)
             .service(test_prompt)
             .service(get_messages)
     })

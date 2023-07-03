@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./interfaces/MessagesInterface";
+import CompanionAvatar from "../assets/companion_avatar.jpg";
 
 const MessagesList = ({ messages }: {messages: Messages}) => {
     return (
@@ -9,11 +10,11 @@ const MessagesList = ({ messages }: {messages: Messages}) => {
                     <div className="chat chat-start">
                         <div className="chat-image avatar">
                             <div className="w-10 rounded-full">
-                                <img src="" />
+                                <img src={CompanionAvatar} />
                             </div>
                         </div>
                         <div className="chat-header">
-                            companion name
+                            AI companion
                             <time className="text-xs opacity-50">{message.date}</time>
                         </div>
                         <div className="chat-bubble">{message.text}</div>
@@ -24,7 +25,7 @@ const MessagesList = ({ messages }: {messages: Messages}) => {
                     <div className="chat chat-end">
                         <div className="chat-image avatar">
                             <div className="w-10 rounded-full">
-                                <img src="" />
+                                
                             </div>
                         </div>
                         <div className="chat-header">
