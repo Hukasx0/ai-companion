@@ -35,7 +35,7 @@ struct ReceivedPrompt {
     prompt: String,
 }
 
-#[post("/api/testPrompt")]
+#[post("/api/prompt")]
 async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
 
     Database::add_message(&received.prompt, false);
@@ -104,6 +104,11 @@ async fn clear_messages() -> HttpResponse {
     HttpResponse::Ok().body("Chat log cleared")
 }
 
+#[get("/api/companionData")]
+async fn fetch_companion_data() -> HttpResponse {
+    HttpResponse::Ok().body(serde_json::to_string(&Database::get_companion_data()).unwrap())
+}
+
 #[derive(Deserialize)]
 struct ChangeFirstMessage {
     first_message: String,
@@ -137,6 +142,20 @@ async fn change_companion_persona(received: web::Json<ChangeCompanionPersona>) -
     HttpResponse::Ok().body("Changed companion persona")
 }
 
+#[derive(Deserialize)]
+struct ChangeCompanionData {
+    id: u32,
+    name: String,
+    persona: String,
+    first_message: String,
+}
+
+#[post("/api/change/companionData")]
+async fn change_companion_data(received: web::Json<ChangeCompanionData>) -> HttpResponse {
+    Database::change_companion(&received.name, &received.persona, &received.first_message);
+    HttpResponse::Ok().body("Data of your ai companion has been changed")
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -162,6 +181,8 @@ async fn main() -> std::io::Result<()> {
             .service(change_first_message)
             .service(change_companion_name)
             .service(change_companion_persona)
+            .service(change_companion_data)
+            .service(fetch_companion_data)
     })
     .bind((hostname, port))?
     .run()

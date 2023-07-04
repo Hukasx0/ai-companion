@@ -79,7 +79,7 @@ const ChatWindow = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: inputText })
             }   
-            fetch(`${window.location.href}api/testPrompt`, requestOptions)
+            fetch(`${window.location.href}api/prompt`, requestOptions)
             .then(response => response.json())
             .then(jdata => setMsgs((prevMsgs) => [
                 ...prevMsgs,

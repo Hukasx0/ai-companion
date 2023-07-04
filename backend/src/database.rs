@@ -144,4 +144,9 @@ impl Database {
         let con = Connection::open("companion.db").unwrap();
         con.execute(&format!("UPDATE companion SET persona=\"{}\"", persona), []).unwrap();
     }
+
+    pub fn change_companion(name: &str, persona: &str, first_message: &str) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE companion SET name=\"{}\", persona=\"{}\", first_message=\"{}\"", name, persona, first_message), []).unwrap();
+    }
 }
