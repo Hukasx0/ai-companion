@@ -3,7 +3,7 @@ use llm::Model;
 use std::io::Write;
 use serde::Deserialize;
 mod database;
-use database::{Database, Message};
+use database::{Database, Message, CompanionData};
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -54,10 +54,11 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     let mut session = llama.start_session(Default::default());
     let mut x = String::new();
     println!("Generating ai response...");
-    let mut base_prompt: String = String::from("Assistant's Persona: Assistant is an artificial intelligence model designed to help the user\n<START>\n");
+    let companion: CompanionData = Database::get_companion_data();
+    let mut base_prompt: String = format!("{}'s Persona: {}\n<START>\n", companion.name, companion.persona);
     let ai_memory: Vec<Message> = Database::get_five_msgs();
     for message in ai_memory {
-        let prefix = if message.ai == "true" { "Assistant" } else { "user" };
+        let prefix = if message.ai == "true" { &companion.name } else { "user" };
         let text = message.text;
         let formatted_message = format!("{}: {}\n", prefix, text);
         base_prompt += &formatted_message;
@@ -66,7 +67,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
         &llama,
         &mut rand::thread_rng(),
         &llm::InferenceRequest {
-            prompt: &format!("{}Assistant:", &base_prompt),
+            prompt: &format!("{}{}:", &base_prompt, companion.name),
             ..Default::default()
         },
         &mut Default::default(),
@@ -83,7 +84,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
         Err(err) => println!("\n{err}"),
     }
     let companion_text = x
-    .split("\nAssistant: ")
+    .split(&format!("\n{}: ", &companion.name))
     .last()
     .unwrap_or("");
     Database::add_message(&companion_text, true);
@@ -101,6 +102,39 @@ async fn get_messages() -> HttpResponse {
 async fn clear_messages() -> HttpResponse {
     Database::clear_messages();
     HttpResponse::Ok().body("Chat log cleared")
+}
+
+#[derive(Deserialize)]
+struct ChangeFirstMessage {
+    first_message: String,
+}
+
+#[post("/api/change/firstMessage")]
+async fn change_first_message(received: web::Json<ChangeFirstMessage>) -> HttpResponse {
+    Database::change_first_message(&received.first_message);
+    HttpResponse::Ok().body("Changed first message")
+}
+
+#[derive(Deserialize)]
+struct ChangeCompanionName {
+    companion_name: String,
+}
+
+#[post("/api/change/companionName")]
+async fn change_companion_name(received: web::Json<ChangeCompanionName>) -> HttpResponse {
+    Database::change_companion_name(&received.companion_name);
+    HttpResponse::Ok().body("Changed companion name")
+}
+
+#[derive(Deserialize)]
+struct ChangeCompanionPersona {
+    companion_persona: String,
+}
+
+#[post("/api/change/companionPersona")]
+async fn change_companion_persona(received: web::Json<ChangeCompanionPersona>) -> HttpResponse {
+    Database::change_companion_persona(&received.companion_persona);
+    HttpResponse::Ok().body("Changed companion persona")
 }
 
 #[actix_web::main]
@@ -125,6 +159,9 @@ async fn main() -> std::io::Result<()> {
             .service(test_prompt)
             .service(get_messages)
             .service(clear_messages)
+            .service(change_first_message)
+            .service(change_companion_name)
+            .service(change_companion_persona)
     })
     .bind((hostname, port))?
     .run()

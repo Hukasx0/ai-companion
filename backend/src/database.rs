@@ -9,6 +9,14 @@ pub struct Message {
     pub date: String,
 }
 
+#[derive(Serialize, Deserialize, Default)]
+pub struct CompanionData {
+    pub id: u32,
+    pub name: String,
+    pub persona: String,
+    pub first_message: String,
+}
+
 pub struct Database {}
 
 impl Database {
@@ -22,17 +30,31 @@ impl Database {
                 date DATE NOT NULL
             )", [],
         ).unwrap();
-        if Database::is_table_empty(&con) {
+        con.execute(
+            "CREATE TABLE IF NOT EXISTS companion (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                persona TEXT NOT NULL,
+                first_message TEXT NOT NULL
+            )", [],
+        ).unwrap();
+        if Database::is_table_empty("companion", &con) {
+            con.execute(
+                "INSERT INTO companion (id, name, persona, first_message) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"hello user, how can i help you?\")", []
+            );
+        }
+        if Database::is_table_empty("messages", &con) {
+            let first_message: String = con.query_row("SELECT first_message FROM companion ASC LIMIT 1", [], |row| row.get(0)).unwrap();
             return con.execute(
-                "INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", \"hello user, how can i help you?\", date('now'))", []
+                &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", \"{}\", date('now'))", first_message), []
             );
         } else {
             return Ok(0);
         }
     }
 
-    pub fn is_table_empty(con: &Connection) -> bool {
-        let count: i64 = con.query_row("SELECT COUNT(*) FROM messages", [], |row| row.get(0)).unwrap();
+    pub fn is_table_empty(table_name: &str, con: &Connection) -> bool {
+        let count: i64 = con.query_row(&format!("SELECT COUNT(*) FROM {}",table_name), [], |row| row.get(0)).unwrap();
         return count == 0;
     }
 
@@ -74,6 +96,25 @@ impl Database {
         messages.into_iter().rev().collect()
     }
 
+    pub fn get_companion_data() -> CompanionData {
+        let con = Connection::open("companion.db").unwrap();
+        let mut stmt = con.prepare("SELECT * FROM companion LIMIT 1").unwrap();
+        let companion_data = stmt
+        .query_map([], |row| {
+            Ok(CompanionData {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                persona: row.get(2)?,
+                first_message: row.get(3)?,
+            })
+        }).unwrap();
+        let mut result: CompanionData = Default::default();
+        for companion in companion_data {
+            result = companion.unwrap();
+         }
+        result
+    }
+
     pub fn add_message(text: &str, is_ai: bool) {
         let con = Connection::open("companion.db").unwrap();
         let ai = &is_ai.to_string();
@@ -83,9 +124,24 @@ impl Database {
     pub fn clear_messages() {
         let con = Connection::open("companion.db").unwrap();
         con.execute("DELETE FROM messages", []).unwrap();
+        let first_message: String = con.query_row("SELECT first_message FROM companion ASC LIMIT 1", [], |row| row.get(0)).unwrap();
         con.execute(
-            "INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", \"hello user, how can i help you?\", date('now'))", []
+            &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", \"{}\", date('now'))", first_message), []
         );
     }
 
+    pub fn change_first_message(first_message: &str) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE companion SET first_message=\"{}\"", first_message), []).unwrap();
+    }
+
+    pub fn change_companion_name(name: &str) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE companion SET name=\"{}\"", name), []).unwrap();
+    }
+
+    pub fn change_companion_persona(persona: &str) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE companion SET persona=\"{}\"", persona), []).unwrap();
+    }
 }
