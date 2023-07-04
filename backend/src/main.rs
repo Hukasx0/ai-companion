@@ -97,6 +97,12 @@ async fn get_messages() -> HttpResponse {
     HttpResponse::Ok().body(format!("{}", json))
 }
 
+#[get("/api/clearMessages")]
+async fn clear_messages() -> HttpResponse {
+    Database::clear_messages();
+    HttpResponse::Ok().body("Chat log cleared")
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -118,6 +124,7 @@ async fn main() -> std::io::Result<()> {
             .service(project_logo)
             .service(test_prompt)
             .service(get_messages)
+            .service(clear_messages)
     })
     .bind((hostname, port))?
     .run()

@@ -80,4 +80,12 @@ impl Database {
         con.execute("INSERT INTO messages (id, ai, text, date) VALUES (NULL, ?1, ?2, date('now'))", &[&ai.as_str(), &text]).unwrap();
     }
 
+    pub fn clear_messages() {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute("DELETE FROM messages", []).unwrap();
+        con.execute(
+            "INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", \"hello user, how can i help you?\", date('now'))", []
+        );
+    }
+
 }
