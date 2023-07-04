@@ -6,4 +6,3 @@ interface Message {
 }
 
 interface Messages extends Array<Message> {}
-

@@ -15,7 +15,7 @@ const MessagesList = ({ messages }: {messages: Messages}) => {
                         </div>
                         <div className="chat-header">
                             AI companion
-                            <time className="text-xs opacity-50">{message.date}</time>
+                            <time className="text-xs opacity-50"> {message.date}</time>
                         </div>
                         <div className="chat-bubble">{message.text}</div>
                         </div>
@@ -30,7 +30,7 @@ const MessagesList = ({ messages }: {messages: Messages}) => {
                         </div>
                         <div className="chat-header">
                             you
-                            <time className="text-xs opacity-50">{message.date}</time>
+                            <time className="text-xs opacity-50"> {message.date}</time>
                         </div>
                         <div className="chat-bubble">{message.text}</div>
                         </div>
@@ -109,10 +109,10 @@ const ChatWindow = () => {
     }
 
     return (
-        <div className="mockup-window border bg-base-300 h-3/4">
+        <div className="mockup-window border bg-base-300 h-3/4 overflow-y-scroll">
             <MessagesList messages={msgs}/>
             <div className="flex justify-center items-center">
-                <input type="text" placeholder="Send a message" value={inputText} onKeyDown={enterPress} onChange={(v) => handleSentMessage(v.target.value)} className="input input-bordered w-1/3 absolute bottom-0" />
+                <input type="text" placeholder="Send a message" value={inputText} onKeyDown={enterPress} onChange={(v) => handleSentMessage(v.target.value)} className="input input-bordered w-1/3 fixed bottom-14" />
             </div>
         </div>
     );
