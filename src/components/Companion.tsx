@@ -57,8 +57,10 @@ const Modal = () => {
                 <p className="py-4">Your AI companion's persona (personality, look, backstory etc)</p>
                 <input onChange={handleChange} type="text" name="persona" id="persona" value={companionData && companionData.persona} />
                 <p className="py-4">First message with which the AI will start conversation</p>
-                <input onChange={handleChange} type="text" name="first_message" id="first_message" value={companionData && companionData.first_message} /> <br />
-                <button className='btn btn-primary center' onClick={handleSubmit}>Update</button>
+                <input onChange={handleChange} type="text" name="first_message" id="first_message" value={companionData && companionData.first_message} /> <br /> <br />
+                <div className="flex justify-center">
+                    <button className='btn btn-primary' onClick={handleSubmit}>Update</button>
+                </div>
             </div>
             <label className="modal-backdrop" htmlFor="modal">Close</label>
             </div>

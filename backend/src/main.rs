@@ -1,5 +1,5 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
-use llm::Model;
+use llm::{Model, InferenceSession};
 use std::io::Write;
 use serde::Deserialize;
 mod database;
@@ -160,14 +160,15 @@ async fn change_companion_data(received: web::Json<ChangeCompanionData>) -> Http
 async fn main() -> std::io::Result<()> {
 
     let port: u16 = 3000;
-    let hostname: &str = "127.0.0.1";
+    let hostname: &str = "0.0.0.0";
 
     match Database::create() {
         Ok(_) => { println!("Successfully connected to local database"); }
         Err(e) => { eprintln!("Cannot connect ti SQLite database because of: {}",e); }
     }
 
-    println!("Started Rust backend server at:\n -> http://{}:{}/", hostname, port);
+    println!("AI companion works at:\n -> http://{}:{}/", hostname, port);
+    println!("You can access it, by entering a link in your browser:\n -> http://localhost:{}/", port);
     HttpServer::new(|| {
         App::new()
             .service(index)

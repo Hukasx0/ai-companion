@@ -109,10 +109,10 @@ const ChatWindow = () => {
     }
 
     return (
-        <div className="mockup-window border bg-base-300 h-3/4 overflow-y-scroll">
+        <div className="mockup-window border bg-base-300 h-3/5 overflow-y-scroll">
             <MessagesList messages={msgs}/>
             <div className="flex justify-center items-center">
-                <input type="text" placeholder="Send a message" value={inputText} onKeyDown={enterPress} onChange={(v) => handleSentMessage(v.target.value)} className="input input-bordered w-1/3 fixed bottom-14" />
+                <input type="text" placeholder="Send a message" value={inputText} onKeyDown={enterPress} onChange={(v) => handleSentMessage(v.target.value)} className="input input-bordered w-1/3 min-w-max fixed bottom-14" />
             </div>
         </div>
     );
