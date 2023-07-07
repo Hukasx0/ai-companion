@@ -55,7 +55,8 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     let mut x = String::new();
     println!("Generating ai response...");
     let companion: CompanionData = Database::get_companion_data();
-    let mut base_prompt: String = format!("{}'s Persona: {}\n<START>\n", companion.name, companion.persona);
+    let mut base_prompt: String = format!("Text transcript of a conversation between user and {}. In the transcript, gestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*).\n{}'s Persona: {}\n<START>\n", 
+                                            companion.name, companion.name, companion.persona);
     let ai_memory: Vec<Message> = Database::get_five_msgs();
     for message in ai_memory {
         let prefix = if message.ai == "true" { &companion.name } else { "user" };
