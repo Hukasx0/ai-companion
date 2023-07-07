@@ -149,4 +149,9 @@ impl Database {
         let con = Connection::open("companion.db").unwrap();
         con.execute(&format!("UPDATE companion SET name=\"{}\", persona=\"{}\", first_message=\"{}\"", name, persona, first_message), []).unwrap();
     }
+
+    pub fn rm_message(id: u32) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("DELETE FROM messages WHERE id={}", id), []).unwrap();
+    }
 }

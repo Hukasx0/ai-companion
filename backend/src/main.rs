@@ -105,6 +105,17 @@ async fn clear_messages() -> HttpResponse {
     HttpResponse::Ok().body("Chat log cleared")
 }
 
+#[derive(Deserialize)]
+struct RmMsg {
+    id: u32,
+}
+
+#[post("/api/removeMessage")]
+async fn rm_message(received: web::Json<RmMsg>) -> HttpResponse {
+    Database::rm_message(received.id);
+    HttpResponse::Ok().body("Removed message")
+}
+
 #[get("/api/companionData")]
 async fn fetch_companion_data() -> HttpResponse {
     HttpResponse::Ok().body(serde_json::to_string(&Database::get_companion_data()).unwrap())
@@ -180,6 +191,7 @@ async fn main() -> std::io::Result<()> {
             .service(test_prompt)
             .service(get_messages)
             .service(clear_messages)
+            .service(rm_message)
             .service(change_first_message)
             .service(change_companion_name)
             .service(change_companion_persona)

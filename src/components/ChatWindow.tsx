@@ -3,6 +3,28 @@ import "./interfaces/MessagesInterface";
 import CompanionAvatar from "../assets/companion_avatar.jpg";
 
 const MessagesList = ({ messages }: {messages: Messages}) => {
+
+    const removeMsg = (id: number) => {
+        const send_json = {
+            id: id
+        }
+
+        fetch('/api/removeMessage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(send_json)
+        })
+        .then((response) => {
+            console.log(response);
+            window.location.reload();
+        })
+        .catch(e => {
+            console.error('Cannot remove message because of: ', e);
+        });
+    }
+
     return (
         <>
             {messages.map((message: Message) => message.ai ? 
@@ -18,6 +40,9 @@ const MessagesList = ({ messages }: {messages: Messages}) => {
                             <time className="text-xs opacity-50"> {message.date}</time>
                         </div>
                         <div className="chat-bubble">{message.text}</div>
+                        <div className="chat-footer opacity-50 cursor-pointer" onClick={() => removeMsg(message.id)}>
+                            Remove message
+                        </div>
                         </div>
                 </> :
 
@@ -33,6 +58,9 @@ const MessagesList = ({ messages }: {messages: Messages}) => {
                             <time className="text-xs opacity-50"> {message.date}</time>
                         </div>
                         <div className="chat-bubble">{message.text}</div>
+                        <div className="chat-footer opacity-50 cursor-pointer" onClick={() => removeMsg(message.id)}>
+                            Remove message
+                        </div>
                         </div>
                 </>
                 )}
