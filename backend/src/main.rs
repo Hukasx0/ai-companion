@@ -4,6 +4,8 @@ use std::io::Write;
 use serde::Deserialize;
 mod database;
 use database::{Database, Message, CompanionData, UserData};
+mod vectordb;
+use vectordb::VectorDatabase;
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -39,6 +41,7 @@ struct ReceivedPrompt {
 async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
 
     Database::add_message(&received.prompt, false);
+    let vector = VectorDatabase::connect().unwrap();
 
     // https://github.com/rustformers/llm
     // https://docs.rs/llm/latest/llm/
@@ -59,6 +62,10 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     let mut base_prompt: String = 
         format!("Text transcript of a conversation between {} and {}. In the transcript, gestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*).\n{}'s Persona: {}\n{}'s Persona: {}\n<START>\n", 
                                             user.name, companion.name, user.name, user.persona, companion.name, companion.persona);
+    let abstract_memory: Vec<String> = vector.get_matches(&received.prompt);
+    for message in abstract_memory {
+        base_prompt += &message;
+    }
     let ai_memory: Vec<Message> = Database::get_five_msgs();
     for message in ai_memory {
         let prefix = if message.ai == "true" { &companion.name } else { &user.name };
@@ -91,6 +98,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     .last()
     .unwrap_or("");
     Database::add_message(&companion_text, true);
+    vector.add_entry(&format!("{}: {}\n{}: {}\n", user.name, &received.prompt, &companion.name, &companion_text));
     return HttpResponse::Ok().body(format!("{{\n\"id\": 0,\n\"ai\": true,\n\"text\": \"{}\",\n\"date\": \"now\"\n}}", companion_text.to_owned()));
 }
 
@@ -218,7 +226,12 @@ async fn main() -> std::io::Result<()> {
 
     match Database::create() {
         Ok(_) => { println!("Successfully connected to local database"); }
-        Err(e) => { eprintln!("Cannot connect ti SQLite database because of: {}",e); }
+        Err(e) => { eprintln!("Cannot connect to SQLite database because of: {}",e); }
+    }
+
+    match VectorDatabase::connect() {
+        Ok(_) => { println!("Successfully connected to tantivy"); }
+        Err(e) => { eprintln!("Cannot connect to tantivy because of: {}",e); }
     }
 
     println!("AI companion works at:\n -> http://{}:{}/", hostname, port);
