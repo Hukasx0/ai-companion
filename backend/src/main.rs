@@ -3,7 +3,7 @@ use llm::{Model, InferenceSession};
 use std::io::Write;
 use serde::Deserialize;
 mod database;
-use database::{Database, Message, CompanionData};
+use database::{Database, Message, CompanionData, UserData};
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -55,11 +55,13 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     let mut x = String::new();
     println!("Generating ai response...");
     let companion: CompanionData = Database::get_companion_data();
-    let mut base_prompt: String = format!("Text transcript of a conversation between user and {}. In the transcript, gestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*).\n{}'s Persona: {}\n<START>\n", 
-                                            companion.name, companion.name, companion.persona);
+    let user: UserData = Database::get_user_data();
+    let mut base_prompt: String = 
+        format!("Text transcript of a conversation between {} and {}. In the transcript, gestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*).\n{}'s Persona: {}\n{}'s Persona: {}\n<START>\n", 
+                                            user.name, companion.name, user.name, user.persona, companion.name, companion.persona);
     let ai_memory: Vec<Message> = Database::get_five_msgs();
     for message in ai_memory {
-        let prefix = if message.ai == "true" { &companion.name } else { "user" };
+        let prefix = if message.ai == "true" { &companion.name } else { &user.name };
         let text = message.text;
         let formatted_message = format!("{}: {}\n", prefix, text);
         base_prompt += &formatted_message;
@@ -121,6 +123,11 @@ async fn fetch_companion_data() -> HttpResponse {
     HttpResponse::Ok().body(serde_json::to_string(&Database::get_companion_data()).unwrap())
 }
 
+#[get("/api/userData")]
+async fn fetch_user_data() -> HttpResponse {
+    HttpResponse::Ok().body(serde_json::to_string(&Database::get_user_data()).unwrap())
+}
+
 #[derive(Deserialize)]
 struct ChangeFirstMessage {
     first_message: String,
@@ -144,6 +151,17 @@ async fn change_companion_name(received: web::Json<ChangeCompanionName>) -> Http
 }
 
 #[derive(Deserialize)]
+struct ChangeUsername {
+    user_name: String,
+}
+
+#[post("/api/change/userName")]
+async fn change_user_name(received: web::Json<ChangeUsername>) -> HttpResponse {
+    Database::change_username(&received.user_name);
+    HttpResponse::Ok().body("Changed user name")
+}
+
+#[derive(Deserialize)]
 struct ChangeCompanionPersona {
     companion_persona: String,
 }
@@ -152,6 +170,17 @@ struct ChangeCompanionPersona {
 async fn change_companion_persona(received: web::Json<ChangeCompanionPersona>) -> HttpResponse {
     Database::change_companion_persona(&received.companion_persona);
     HttpResponse::Ok().body("Changed companion persona")
+}
+
+#[derive(Deserialize)]
+struct ChangeUserPersona {
+    user_persona: String,
+}
+
+#[post("/api/change/userPersona")]
+async fn change_user_persona(received: web::Json<ChangeUserPersona>) -> HttpResponse {
+    Database::change_user_persona(&received.user_persona);
+    HttpResponse::Ok().body("Changed user persona")
 }
 
 #[derive(Deserialize)]
@@ -166,6 +195,19 @@ struct ChangeCompanionData {
 async fn change_companion_data(received: web::Json<ChangeCompanionData>) -> HttpResponse {
     Database::change_companion(&received.name, &received.persona, &received.first_message);
     HttpResponse::Ok().body("Data of your ai companion has been changed")
+}
+
+#[derive(Deserialize)]
+struct ChangeUserData {
+    id: u32,
+    name: String,
+    persona: String,
+}
+
+#[post("/api/change/userData")]
+async fn change_user_data(received: web::Json<ChangeUserData>) -> HttpResponse {
+    Database::change_user(&received.name, &received.persona);
+    HttpResponse::Ok().body("Data of user has been changed")
 }
 
 #[actix_web::main]
@@ -197,6 +239,10 @@ async fn main() -> std::io::Result<()> {
             .service(change_companion_persona)
             .service(change_companion_data)
             .service(fetch_companion_data)
+            .service(fetch_user_data)
+            .service(change_user_data)
+            .service(change_user_name)
+            .service(change_user_persona)
     })
     .bind((hostname, port))?
     .run()

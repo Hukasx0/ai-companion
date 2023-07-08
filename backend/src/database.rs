@@ -17,6 +17,13 @@ pub struct CompanionData {
     pub first_message: String,
 }
 
+#[derive(Serialize, Deserialize, Default)]
+pub struct UserData {
+    pub id: u32,
+    pub name: String,
+    pub persona: String,
+}
+
 pub struct Database {}
 
 impl Database {
@@ -31,6 +38,13 @@ impl Database {
             )", [],
         ).unwrap();
         con.execute(
+            "CREATE TABLE IF NOT EXISTS user (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                persona TEXT NOT NULL
+            )", [],
+        ).unwrap();
+        con.execute(
             "CREATE TABLE IF NOT EXISTS companion (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -41,6 +55,11 @@ impl Database {
         if Database::is_table_empty("companion", &con) {
             con.execute(
                 "INSERT INTO companion (id, name, persona, first_message) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"hello user, how can i help you?\")", []
+            );
+        }
+        if Database::is_table_empty("user", &con) {
+            con.execute(
+                "INSERT INTO user (id, name, persona) VALUES (NULL, \"user\", \"user chatting with artificial intelligence\")", []
             );
         }
         if Database::is_table_empty("messages", &con) {
@@ -115,6 +134,24 @@ impl Database {
         result
     }
 
+    pub fn get_user_data() -> UserData {
+        let con = Connection::open("companion.db").unwrap();
+        let mut stmt = con.prepare("SELECT * FROM user LIMIT 1").unwrap();
+        let user_data = stmt
+        .query_map([], |row| {
+            Ok(UserData {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                persona: row.get(2)?,
+            })
+        }).unwrap();
+        let mut result: UserData = Default::default();
+        for user in user_data {
+            result = user.unwrap();
+         }
+        result
+    }
+
     pub fn add_message(text: &str, is_ai: bool) {
         let con = Connection::open("companion.db").unwrap();
         let ai = &is_ai.to_string();
@@ -153,5 +190,20 @@ impl Database {
     pub fn rm_message(id: u32) {
         let con = Connection::open("companion.db").unwrap();
         con.execute(&format!("DELETE FROM messages WHERE id={}", id), []).unwrap();
+    }
+
+    pub fn change_username(name: &str) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE user SET name=\"{}\"", name), []).unwrap();
+    }
+
+    pub fn change_user_persona(persona: &str) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE user SET persona=\"{}\"", persona), []).unwrap();
+    }
+
+    pub fn change_user(name: &str, persona: &str) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE user SET name=\"{}\", persona=\"{}\"", name, persona), []).unwrap();
     }
 }

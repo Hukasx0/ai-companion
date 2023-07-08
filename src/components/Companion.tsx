@@ -1,6 +1,7 @@
 import CompanionAvatar from "../assets/companion_avatar.jpg";
 import { useEffect, useState } from "react";
 import "./interfaces/CompanionData";
+import "./interfaces/UserData";
 
 const Modal = () => {
     const [companionData, setCompanionData] = useState<CompanionData>();
@@ -48,7 +49,7 @@ const Modal = () => {
     
     return (
         <>
-        <input type="checkbox" id="modal" className="modal-toggle" />
+        <input type="checkbox" id="companionModal" className="modal-toggle" />
         <div className="modal">
             <div className="modal-box">
                 <h3 className="text-lg font-bold">Change your companion data</h3>
@@ -62,7 +63,71 @@ const Modal = () => {
                     <button className='btn btn-primary' onClick={handleSubmit}>Update</button>
                 </div>
             </div>
-            <label className="modal-backdrop" htmlFor="modal">Close</label>
+            <label className="modal-backdrop" htmlFor="companionModal">Close</label>
+            </div>
+        </>
+    )
+}
+
+const UserModal = () => {
+    const [userData, setUserData] = useState<UserData>();
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const get_data = await fetch(`${window.location.href}api/userData`);
+                const data = await get_data.text();
+                const json_data = JSON.parse(data);
+                setUserData(json_data);
+            } catch (error) {
+                console.log('Error while fetching chat messages: ', error);
+            }
+        };
+    
+        fetchData();
+    }, []);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setUserData((prevState) => ({
+          ...prevState,
+          [name]: value
+        }));
+      };
+
+      const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        fetch('/api/change/userData', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(userData)
+        })
+          .then((response) => {
+            console.log(response);
+            window.location.reload();
+          })
+          .catch((error) => {
+            console.log("Error while updating user data", error);
+          });
+      };
+    
+    return (
+        <>
+        <input type="checkbox" id="userModal" className="modal-toggle" />
+        <div className="modal">
+            <div className="modal-box">
+                <h3 className="text-lg font-bold">Change your data</h3>
+                <p className="py-4">Your name</p>
+                <input onChange={handleChange} type="text" name="name" id="name" value={userData && userData.name} />
+                <p className="py-4">Your persona (personality, look, backstory etc)</p>
+                <input onChange={handleChange} type="text" name="persona" id="persona" value={userData && userData.persona} /> <br /> <br />
+                <div className="flex justify-center">
+                    <button className='btn btn-primary' onClick={handleSubmit}>Update</button>
+                </div>
+            </div>
+            <label className="modal-backdrop" htmlFor="userModal">Close</label>
             </div>
         </>
     )
@@ -85,13 +150,15 @@ const Companion_element = () => {
     return (
         <>
         <Modal />
+        <UserModal />
         <div className="flex justify-center items-center">
         <div className="avatar card w-52 bg-base-100">
             <div className="w-24 rounded-full self-center">
                 <img src={CompanionAvatar} />
             </div>
             <h2 className="text-center">AI companion</h2>
-            <label htmlFor="modal" className="btn btn-outline btn-primary">Change data</label>
+            <label htmlFor="companionModal" className="btn btn-outline btn-primary">Change data</label>
+            <label htmlFor="userModal" className="btn btn-outline btn-primary">Change user data</label>
             <button className='btn btn-outline btn-primary' onClick={clearButtonPress}><a>Clear chat</a></button>
         </div>
         </div>
