@@ -15,6 +15,9 @@ This software can also be used as a backend or API for other projects that requi
 - feeding ai with custom data - using the API, it is possible to save to the AI's long-term memory, e.g. fragments of documents, articles, song lyrics, poems
 - .. That's all the pros for now, maybe more in the future
 
+## API documentation
+API documentation can be found [here](https://github.com/Hukasx0/ai-companion/blob/main/docs/api_docs.md)
+
 ## installation
 
 ### Recommended
