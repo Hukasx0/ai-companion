@@ -8,16 +8,20 @@ AI Companion is a project that aims to provide users with their own personal AI 
 - works locally - does not require API keys for other services, which makes it completely free to use (well, apart from electricity costs - your computer must work somehow), also does not require the Internet to work
 - privacy - all conversations are kept locally in the SQLite database, which means that your conversations or the characteristics of your AI stay only on your computer
 - customization - you can change the AI's name, personality, appearance and the first message sent
+- short-term memory - artificial intelligence remembers recently received/sent messages
+- long-term memory - AI can remember conversations even thousands of prompts later using long-term memory - associating things with different words, phrases or sentences
+- real-time learning - when chatting with the AI, it is able to create "memories" as well as learn about the people it chats with (what their profession is, what they like to eat, drink and so on)
+- feeding ai with custom data - using the API, it is possible to save to the AI's long-term memory, e.g. fragments of documents, articles, song lyrics, poems
 - .. That's all the pros for now, maybe more in the future
 
 ## installation
 
 ### Recommended
-go to https://github.com/Hukasx0/ai-companion/releases/tag/Alpha
-and depending on your system select [download_linux.sh](https://github.com/Hukasx0/ai-companion/releases/download/Alpha/download_linux.sh) or [download_windows.bat](https://github.com/Hukasx0/ai-companion/releases/download/Alpha/download_windows.bat), after running the script, all files will be downloaded and placed in the correct folders
+go to https://github.com/Hukasx0/ai-companion/releases/tag/Beta
+and depending on your system select [download_linux.sh](https://github.com/Hukasx0/ai-companion/releases/download/Beta/download_linux.sh) or [download_windows.bat](https://github.com/Hukasx0/ai-companion/releases/download/Beta/download_windows.bat), after running the script, all files will be downloaded and placed in the correct folders
 
 ### Manual installation
-create a folder AI_companion, navigate to it, then install [AI_companion](https://github.com/Hukasx0/ai-companion/releases/download/Alpha/AI_companion) or [AI_companion.exe](https://github.com/Hukasx0/ai-companion/releases/download/Alpha/AI_companion.exe) (depending on your system), then create a folder 'models/' and put [AI model](https://huggingface.co/TehVenom/Pygmalion-7b-4bit-Q4_1-GGML/resolve/main/Pygmalion-7b-4bit-Q4_1-GGML-V2.bin) there (without renaming the file!)
+create a folder AI_companion, navigate to it, then install [AI_companion](https://github.com/Hukasx0/ai-companion/releases/download/Beta/AI_companion) or [AI_companion.exe](https://github.com/Hukasx0/ai-companion/releases/download/Beta/AI_companion.exe) (depending on your system), then create a folder 'models/' and put [AI model](https://huggingface.co/TehVenom/Pygmalion-7b-4bit-Q4_1-GGML/resolve/main/Pygmalion-7b-4bit-Q4_1-GGML-V2.bin) there (without renaming the file!)
 on linux that's it, on windows you still need:
 download sqlite from [here](https://www.sqlite.org/2023/sqlite-dll-win64-x64-3420000.zip)
 and extract in the same folder where AI_companion.exe is located
