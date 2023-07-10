@@ -218,6 +218,22 @@ async fn change_user_data(received: web::Json<ChangeUserData>) -> HttpResponse {
     HttpResponse::Ok().body("Data of user has been changed")
 }
 
+#[derive(Deserialize)]
+struct AddData {
+    text: String,
+}
+
+#[post("/api/addData")]
+async fn add_custom_data(received: web::Json<AddData>) -> HttpResponse {
+    match VectorDatabase::connect() {
+        Ok(vdb) => {
+            vdb.add_entry(&(received.text.to_string()+"\n"));
+            HttpResponse::Ok().body("Added custom data to AI long term memory")
+        }
+        Err(_) => HttpResponse::Ok().body("Error while connecting with AI long term memory")
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -256,6 +272,7 @@ async fn main() -> std::io::Result<()> {
             .service(change_user_data)
             .service(change_user_name)
             .service(change_user_persona)
+            .service(add_custom_data)
     })
     .bind((hostname, port))?
     .run()
