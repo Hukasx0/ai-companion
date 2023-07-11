@@ -1,5 +1,6 @@
 use rusqlite::{Connection, Result};
 use serde::{Serialize, Deserialize};
+use chrono::{DateTime, Local};
 
 #[derive(Serialize, Deserialize)]
 pub struct Message {
@@ -34,7 +35,7 @@ impl Database {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ai BOOLEAN NOT NULL,
                 text TEXT NOT NULL,
-                date DATE NOT NULL
+                date TEXT NOT NULL
             )", [],
         ).unwrap();
         con.execute(
@@ -63,9 +64,11 @@ impl Database {
             );
         }
         if Database::is_table_empty("messages", &con) {
+            let local: DateTime<Local> = Local::now();
+            let formatted_date = local.format("%A %d.%m.%Y %H:%M").to_string();
             let first_message: String = con.query_row("SELECT first_message FROM companion ASC LIMIT 1", [], |row| row.get(0)).unwrap();
             return con.execute(
-                &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", \"{}\", date('now'))", first_message), []
+                &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", \"{}\", \"{}\")", first_message, formatted_date), []
             );
         } else {
             return Ok(0);
@@ -155,15 +158,19 @@ impl Database {
     pub fn add_message(text: &str, is_ai: bool) {
         let con = Connection::open("companion.db").unwrap();
         let ai = &is_ai.to_string();
-        con.execute("INSERT INTO messages (id, ai, text, date) VALUES (NULL, ?1, ?2, date('now'))", &[&ai.as_str(), &text]).unwrap();
+        let local: DateTime<Local> = Local::now();
+        let formatted_date = &local.format("%A %d.%m.%Y %H:%M").to_string();
+        con.execute("INSERT INTO messages (id, ai, text, date) VALUES (NULL, ?1, ?2, ?3)", &[&ai.as_str(), &text, &formatted_date.as_str()]).unwrap();
     }
 
     pub fn clear_messages() {
         let con = Connection::open("companion.db").unwrap();
         con.execute("DELETE FROM messages", []).unwrap();
         let first_message: String = con.query_row("SELECT first_message FROM companion ASC LIMIT 1", [], |row| row.get(0)).unwrap();
+        let local: DateTime<Local> = Local::now();
+        let formatted_date = &local.format("%A %d.%m.%Y %H:%M").to_string();
         con.execute(
-            &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", \"{}\", date('now'))", first_message), []
+            &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", \"{}\", \"{}\")", first_message, formatted_date), []
         );
     }
 

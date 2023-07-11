@@ -2,6 +2,7 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use llm::{Model, InferenceSession};
 use std::io::Write;
 use serde::Deserialize;
+use chrono::{DateTime, Local};
 mod database;
 use database::{Database, Message, CompanionData, UserData};
 mod vectordb;
@@ -42,6 +43,8 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
 
     Database::add_message(&received.prompt, false);
     let vector = VectorDatabase::connect().unwrap();
+    let local: DateTime<Local> = Local::now();
+    let formatted_date = local.format("* at %A %d.%m.%Y %H:%M*\n").to_string();
 
     // https://github.com/rustformers/llm
     // https://docs.rs/llm/latest/llm/
@@ -68,9 +71,9 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     }
     let ai_memory: Vec<Message> = Database::get_five_msgs();
     for message in ai_memory {
-        let prefix = if message.ai == "true" { &companion.name } else { &user.name };
+        let (prefix, time) = if message.ai == "true" { (&companion.name, String::from("")) } else { (&user.name, format!("* at {} *\n", message.date)) };
         let text = message.text;
-        let formatted_message = format!("{}: {}\n", prefix, text);
+        let formatted_message = format!("{}{}: {}\n", time, prefix, text);
         base_prompt += &formatted_message;
     }
     let res = session.infer::<std::convert::Infallible>(
@@ -98,7 +101,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     .last()
     .unwrap_or("");
     Database::add_message(&companion_text, true);
-    vector.add_entry(&format!("{}: {}\n{}: {}\n", user.name, &received.prompt, &companion.name, &companion_text));
+    vector.add_entry(&format!("{}{}: {}\n{}: {}\n", formatted_date,user.name, &received.prompt, &companion.name, &companion_text));
     return HttpResponse::Ok().body(format!("{{\n\"id\": 0,\n\"ai\": true,\n\"text\": \"{}\",\n\"date\": \"now\"\n}}", companion_text.to_owned()));
 }
 
