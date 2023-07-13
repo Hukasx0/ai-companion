@@ -3,6 +3,7 @@ use llm::{Model, InferenceSession};
 use std::io::Write;
 use serde::Deserialize;
 use chrono::{DateTime, Local};
+use std::fs;
 mod database;
 use database::{Database, Message, CompanionData, UserData};
 mod vectordb;
@@ -49,10 +50,30 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     // https://github.com/rustformers/llm
     // https://docs.rs/llm/latest/llm/
 
+    // get .bin file (ai model) from models/ folder
+    let mut model_path: String = String::from("");
+    let dir_path = "models/";
+    if let Ok(entries) = fs::read_dir(dir_path) {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                if let Some(file_name) = entry.file_name().to_str() {
+                    if file_name.ends_with(".bin") {
+                        model_path = "models/".to_owned()+file_name;
+                        println!("loaded model models/{}", file_name);
+                    }
+                }
+            }
+        }
+    }
+    if model_path == "" {
+        eprintln!("You need to put your AI model (with .bin format - ggml) in models/ folder");
+        panic!();
+    }
+
     let llama = llm::load::<llm::models::Llama>(
-        // https://huggingface.co/TehVenom/Pygmalion-7b-4bit-Q4_1-GGML/tree/main
-        std::path::Path::new("models/Pygmalion-7b-4bit-Q4_1-GGML-V2.bin"),
-        Default::default(),
+        std::path::Path::new(&model_path),
+        llm::TokenizerSource::Embedded,
+        llm::ModelParameters::default(),
         llm::load_progress_callback_stdout
     )
     .unwrap_or_else(|err| panic!("Failed to load model: {err}"));
@@ -71,24 +92,33 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     }
     let ai_memory: Vec<Message> = Database::get_five_msgs();
     for message in ai_memory {
-        let (prefix, time) = if message.ai == "true" { (&companion.name, String::from("")) } else { (&user.name, format!("* at {} *\n", message.date)) };
+        let prefix = if message.ai == "true" { &companion.name } else { &user.name };
         let text = message.text;
-        let formatted_message = format!("{}{}: {}\n", time, prefix, text);
+        let formatted_message = format!("{}: {}\n", prefix, text);
         base_prompt += &formatted_message;
     }
     let res = session.infer::<std::convert::Infallible>(
         &llama,
         &mut rand::thread_rng(),
         &llm::InferenceRequest {
-            prompt: &format!("{}{}:", &base_prompt, companion.name),
-            ..Default::default()
+            prompt: llm::Prompt::Text(&format!("{}{}:", &base_prompt, companion.name)),
+            parameters: &llm::InferenceParameters::default(),
+            play_back_previous_tokens: false,
+            maximum_token_count: None,
         },
         &mut Default::default(),
         |t| {
-            x = (x.clone()+t).to_string();
-            print!("{t}");
+            match t {
+                llm::InferenceResponse::SnapshotToken(token) => {print!("{token}");}
+                llm::InferenceResponse::PromptToken(token) => {print!("{token}");}
+                llm::InferenceResponse::InferredToken(token) => {
+                    x = (x.clone()+&token).to_string();
+                    print!("{token}");
+                }
+                llm::InferenceResponse::EotToken => {}
+            }
             std::io::stdout().flush().unwrap();
-            Ok(())
+            Ok(llm::InferenceFeedback::Continue)
         }
     );
     

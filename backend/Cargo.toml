@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.3.1"
-llm = "0.1.1"
+llm = { git = "https://github.com/rustformers/llm" , branch = "main" }
 rand = "0.8.5"
 rusqlite = "0.29.0"
 serde = "1.0.164"
