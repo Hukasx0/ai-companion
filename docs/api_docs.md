@@ -242,3 +242,12 @@ JSON object containing text that will be saved in AI's long term memory
 
 Response:
 - Returns HTTP status code 200 (OK) with the plain text message "Added custom data to AI long term memory".
+
+## Endpoint `/api/erase/longTermMemory`
+
+Method: GET
+
+Description: This endpoint removes everything from the long-term memory of the AI.
+
+Response:
+- Returns HTTP status code 200 (OK) with the plain text message "Erased AI's long term memory".
