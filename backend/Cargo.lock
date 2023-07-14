@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "AI_companion"
-version = "0.1.0"
+version = "0.8.5"
 dependencies = [
  "actix-web",
  "chrono",
@@ -936,7 +936,7 @@ version = "0.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2eeb4ed9e12f43b7fa0baae3f9cdda28352770132ef2e09a23760c29cae8bd47"
 dependencies = [
- "rustix 0.38.3",
+ "rustix 0.38.4",
  "windows-sys 0.48.0",
 ]
 
@@ -1025,7 +1025,7 @@ dependencies = [
 [[package]]
 name = "ggml"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#bc9f2fe55de48de5e2b96f7984b60efaac6eaea2"
+source = "git+https://github.com/rustformers/llm?branch=main#fc1c05207f0571a4b5591629e1aabb0b8e0c1a34"
 dependencies = [
  "ggml-sys",
  "memmap2 0.5.10",
@@ -1035,7 +1035,7 @@ dependencies = [
 [[package]]
 name = "ggml-sys"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#bc9f2fe55de48de5e2b96f7984b60efaac6eaea2"
+source = "git+https://github.com/rustformers/llm?branch=main#fc1c05207f0571a4b5591629e1aabb0b8e0c1a34"
 dependencies = [
  "cc",
 ]
@@ -1406,7 +1406,7 @@ checksum = "09fc20d2ca12cb9f044c93e3bd6d32d523e6e2ec3db4f7b2939cd99026ecd3f0"
 [[package]]
 name = "llm"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#bc9f2fe55de48de5e2b96f7984b60efaac6eaea2"
+source = "git+https://github.com/rustformers/llm?branch=main#fc1c05207f0571a4b5591629e1aabb0b8e0c1a34"
 dependencies = [
  "llm-base",
  "llm-bloom",
@@ -1421,7 +1421,7 @@ dependencies = [
 [[package]]
 name = "llm-base"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#bc9f2fe55de48de5e2b96f7984b60efaac6eaea2"
+source = "git+https://github.com/rustformers/llm?branch=main#fc1c05207f0571a4b5591629e1aabb0b8e0c1a34"
 dependencies = [
  "bytemuck",
  "ggml",
@@ -1439,7 +1439,7 @@ dependencies = [
 [[package]]
 name = "llm-bloom"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#bc9f2fe55de48de5e2b96f7984b60efaac6eaea2"
+source = "git+https://github.com/rustformers/llm?branch=main#fc1c05207f0571a4b5591629e1aabb0b8e0c1a34"
 dependencies = [
  "llm-base",
 ]
@@ -1447,7 +1447,7 @@ dependencies = [
 [[package]]
 name = "llm-gpt2"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#bc9f2fe55de48de5e2b96f7984b60efaac6eaea2"
+source = "git+https://github.com/rustformers/llm?branch=main#fc1c05207f0571a4b5591629e1aabb0b8e0c1a34"
 dependencies = [
  "bytemuck",
  "llm-base",
@@ -1456,7 +1456,7 @@ dependencies = [
 [[package]]
 name = "llm-gptj"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#bc9f2fe55de48de5e2b96f7984b60efaac6eaea2"
+source = "git+https://github.com/rustformers/llm?branch=main#fc1c05207f0571a4b5591629e1aabb0b8e0c1a34"
 dependencies = [
  "llm-base",
 ]
@@ -1464,7 +1464,7 @@ dependencies = [
 [[package]]
 name = "llm-gptneox"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#bc9f2fe55de48de5e2b96f7984b60efaac6eaea2"
+source = "git+https://github.com/rustformers/llm?branch=main#fc1c05207f0571a4b5591629e1aabb0b8e0c1a34"
 dependencies = [
  "llm-base",
 ]
@@ -1472,7 +1472,7 @@ dependencies = [
 [[package]]
 name = "llm-llama"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#bc9f2fe55de48de5e2b96f7984b60efaac6eaea2"
+source = "git+https://github.com/rustformers/llm?branch=main#fc1c05207f0571a4b5591629e1aabb0b8e0c1a34"
 dependencies = [
  "llm-base",
 ]
@@ -1480,7 +1480,7 @@ dependencies = [
 [[package]]
 name = "llm-mpt"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#bc9f2fe55de48de5e2b96f7984b60efaac6eaea2"
+source = "git+https://github.com/rustformers/llm?branch=main#fc1c05207f0571a4b5591629e1aabb0b8e0c1a34"
 dependencies = [
  "llm-base",
 ]
@@ -2050,7 +2050,7 @@ checksum = "b2eae68fc220f7cf2532e4494aded17545fce192d59cd996e0fe7887f4ceb575"
 dependencies = [
  "aho-corasick 1.0.2",
  "memchr",
- "regex-automata 0.3.2",
+ "regex-automata 0.3.3",
  "regex-syntax 0.7.4",
 ]
 
@@ -2065,9 +2065,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83d3daa6976cffb758ec878f108ba0e062a45b2d6ca3a2cca965338855476caf"
+checksum = "39354c10dd07468c2e73926b23bb9c2caca74c5501e38a35da70406f1d923310"
 dependencies = [
  "aho-corasick 1.0.2",
  "memchr",
@@ -2184,9 +2184,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "0.38.3"
+version = "0.38.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac5ffa1efe7548069688cd7028f32591853cd7b5b756d41bcffd2353e4fc75b4"
+checksum = "0a962918ea88d644592894bc6dc55acc6c0956488adcebbfb6e273506b7fd6e5"
 dependencies = [
  "bitflags 2.3.3",
  "errno",
@@ -2288,9 +2288,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.100"
+version = "1.0.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f1e14e89be7aa4c4b78bdbdc9eb5bf8517829a600ae8eaa39a6e1d960b5185c"
+checksum = "b5062a995d481b2308b6064e9af76011f2921c35f97b0468811ed9f6cd91dfed"
 dependencies = [
  "itoa",
  "ryu",
@@ -2580,9 +2580,9 @@ dependencies = [
 
 [[package]]
 name = "tar"
-version = "0.4.38"
+version = "0.4.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b55807c0344e1e6c04d7c965f5289c39a8d94ae23ed5c0b57aabac549f871c6"
+checksum = "ec96d2ffad078296368d46ff1cb309be1c23c513b4ab0e22a45de0185275ac96"
 dependencies = [
  "filetime",
  "libc",

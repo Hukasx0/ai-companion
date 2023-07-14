@@ -50,4 +50,10 @@ impl VectorDatabase {
         }
         result
     }
+
+    pub fn erase_memory(&self) {
+        let mut writer = self.index.writer(50_000_000).unwrap();
+        writer.delete_all_documents().unwrap();
+        writer.commit().unwrap();
+    }
 }

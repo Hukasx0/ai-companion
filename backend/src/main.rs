@@ -267,6 +267,17 @@ async fn add_custom_data(received: web::Json<AddData>) -> HttpResponse {
     }
 }
 
+#[get("/api/erase/longTermMemory")]
+async fn erase_longterm_mem() -> HttpResponse {
+    match VectorDatabase::connect() {
+        Ok(vdb) => {
+            vdb.erase_memory();
+            HttpResponse::Ok().body("Erased AI's long term memory")
+        }
+        Err(_) => HttpResponse::Ok().body("Error while connecting with AI long term memory")
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -306,6 +317,7 @@ async fn main() -> std::io::Result<()> {
             .service(change_user_name)
             .service(change_user_persona)
             .service(add_custom_data)
+            .service(erase_longterm_mem)
     })
     .bind((hostname, port))?
     .run()
