@@ -1,7 +1,7 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use llm::{Model, InferenceSession};
 use std::io::Write;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Local};
 use std::fs;
 mod database;
@@ -37,6 +37,14 @@ async fn css() -> HttpResponse {
 #[derive(Deserialize)]
 struct ReceivedPrompt {
     prompt: String,
+}
+
+#[derive(Serialize)]
+struct PromptResponse {
+    id: u32,
+    ai: bool,
+    text: String,
+    date: String,
 }
 
 #[post("/api/prompt")]
@@ -132,7 +140,12 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     .unwrap_or("");
     Database::add_message(&companion_text, true);
     vector.add_entry(&format!("{}{}: {}\n{}: {}\n", formatted_date,user.name, &received.prompt, &companion.name, &companion_text));
-    return HttpResponse::Ok().body(format!("{{\n\"id\": 0,\n\"ai\": true,\n\"text\": \"{}\",\n\"date\": \"now\"\n}}", companion_text.to_owned()));
+    return HttpResponse::Ok().body(serde_json::to_string(&PromptResponse {
+        id: 0,
+        ai: true,
+        text: companion_text.to_string(),
+        date: String::from("now"),
+    }).unwrap())
 }
 
 #[get("/api/messages")]
