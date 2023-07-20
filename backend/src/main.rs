@@ -1,10 +1,8 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
-use llm::Model;
+use llm::{Model, InferenceSession};
 use std::io::Write;
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Local};
-use whisper_rs::{WhisperContext, FullParams, SamplingStrategy};
-use futures_util::StreamExt as _;
 use std::fs;
 mod database;
 use database::{Database, Message, CompanionData, UserData};
@@ -62,21 +60,21 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
 
     // get .bin file (ai model) from models/ folder
     let mut model_path: String = String::from("");
-    let dir_path = "models/text/";
+    let dir_path = "models/";
     if let Ok(entries) = fs::read_dir(dir_path) {
         for entry in entries {
             if let Ok(entry) = entry {
                 if let Some(file_name) = entry.file_name().to_str() {
                     if file_name.ends_with(".bin") {
-                        model_path = "models/text/".to_owned()+file_name;
-                        println!("loaded model models/text/{}", file_name);
+                        model_path = "models/".to_owned()+file_name;
+                        println!("loaded model models/{}", file_name);
                     }
                 }
             }
         }
     }
     if model_path == "" {
-        eprintln!("You need to put your AI model (with .bin format - ggml) in models/text/ folder");
+        eprintln!("You need to put your AI model (with .bin format - ggml) in models/ folder");
         panic!();
     }
 
@@ -148,82 +146,6 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
         text: companion_text.to_string(),
         date: String::from("now"),
     }).unwrap())
-}
-
-#[post("/api/voice")]
-async fn voice_transcript(mut received: actix_web::web::Payload) -> HttpResponse {
-
-    // curl -X POST -H "Content-Type: audio/wav" -T audio.wav http://localhost:3000/api/voice
-
-    let mut wav_data = web::BytesMut::new();
-    while let Some(chunk) = received.next().await {
-        let data = chunk.unwrap();
-        wav_data.extend_from_slice(&data);
-    }
-    let mut reader = hound::WavReader::new(&wav_data[..]);
-    match reader {
-        Ok(_) => {}
-        Err(e) => {
-            return HttpResponse::BadRequest().body(
-                format!("Only .wav sample rate 16KHz is supported, {}", e));
-        }
-    }
-    let mut model_path: String = String::from("");
-    let dir_path = "models/voice/";
-    if let Ok(entries) = fs::read_dir(dir_path) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                if let Some(file_name) = entry.file_name().to_str() {
-                    if file_name.ends_with(".bin") {
-                        model_path = "models/voice/".to_owned()+file_name;
-                        println!("loaded model models/voice/{}", file_name);
-                    }
-                }
-            }
-        }
-    }
-    if model_path == "" {
-        eprintln!("You need to put your AI model (with .bin format - ggml) in models/voice/ folder");
-        panic!();
-    }
-    let mut ctx = WhisperContext::new(&model_path).unwrap();
-    let mut state = ctx.create_state().expect("failed to create key");
-    let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 0 });
-    #[allow(unused_variables)]
-    let hound::WavSpec {
-        channels,
-        sample_rate,
-        bits_per_sample,
-        ..
-    } = reader.as_ref().unwrap().spec();
-    let mut audio = whisper_rs::convert_integer_to_float_audio(
-        &reader
-            .unwrap()
-            .samples::<i16>()
-            .map(|s| s.expect("invalid sample"))
-            .collect::<Vec<_>>(),
-    );
-    if channels == 2 {
-        audio = whisper_rs::convert_stereo_to_mono_audio(&audio).unwrap();
-    } else if channels != 1 {
-        panic!(">2 channels unsupported");
-    }
-
-    if sample_rate != 16000 {
-        panic!("sample rate must be 16KHz");
-    }
-    state.full(params, &audio[..]).expect("failed to run model");
-    let num_segments = state
-    .full_n_segments()
-    .expect("failed to get number of segments");
-    let mut transcript = String::new();
-    for i in 0..num_segments {
-        let segment = state
-            .full_get_segment_text(i)
-            .expect("failed to get segment");
-        transcript += &segment;
-    }
-    HttpResponse::Ok().body(format!("{}", &transcript))
 }
 
 #[get("/api/messages")]
@@ -385,13 +307,10 @@ async fn main() -> std::io::Result<()> {
         Err(e) => { eprintln!("Cannot connect to tantivy because of: {}",e); }
     }
 
-    let payload_cfg = web::PayloadConfig::default().limit(5_000_000);
-
     println!("AI companion works at:\n -> http://{}:{}/", hostname, port);
     println!("You can access it, by entering a link in your browser:\n -> http://localhost:{}/", port);
-    HttpServer::new(move || {
+    HttpServer::new(|| {
         App::new()
-        .app_data(payload_cfg.clone())
             .service(index)
             .service(js)
             .service(css)
@@ -412,7 +331,6 @@ async fn main() -> std::io::Result<()> {
             .service(change_user_persona)
             .service(add_custom_data)
             .service(erase_longterm_mem)
-            .service(voice_transcript)
     })
     .bind((hostname, port))?
     .run()
