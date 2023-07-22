@@ -54,6 +54,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     let vector = VectorDatabase::connect().unwrap();
     let local: DateTime<Local> = Local::now();
     let formatted_date = local.format("* at %A %d.%m.%Y %H:%M*\n").to_string();
+    let mut is_llama2: bool = false;
 
     // https://github.com/rustformers/llm
     // https://docs.rs/llm/latest/llm/
@@ -68,6 +69,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
                     if file_name.ends_with(".bin") {
                         model_path = "models/".to_owned()+file_name;
                         println!("loaded model models/{}", file_name);
+                        is_llama2 = file_name.contains("llama");
                     }
                 }
             }
@@ -91,19 +93,37 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     println!("Generating ai response...");
     let companion: CompanionData = Database::get_companion_data();
     let user: UserData = Database::get_user_data();
-    let mut base_prompt: String = 
+    let mut base_prompt: String = String::new();
+    if is_llama2 {
+        base_prompt = 
+        format!("<<SYS>>\nYou are {}, {}\nyou are talking with {}, {} is {}\ngestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*)\n",
+                companion.name, companion.persona, user.name, user.name, user.persona);
+    } else {
+        base_prompt = 
         format!("Text transcript of a conversation between {} and {}. In the transcript, gestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*).\n{}'s Persona: {}\n{}'s Persona: {}\n<START>\n", 
                                             user.name, companion.name, user.name, user.persona, companion.name, companion.persona);
+    
+    }
     let abstract_memory: Vec<String> = vector.get_matches(&received.prompt);
     for message in abstract_memory {
         base_prompt += &message;
     }
     let ai_memory: Vec<Message> = Database::get_five_msgs();
-    for message in ai_memory {
-        let prefix = if message.ai == "true" { &companion.name } else { &user.name };
-        let text = message.text;
-        let formatted_message = format!("{}: {}\n", prefix, text);
-        base_prompt += &formatted_message;
+    if is_llama2 {
+        for message in ai_memory {
+            let prefix = if message.ai == "true" { &companion.name } else { &user.name };
+            let text = message.text;
+            let formatted_message = format!("{}: {}\n", prefix, text);
+            base_prompt += &("[INST]".to_owned() + &formatted_message + "[/INST]\n");
+        }
+        base_prompt += "<</SYS>>";
+    } else {
+        for message in ai_memory {
+            let prefix = if message.ai == "true" { &companion.name } else { &user.name };
+            let text = message.text;
+            let formatted_message = format!("{}: {}\n", prefix, text);
+            base_prompt += &formatted_message;
+        }
     }
     let res = session.infer::<std::convert::Infallible>(
         &llama,
@@ -129,14 +149,13 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
             Ok(llm::InferenceFeedback::Continue)
         }
     );
-    
     match res {
         Ok(result) => println!("\n\nInference stats:\n{result}"),
         Err(err) => println!("\n{err}"),
     }
     let companion_text = x
     .split(&format!("\n{}: ", &companion.name))
-    .last()
+    .next()
     .unwrap_or("");
     Database::add_message(&companion_text, true);
     vector.add_entry(&format!("{}{}: {}\n{}: {}\n", formatted_date,user.name, &received.prompt, &companion.name, &companion_text));
