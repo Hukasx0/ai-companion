@@ -22,10 +22,15 @@ const Modal = () => {
     }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
+        const { name, value, type, checked } = e.target;
+
+        const v2 = type === 'checkbox' ? checked : value;
+
+        const v3 = type === 'number' ? parseInt(value, 10) : v2;
+
         setCompanionData((prevState) => ({
           ...prevState,
-          [name]: value
+          [name]: v3
         }));
       };
 
@@ -58,7 +63,14 @@ const Modal = () => {
                 <p className="py-4">Your AI companion's persona (personality, look, backstory etc)</p>
                 <input onChange={handleChange} type="text" name="persona" id="persona" value={companionData && companionData.persona} />
                 <p className="py-4">First message with which the AI will start conversation</p>
-                <input onChange={handleChange} type="text" name="first_message" id="first_message" value={companionData && companionData.first_message} /> <br /> <br />
+                <input onChange={handleChange} type="text" name="first_message" id="first_message" value={companionData && companionData.first_message} />
+                <p className="py-4">long term memory entries (how much the ai has to recall things from long-term memory at a time)</p>
+                <input onChange={handleChange} type="number" name="long_term_mem" id="long_term_mem" value={companionData && companionData.long_term_mem} />
+                <p className="py-4">short term memory entries (how many recent messages to remind ai at once)</p>
+                <input onChange={handleChange} type="number" name="short_term_mem" id="short_term_mem" value={companionData && companionData.short_term_mem} /> <br /> <br />
+                <input onChange={handleChange} type="checkbox" name="roleplay" id="roleplay" checked={companionData && companionData.roleplay} />
+                <label htmlFor="rp" className="py-4"> roleplay</label>
+                 <br /> <br />
                 <div className="flex justify-center">
                     <button className='btn btn-primary' onClick={handleSubmit}>Update</button>
                 </div>

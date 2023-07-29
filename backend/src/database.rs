@@ -16,6 +16,9 @@ pub struct CompanionData {
     pub name: String,
     pub persona: String,
     pub first_message: String,
+    pub long_term_mem: usize,
+    pub short_term_mem: u32,
+    pub roleplay: u32,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -50,12 +53,15 @@ impl Database {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 persona TEXT NOT NULL,
-                first_message TEXT NOT NULL
+                first_message TEXT NOT NULL,
+                long_term_mem INTEGER NOT NULL,
+                short_term_mem INTEGER NOT NULL,
+                roleplay INTEGER NOT NULL
             )", [],
         ).unwrap();
         if Database::is_table_empty("companion", &con) {
             con.execute(
-                "INSERT INTO companion (id, name, persona, first_message) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"hello user, how can i help you?\")", []
+                "INSERT INTO companion (id, name, persona, first_message, long_term_mem, short_term_mem, roleplay) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"hello user, how can i help you?\", 2, 5, 1)", []
             );
         }
         if Database::is_table_empty("user", &con) {
@@ -98,9 +104,9 @@ impl Database {
         messages
     }
 
-    pub fn get_five_msgs() -> Vec<Message> {
+    pub fn get_x_msgs(msgs_limit: u32) -> Vec<Message> {
         let con = Connection::open("companion.db").unwrap();
-        let mut stmt = con.prepare("SELECT id, ai, text, date FROM messages ORDER BY id DESC LIMIT 5").unwrap();
+        let mut stmt = con.prepare(&format!("SELECT id, ai, text, date FROM messages ORDER BY id DESC LIMIT {}", msgs_limit)).unwrap();
         let message_rows = stmt
         .query_map([], |row| {
             Ok(Message {
@@ -128,6 +134,9 @@ impl Database {
                 name: row.get(1)?,
                 persona: row.get(2)?,
                 first_message: row.get(3)?,
+                long_term_mem: row.get(4)?,
+                short_term_mem: row.get(5)?,
+                roleplay: row.get(6)?,
             })
         }).unwrap();
         let mut result: CompanionData = Default::default();
@@ -189,9 +198,9 @@ impl Database {
         con.execute(&format!("UPDATE companion SET persona=\"{}\"", persona), []).unwrap();
     }
 
-    pub fn change_companion(name: &str, persona: &str, first_message: &str) {
+    pub fn change_companion(name: &str, persona: &str, first_message: &str, long_term_mem: u32, short_term_mem: u32, roleplay: bool) {
         let con = Connection::open("companion.db").unwrap();
-        con.execute(&format!("UPDATE companion SET name=\"{}\", persona=\"{}\", first_message=\"{}\"", name, persona, first_message), []).unwrap();
+        con.execute(&format!("UPDATE companion SET name=\"{}\", persona=\"{}\", first_message=\"{}\", long_term_mem={}, short_term_mem={}, roleplay={}", name, persona, first_message, long_term_mem, short_term_mem, roleplay), []).unwrap();
     }
 
     pub fn rm_message(id: u32) {
@@ -212,5 +221,20 @@ impl Database {
     pub fn change_user(name: &str, persona: &str) {
         let con = Connection::open("companion.db").unwrap();
         con.execute(&format!("UPDATE user SET name=\"{}\", persona=\"{}\"", name, persona), []).unwrap();
+    }
+
+    pub fn change_short_term_memory(limit: u32) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE companion SET short_term_mem={}", limit), []).unwrap();
+    }
+
+    pub fn change_long_term_memory(limit: u32) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE companion SET long_term_mem={}", limit), []).unwrap();
+    }
+
+    pub fn disable_enable_roleplay(op: bool) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE companion SET roleplay={}", op), []).unwrap();
     }
 }

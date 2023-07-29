@@ -36,12 +36,15 @@ impl VectorDatabase {
         writer.commit().unwrap();
     }
 
-    pub fn get_matches(&self, query_string: &str) -> Vec<String> {
+    pub fn get_matches(&self, query_string: &str, limit: usize) -> Vec<String> {
         let reader = self.index.reader().unwrap();
         let searcher = reader.searcher();
         let qp = QueryParser::for_index(&self.index, vec![self.chat_field]);
         let query = qp.parse_query(query_string).unwrap();
-        let matches: Vec<(f32, tantivy::DocAddress)> = searcher.search(&query, &TopDocs::with_limit(2)).unwrap();
+        if limit == 0 {
+            return Vec::new();
+        }
+        let matches: Vec<(f32, tantivy::DocAddress)> = searcher.search(&query, &TopDocs::with_limit(limit)).unwrap();
         let mut result: Vec<String> = Vec::new();
         for (_, text_addr) in matches {
             let retrieved = searcher.doc(text_addr).unwrap();

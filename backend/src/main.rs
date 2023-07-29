@@ -94,21 +94,24 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     let companion: CompanionData = Database::get_companion_data();
     let user: UserData = Database::get_user_data();
     let mut base_prompt: String = String::new();
+    let mut rp: &str = "";
+    if companion.roleplay == 1 {
+        rp = "gestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*)";
+    }
     if is_llama2 {
         base_prompt = 
-        format!("<<SYS>>\nYou are {}, {}\nyou are talking with {}, {} is {}\ngestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*)\n",
-                companion.name, companion.persona, user.name, user.name, user.persona);
+        format!("<<SYS>>\nYou are {}, {}\nyou are talking with {}, {} is {}\n{}",
+                companion.name, companion.persona, user.name, user.name, user.persona, rp);
     } else {
         base_prompt = 
-        format!("Text transcript of a conversation between {} and {}. In the transcript, gestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*).\n{}'s Persona: {}\n{}'s Persona: {}\n<START>\n", 
-                                            user.name, companion.name, user.name, user.persona, companion.name, companion.persona);
-    
+        format!("Text transcript of a conversation between {} and {}. {}\n{}'s Persona: {}\n{}'s Persona: {}\n<START>\n", 
+                                            user.name, companion.name, rp, user.name, user.persona, companion.name, companion.persona);
     }
-    let abstract_memory: Vec<String> = vector.get_matches(&received.prompt);
+    let abstract_memory: Vec<String> = vector.get_matches(&received.prompt, companion.long_term_mem);
     for message in abstract_memory {
         base_prompt += &message;
     }
-    let ai_memory: Vec<Message> = Database::get_five_msgs();
+    let ai_memory: Vec<Message> = Database::get_x_msgs(companion.short_term_mem);
     if is_llama2 {
         for message in ai_memory {
             let prefix = if message.ai == "true" { &companion.name } else { &user.name };
@@ -256,17 +259,20 @@ async fn change_user_persona(received: web::Json<ChangeUserPersona>) -> HttpResp
     HttpResponse::Ok().body("Changed user persona")
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct ChangeCompanionData {
     id: u32,
     name: String,
     persona: String,
     first_message: String,
+    long_term_mem: u32,
+    short_term_mem: u32,
+    roleplay: bool,
 }
 
 #[post("/api/change/companionData")]
 async fn change_companion_data(received: web::Json<ChangeCompanionData>) -> HttpResponse {
-    Database::change_companion(&received.name, &received.persona, &received.first_message);
+    Database::change_companion(&received.name, &received.persona, &received.first_message, received.long_term_mem, received.short_term_mem, received.roleplay);
     HttpResponse::Ok().body("Data of your ai companion has been changed")
 }
 
@@ -310,6 +316,38 @@ async fn erase_longterm_mem() -> HttpResponse {
     }
 }
 
+#[derive(Deserialize)]
+struct ChangeMemory {
+    limit: u32,
+}
+
+#[post("/api/change/longTermMemory")]
+async fn change_long_term_mem(received: web::Json<ChangeMemory>) -> HttpResponse {
+    Database::change_long_term_memory(received.limit);
+    HttpResponse::Ok().body("Changed long term memory limit for ai")
+}
+
+#[post("/api/change/shortTermMemory")]
+async fn change_short_term_mem(received: web::Json<ChangeMemory>) -> HttpResponse {
+    Database::change_short_term_memory(received.limit);
+    HttpResponse::Ok().body("Changed short term memory limit for ai")
+}
+
+#[derive(Deserialize)]
+struct ChangeRoleplay {
+    enable: bool,
+}
+
+#[post("/api/change/roleplay")]
+async fn change_roleplay(received: web::Json<ChangeRoleplay>) -> HttpResponse {
+    Database::disable_enable_roleplay(received.enable);
+    if received.enable {
+        HttpResponse::Ok().body("Enabled roleplay")
+    } else {
+        HttpResponse::Ok().body("Disabled roleplay")
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -350,6 +388,9 @@ async fn main() -> std::io::Result<()> {
             .service(change_user_persona)
             .service(add_custom_data)
             .service(erase_longterm_mem)
+            .service(change_long_term_mem)
+            .service(change_short_term_mem)
+            .service(change_roleplay)
     })
     .bind((hostname, port))?
     .run()
