@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import "./interfaces/MessagesInterface";
 import CompanionAvatar from "../assets/companion_avatar.jpg";
 
+const safe_eval = (text: string) => text.replace(/</g, '&lt;').replace(/>/g, "&gt;")
+                                    .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+
+
 const MessagesList = ({ messages }: {messages: Messages}) => {
 
     const removeMsg = (id: number) => {
@@ -39,7 +43,7 @@ const MessagesList = ({ messages }: {messages: Messages}) => {
                             AI companion
                             <time className="text-xs opacity-50"> {message.date}</time>
                         </div>
-                        <div className="chat-bubble">{message.text}</div>
+                        <div className="chat-bubble" dangerouslySetInnerHTML={{ __html: safe_eval(message.text) }}></div>
                         <div className="chat-footer opacity-50 cursor-pointer" onClick={() => removeMsg(message.id)}>
                             Remove message
                         </div>
@@ -57,7 +61,7 @@ const MessagesList = ({ messages }: {messages: Messages}) => {
                             you
                             <time className="text-xs opacity-50"> {message.date}</time>
                         </div>
-                        <div className="chat-bubble">{message.text}</div>
+                        <div className="chat-bubble" dangerouslySetInnerHTML={{ __html: safe_eval(message.text) }}></div>
                         <div className="chat-footer opacity-50 cursor-pointer" onClick={() => removeMsg(message.id)}>
                             Remove message
                         </div>
