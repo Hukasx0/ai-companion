@@ -36,6 +36,9 @@ const Modal = () => {
 
       const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (companionData && companionData.roleplay) {
+          companionData.roleplay = Boolean(companionData.roleplay)
+        }
         fetch('/api/change/companionData', {
           method: 'POST',
           headers: {
