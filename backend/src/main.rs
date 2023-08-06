@@ -3,6 +3,7 @@ use llm::{Model, InferenceSession};
 use std::io::Write;
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Local};
+use futures_util::StreamExt as _;
 use std::fs;
 mod database;
 use database::{Database, Message, CompanionData, UserData};
@@ -351,22 +352,41 @@ async fn change_roleplay(received: web::Json<ChangeRoleplay>) -> HttpResponse {
 // works with https://zoltanai.github.io/character-editor/
 #[derive(Deserialize)]
 struct CharacterJson {
-    char_name: String,
-    char_persona: String,
-    char_greeting: String,
+    name: String,
+    description: String,
+    first_mes: String,
 }
 
 #[post("/api/import/characterJson")]
 async fn import_character_json(received: web::Json<CharacterJson>) -> HttpResponse {
-    Database::import_companion(&received.char_name, &received.char_persona, &received.char_greeting);
+    Database::import_companion(&received.name, &received.description, &received.first_mes);
     HttpResponse::Ok().body("Data of your ai companion has been changed")
 }
 
-/*#[post("/api/import/characterCard")]
-async fn change_roleplay(received: web::Json<ChangeRoleplay>) -> HttpResponse {
-    Database::import_companion(&received.char_name, &received.char_persona, &received.char_greeting, received.long_term_mem, received.short_term_mem, received.roleplay);
+// works with https://zoltanai.github.io/character-editor/
+#[derive(Deserialize)]
+struct CharacterCard {
+    name: String,
+    description: String,
+    first_mes: String,
+}
+
+#[post("/api/import/characterCard")]
+        // curl -X POST -F "file=@character_card.png" http://localhost:3000/api/import/characterCard
+async fn import_character_card(mut received: actix_web::web::Payload) -> HttpResponse {
+    let mut data = web::BytesMut::new();
+    while let Some(chunk) = received.next().await {
+        data.extend_from_slice(&chunk.unwrap());
+    }
+    let text_chunk_start = data.windows(9).position(|window| window == b"tEXtchara").expect("Looks like this image does not contain character data");
+    let text_chunk_end = data.windows(4).rposition(|window| window == b"IEND").expect("Looks like this image does not contain character data");
+    let character_base64 = (&data[text_chunk_start + 10..text_chunk_end - 8]);
+    let character_bytes = base64::decode(&character_base64).unwrap();
+    let character_text: &str = std::str::from_utf8(&character_bytes).unwrap();
+    let character_data: CharacterCard = serde_json::from_str(character_text).expect("Your image file does not contain correct json data");
+    Database::import_companion(&character_data.name, &character_data.description, &character_data.first_mes);
     HttpResponse::Ok().body("Data of your ai companion has been changed")
-}*/
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -412,6 +432,7 @@ async fn main() -> std::io::Result<()> {
             .service(change_short_term_mem)
             .service(change_roleplay)
             .service(import_character_json)
+            .service(import_character_card)
     })
     .bind((hostname, port))?
     .run()
