@@ -348,6 +348,26 @@ async fn change_roleplay(received: web::Json<ChangeRoleplay>) -> HttpResponse {
     }
 }
 
+// works with https://zoltanai.github.io/character-editor/
+#[derive(Deserialize)]
+struct CharacterJson {
+    char_name: String,
+    char_persona: String,
+    char_greeting: String,
+}
+
+#[post("/api/import/characterJson")]
+async fn import_character_json(received: web::Json<CharacterJson>) -> HttpResponse {
+    Database::import_companion(&received.char_name, &received.char_persona, &received.char_greeting);
+    HttpResponse::Ok().body("Data of your ai companion has been changed")
+}
+
+/*#[post("/api/import/characterCard")]
+async fn change_roleplay(received: web::Json<ChangeRoleplay>) -> HttpResponse {
+    Database::import_companion(&received.char_name, &received.char_persona, &received.char_greeting, received.long_term_mem, received.short_term_mem, received.roleplay);
+    HttpResponse::Ok().body("Data of your ai companion has been changed")
+}*/
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -391,6 +411,7 @@ async fn main() -> std::io::Result<()> {
             .service(change_long_term_mem)
             .service(change_short_term_mem)
             .service(change_roleplay)
+            .service(import_character_json)
     })
     .bind((hostname, port))?
     .run()

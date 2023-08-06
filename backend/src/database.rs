@@ -74,7 +74,7 @@ impl Database {
             let formatted_date = local.format("%A %d.%m.%Y %H:%M").to_string();
             let first_message: String = con.query_row("SELECT first_message FROM companion ASC LIMIT 1", [], |row| row.get(0)).unwrap();
             return con.execute(
-                &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", \"{}\", \"{}\")", first_message, formatted_date), []
+                &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", ?1, \"{}\")", formatted_date), &[&first_message]
             );
         } else {
             return Ok(0);
@@ -179,7 +179,7 @@ impl Database {
         let local: DateTime<Local> = Local::now();
         let formatted_date = &local.format("%A %d.%m.%Y %H:%M").to_string();
         con.execute(
-            &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", \"{}\", \"{}\")", first_message, formatted_date), []
+            &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", ?1, \"{}\")", formatted_date), &[&first_message]
         );
     }
 
@@ -201,6 +201,11 @@ impl Database {
     pub fn change_companion(name: &str, persona: &str, first_message: &str, long_term_mem: u32, short_term_mem: u32, roleplay: bool) {
         let con = Connection::open("companion.db").unwrap();
         con.execute(&format!("UPDATE companion SET name=\"{}\", persona=\"{}\", first_message=\"{}\", long_term_mem={}, short_term_mem={}, roleplay={}", name, persona, first_message, long_term_mem, short_term_mem, roleplay), []).unwrap();
+    }
+
+    pub fn import_companion(name: &str, persona: &str, first_message: &str) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute("UPDATE companion SET name=?1, persona=?2, first_message=?3", &[&name, &persona, &first_message]).unwrap();
     }
 
     pub fn rm_message(id: u32) {
