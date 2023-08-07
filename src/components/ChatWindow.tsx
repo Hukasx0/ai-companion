@@ -40,7 +40,7 @@ const MessagesList = (companionData: CompanionData | undefined, messages: Messag
                             </div>
                         </div>
                         <div className="chat-header">
-                            AI companion
+                            {companionData && companionData.name ? companionData.name : "AI companion"}
                             <time className="text-xs opacity-50"> {message.date}</time>
                         </div>
                         <div className="chat-bubble" dangerouslySetInnerHTML={{ __html: safe_eval(message.text) }}></div>

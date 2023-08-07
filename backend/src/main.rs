@@ -17,7 +17,7 @@ async fn index() -> HttpResponse {
     HttpResponse::Ok().body(include_str!("../../dist/index.html"))
 }
 
-#[get("/assets/default.jpg")]
+#[get("/assets/companion_avatar-4rust.jpg")]
 async fn companion_default_avatar() -> HttpResponse {
     HttpResponse::Ok().content_type("image/jpeg").body(&include_bytes!("../../dist/assets/companion_avatar-4rust.jpg")[..])
 }

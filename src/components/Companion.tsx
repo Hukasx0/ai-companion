@@ -155,7 +155,7 @@ const Companion_element = (companionData: CompanionData | undefined, setCompanio
             <div className="w-24 rounded-full self-center">
                 <img src={companionData && companionData.avatar_path ? companionData.avatar_path : CompanionAvatar} />
             </div>
-            <h2 className="text-center">AI companion</h2>
+            <h2 className="text-center">{companionData && companionData.name ? companionData.name : "AI companion"}</h2>
             <label htmlFor="companionModal" className="btn btn-outline btn-primary">Change data</label>
             <label htmlFor="userModal" className="btn btn-outline btn-primary">Change user data</label>
             <button className='btn btn-outline btn-primary' onClick={clearButtonPress}><a>Clear chat</a></button>

@@ -63,7 +63,7 @@ impl Database {
         ).unwrap();
         if Database::is_table_empty("companion", &con) {
             con.execute(
-                "INSERT INTO companion (id, name, persona, first_message, long_term_mem, short_term_mem, roleplay, avatar_path) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"hello user, how can i help you?\", 2, 5, 1, \"/assets/default.jpg\")", []
+                "INSERT INTO companion (id, name, persona, first_message, long_term_mem, short_term_mem, roleplay, avatar_path) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"hello user, how can i help you?\", 2, 5, 1, \"/assets/companion_avatar-4rust.jpg\")", []
             );
         }
         if Database::is_table_empty("user", &con) {
