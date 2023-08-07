@@ -1,25 +1,9 @@
-import CompanionAvatar from "../assets/companion_avatar.jpg";
 import { useEffect, useState } from "react";
 import "./interfaces/CompanionData";
 import "./interfaces/UserData";
+import CompanionAvatar from "../assets/companion_avatar.jpg";
 
-const Modal = () => {
-    const [companionData, setCompanionData] = useState<CompanionData>();
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const get_data = await fetch(`${window.location.href}api/companionData`);
-                const data = await get_data.text();
-                const json_data = JSON.parse(data);
-                setCompanionData(json_data);
-            } catch (error) {
-                console.log('Error while fetching chat messages: ', error);
-            }
-        };
-    
-        fetchData();
-    }, []);
+const Modal = (companionData: CompanionData | undefined, setCompanionData: React.Dispatch<React.SetStateAction<CompanionData | undefined>> ) => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
@@ -148,7 +132,7 @@ const UserModal = () => {
     )
 }
 
-const Companion_element = () => {
+const Companion_element = (companionData: CompanionData | undefined, setCompanionData: React.Dispatch<React.SetStateAction<CompanionData | undefined>>) => {
     const clearMessages = async () => {
         try {
             await fetch(`${window.location.href}api/clearMessages`);
@@ -164,12 +148,12 @@ const Companion_element = () => {
 
     return (
         <>
-        <Modal />
+        {Modal(companionData, setCompanionData)}
         <UserModal />
         <div className="flex justify-center items-center">
         <div className="avatar card w-52 bg-base-100">
             <div className="w-24 rounded-full self-center">
-                <img src={CompanionAvatar} />
+                <img src={companionData && companionData.avatar_path ? companionData.avatar_path : CompanionAvatar} />
             </div>
             <h2 className="text-center">AI companion</h2>
             <label htmlFor="companionModal" className="btn btn-outline btn-primary">Change data</label>

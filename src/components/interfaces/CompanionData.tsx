@@ -6,4 +6,5 @@ interface CompanionData {
     long_term_mem?: number;
     short_term_mem?: number;
     roleplay?: boolean;
+    avatar_path?: string;
 }

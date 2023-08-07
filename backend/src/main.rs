@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Local};
 use futures_util::StreamExt as _;
 use std::fs;
+use std::fs::File;
+use std::io::Read;
 mod database;
 use database::{Database, Message, CompanionData, UserData};
 mod vectordb;
@@ -15,9 +17,17 @@ async fn index() -> HttpResponse {
     HttpResponse::Ok().body(include_str!("../../dist/index.html"))
 }
 
-#[get("/assets/companion_avatar-4rust.jpg")]
-async fn companion_avatar() -> HttpResponse {
+#[get("/assets/default.jpg")]
+async fn companion_default_avatar() -> HttpResponse {
     HttpResponse::Ok().content_type("image/jpeg").body(&include_bytes!("../../dist/assets/companion_avatar-4rust.jpg")[..])
+}
+
+#[get("/assets/avatar.png")]
+async fn companion_avatar() -> HttpResponse {
+    let mut file = File::open("assets/avatar.png").unwrap();
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer).unwrap();
+    HttpResponse::Ok().content_type("image/png").body(buffer)
 }
 
 #[get("/ai_companion_logo.jpg")]
@@ -372,11 +382,12 @@ struct CharacterCard {
 }
 
 #[post("/api/import/characterCard")]
-        // curl -X POST -F "file=@character_card.png" http://localhost:3000/api/import/characterCard
+        // curl -X POST -H "Content-Type: image/png" -T card.png http://localhost:3000/api/import/characterCard
 async fn import_character_card(mut received: actix_web::web::Payload) -> HttpResponse {
     let mut data = web::BytesMut::new();
     while let Some(chunk) = received.next().await {
-        data.extend_from_slice(&chunk.unwrap());
+        let d = chunk.unwrap();
+        data.extend_from_slice(&d);
     }
     let text_chunk_start = data.windows(9).position(|window| window == b"tEXtchara").expect("Looks like this image does not contain character data");
     let text_chunk_end = data.windows(4).rposition(|window| window == b"IEND").expect("Looks like this image does not contain character data");
@@ -385,7 +396,30 @@ async fn import_character_card(mut received: actix_web::web::Payload) -> HttpRes
     let character_text: &str = std::str::from_utf8(&character_bytes).unwrap();
     let character_data: CharacterCard = serde_json::from_str(character_text).expect("Your image file does not contain correct json data");
     Database::import_companion(&character_data.name, &character_data.description, &character_data.first_mes);
+    if !fs::metadata("assets").is_ok() {
+        fs::create_dir("assets").unwrap();
+    }
+    let mut avatar_file = File::create("assets/avatar.png").unwrap();
+    avatar_file.write_all(&data);
+    Database::change_companion_avatar("assets/avatar.png");
     HttpResponse::Ok().body("Data of your ai companion has been changed")
+}
+
+#[post("/api/change/companionAvatar")]
+async fn change_companion_avatar(mut received: actix_web::web::Payload) -> HttpResponse {
+    // curl -X POST -H "Content-Type: image/png" -T card.png http://localhost:3000/api/change/companionAvatar
+    let mut data = web::BytesMut::new();
+    while let Some(chunk) = received.next().await {
+        let d = chunk.unwrap();
+        data.extend_from_slice(&d);
+    }
+    if !fs::metadata("assets").is_ok() {
+        fs::create_dir("assets").unwrap();
+    }
+    let mut avatar_file = File::create("assets/avatar.png").unwrap();
+    avatar_file.write_all(&data);
+    Database::change_companion_avatar("assets/avatar.png");
+    HttpResponse::Ok().body("Changed avatar of your ai companion")
 }
 
 #[actix_web::main]
@@ -412,6 +446,7 @@ async fn main() -> std::io::Result<()> {
             .service(js)
             .service(css)
             .service(companion_avatar)
+            .service(companion_default_avatar)
             .service(project_logo)
             .service(test_prompt)
             .service(get_messages)
@@ -431,6 +466,7 @@ async fn main() -> std::io::Result<()> {
             .service(change_long_term_mem)
             .service(change_short_term_mem)
             .service(change_roleplay)
+            .service(change_companion_avatar)
             .service(import_character_json)
             .service(import_character_card)
     })

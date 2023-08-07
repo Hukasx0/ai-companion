@@ -6,7 +6,7 @@ const safe_eval = (text: string) => text.replace(/</g, '&lt;').replace(/>/g, "&g
                                     .replace(/\*([^*]+)\*/g, "<em>$1</em>");
 
 
-const MessagesList = ({ messages }: {messages: Messages}) => {
+const MessagesList = (companionData: CompanionData | undefined, messages: Messages) => {
 
     const removeMsg = (id: number) => {
         const send_json = {
@@ -36,7 +36,7 @@ const MessagesList = ({ messages }: {messages: Messages}) => {
                     <div className="chat chat-start">
                         <div className="chat-image avatar">
                             <div className="w-10 rounded-full">
-                                <img src={CompanionAvatar} />
+                                <img src={companionData && companionData.avatar_path ? companionData.avatar_path : CompanionAvatar} />
                             </div>
                         </div>
                         <div className="chat-header">
@@ -72,7 +72,7 @@ const MessagesList = ({ messages }: {messages: Messages}) => {
     )
 }
 
-const ChatWindow = () => {
+const ChatWindow = (companionData: CompanionData | undefined) => {
 
     const [msgs, setMsgs] = useState<Messages>([]);
 
@@ -142,7 +142,7 @@ const ChatWindow = () => {
 
     return (
         <div className="mockup-window border bg-base-300 h-3/5 overflow-y-scroll">
-            <MessagesList messages={msgs}/>
+            {MessagesList(companionData, msgs)}
             <div className="flex justify-center items-center">
                 <input type="text" placeholder="Send a message" value={inputText} onKeyDown={enterPress} onChange={(v) => handleSentMessage(v.target.value)} className="input input-bordered w-1/3 min-w-max fixed bottom-14" />
             </div>

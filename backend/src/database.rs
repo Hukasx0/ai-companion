@@ -19,6 +19,7 @@ pub struct CompanionData {
     pub long_term_mem: usize,
     pub short_term_mem: u32,
     pub roleplay: u32,
+    pub avatar_path: String,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -56,12 +57,13 @@ impl Database {
                 first_message TEXT NOT NULL,
                 long_term_mem INTEGER NOT NULL,
                 short_term_mem INTEGER NOT NULL,
-                roleplay INTEGER NOT NULL
+                roleplay INTEGER NOT NULL,
+                avatar_path STRING NOT NULL
             )", [],
         ).unwrap();
         if Database::is_table_empty("companion", &con) {
             con.execute(
-                "INSERT INTO companion (id, name, persona, first_message, long_term_mem, short_term_mem, roleplay) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"hello user, how can i help you?\", 2, 5, 1)", []
+                "INSERT INTO companion (id, name, persona, first_message, long_term_mem, short_term_mem, roleplay, avatar_path) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"hello user, how can i help you?\", 2, 5, 1, \"/assets/default.jpg\")", []
             );
         }
         if Database::is_table_empty("user", &con) {
@@ -137,6 +139,7 @@ impl Database {
                 long_term_mem: row.get(4)?,
                 short_term_mem: row.get(5)?,
                 roleplay: row.get(6)?,
+                avatar_path: row.get(7)?,
             })
         }).unwrap();
         let mut result: CompanionData = Default::default();
@@ -201,6 +204,11 @@ impl Database {
     pub fn change_companion(name: &str, persona: &str, first_message: &str, long_term_mem: u32, short_term_mem: u32, roleplay: bool) {
         let con = Connection::open("companion.db").unwrap();
         con.execute(&format!("UPDATE companion SET name=\"{}\", persona=\"{}\", first_message=\"{}\", long_term_mem={}, short_term_mem={}, roleplay={}", name, persona, first_message, long_term_mem, short_term_mem, roleplay), []).unwrap();
+    }
+
+    pub fn change_companion_avatar(path: &str) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE companion SET avatar_path=\"{}\"", path), []).unwrap();
     }
 
     pub fn import_companion(name: &str, persona: &str, first_message: &str) {
