@@ -38,6 +38,69 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
             console.log("Error while updating companion data", error);
           });
       };
+
+      const [chrJson, setChrJson] = useState<File | null>(null);
+
+      const handleJsonChange = (event: React.ChangeEvent<HTMLInputElement>) =>  {
+        if (event.target.files && event.target.files.length > 0) {
+          setChrJson(event.target.files[0]);
+        }
+      }
+
+      const [chrCard, setChrCard] = useState<File | null>(null);
+
+      const handleCardChange = (event: React.ChangeEvent<HTMLInputElement>) =>  {
+        if (event.target.files && event.target.files.length > 0) {
+          setChrCard(event.target.files[0]);
+        }
+      }
+
+      const handleJsonSubmit = () => {
+        if (chrJson) {
+            fetch('/api/import/characterJson', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+              },
+                body: chrJson
+            })
+            .then((response) => {
+              console.log(response);
+              window.location.reload();
+            })
+            .catch((error) => {
+              console.log("Error while updating companion data", error);
+            });
+        }
+    };
+
+    const handleCardSubmit = () => {
+      if (chrCard) {
+        const fileReader = new FileReader();
+        fileReader.onload = async () => {
+            const fileData = fileReader.result as ArrayBuffer;
+            try {
+                const response = await fetch('/api/import/characterCard', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'image/png',
+                    },
+                    body: fileData,
+                });
+
+                if (response.ok) {
+                  console.log(response);
+                  window.location.reload();
+                } else {
+                  console.log("Error while sending character card");
+                }
+            } catch (error) {
+              console.log("Error while sending character card", error);
+            }
+        };
+        fileReader.readAsArrayBuffer(chrCard);
+    }
+  };
     
     return (
         <>
@@ -60,6 +123,16 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
                  <br /> <br />
                 <div className="flex justify-center">
                     <button className='btn btn-primary' onClick={handleSubmit}>Update</button>
+                </div>
+                <br />
+                <input type="file" className="file-input w-full max-w-xs" onChange={handleJsonChange} />
+                <div className="flex justify-center">
+                    <button className='btn btn-primary' onClick={handleJsonSubmit}>Upload character JSON</button>
+                </div>
+                <br />
+                <input type="file" className="file-input w-full max-w-xs" onChange={handleCardChange} />
+                <div className="flex justify-center">
+                    <button className='btn btn-primary' onClick={handleCardSubmit}>Upload character Card</button>
                 </div>
             </div>
             <label className="modal-backdrop" htmlFor="companionModal">Close</label>
