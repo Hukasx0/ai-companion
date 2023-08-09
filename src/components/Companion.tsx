@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./interfaces/CompanionData";
 import "./interfaces/UserData";
 import CompanionAvatar from "../assets/companion_avatar.jpg";
@@ -101,6 +101,62 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
         fileReader.readAsArrayBuffer(chrCard);
     }
   };
+
+    const [selectedImage, setSelectedImage] = useState<string>(CompanionAvatar);
+    useEffect(() => {
+      setSelectedImage(companionData && companionData.avatar_path ? companionData.avatar_path : CompanionAvatar);
+    }, [companionData]);
+    const [imageBlob, setImageBlob] = useState<Blob| null>(null);
+    const inputRef = useRef<HTMLInputElement | null>(null);
+
+    const handleImageClick = () => {
+      if (inputRef.current) {
+        inputRef.current.click();
+      }
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        setImageBlob(file);
+  
+        reader.onload = (e) => {
+          const imageDataUrl = e.target?.result as string;
+          setSelectedImage(imageDataUrl);
+        };
+  
+        reader.readAsDataURL(file);
+      }
+    };
+
+    const handleAvatarSubmit = () => {
+      if (imageBlob) {
+        const fileReader = new FileReader();
+        fileReader.onload = async () => {
+            const fileData = fileReader.result as ArrayBuffer;
+            try {
+                const response = await fetch('/api/change/companionAvatar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'image/png',
+                    },
+                    body: fileData,
+                });
+
+                if (response.ok) {
+                  console.log(response);
+                  window.location.reload();
+                } else {
+                  console.log("Error while changing companion avatar");
+                }
+            } catch (error) {
+              console.log("Error while changing companion avatar: ", error);
+            }
+        };
+        fileReader.readAsArrayBuffer(imageBlob);
+    }
+  };
     
     return (
         <>
@@ -108,6 +164,25 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
         <div className="modal">
             <div className="modal-box">
                 <h3 className="text-lg font-bold">Change your companion data</h3>
+                <br />
+                <div className="flex justify-center">
+                  <div className="avatar">
+                    <div className="w-24 rounded-xl">
+                      <img onClick={handleImageClick} src={selectedImage}/>
+                      <input
+                        ref={inputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                      />
+                  </div>
+                </div>
+              </div>
+              <br />
+              <div className="flex justify-center">
+                  <button className='btn btn-primary' onClick={handleAvatarSubmit}>Change avatar</button>
+                </div>
                 <p className="py-4">Your AI companion's name</p>
                 <input onChange={handleChange} type="text" name="name" id="name" value={companionData && companionData.name} />
                 <p className="py-4">Your AI companion's persona (personality, look, backstory etc)</p>
