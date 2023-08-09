@@ -8,15 +8,21 @@ This software can also be used as a backend or API for other projects that requi
 ## Features
 - works locally - does not require API keys for other services, which makes it completely free to use (well, apart from electricity costs - your computer must work somehow), also does not require the Internet to work
 - privacy - all conversations are kept locally in the SQLite database, which means that your conversations or the characteristics of your AI stay only on your computer
-- customization - you can change the AI's name, personality, appearance and the first message sent
+- customization - you can change the AI's name, personality, appearance and the first message sent. Also short term and long term memory of ai can be modified
 - short-term memory - artificial intelligence remembers recently received/sent messages
 - long-term memory - AI can remember conversations even thousands of prompts later using long-term memory - associating things with different words, phrases or sentences
 - real-time learning - when chatting with the AI, it is able to create "memories" as well as learn about the people it chats with (what their profession is, what they like to eat, drink and so on)
 - feeding ai with custom data - using the API, it is possible to save to the AI's long-term memory, e.g. fragments of documents, articles, song lyrics, poems
+- roleplay - ai chatbot can (if enabled) perform actions between asterisks (*) e.g. *moves closer*, *waves hello*
+- you can load character files in .json or .png (character cards) format. For example, you can create your own [here](https://zoltanai.github.io/character-editor/)
 - .. That's all the pros for now, maybe more in the future
 
 ## API documentation
 API documentation can be found [here](https://github.com/Hukasx0/ai-companion/blob/main/docs/api_docs.md)
+
+## Projects based on ai-companion Backend/API
+- [local assistant](https://github.com/Hukasx0/local-assistant) - llm powered ai virtual assistant
+- [matrix companion bot](https://github.com/Hukasx0/matrix-companion-bot) - AI-based chat bot running on the Matrix protocol 
 
 ## installation
 
