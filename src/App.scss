@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.avatar-container {
+    .avatar-change {
+        transition: filter 0.3s, transform 0.3s;
+        cursor: pointer;
+        &:hover {
+            filter: grayscale(100%);
+        }
+    }
+}

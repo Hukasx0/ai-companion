@@ -165,8 +165,8 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
             <div className="modal-box">
                 <h3 className="text-lg font-bold">Change your companion data</h3>
                 <br />
-                <div className="flex justify-center">
-                  <div className="avatar">
+                <div className="flex justify-center avatar-container">
+                  <div className="avatar avatar-change tooltip" data-tip="Change avatar">
                     <div className="w-24 rounded-xl">
                       <img onClick={handleImageClick} src={selectedImage}/>
                       <input
