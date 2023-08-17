@@ -111,12 +111,12 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     }
     if is_llama2 {
         base_prompt = 
-        format!("<<SYS>>\nYou are {}, {}\nyou are talking with {}, {} is {}\n{}",
-                companion.name, companion.persona, user.name, user.name, user.persona, rp);
+        format!("<<SYS>>\nYou are {}, {}\nyou are talking with {}, {} is {}\n{}\n[INST]\n{}\n[/INST]",
+                companion.name, companion.persona, user.name, user.name, user.persona, rp, companion.example_dialogue);
     } else {
         base_prompt = 
-        format!("Text transcript of a conversation between {} and {}. {}\n{}'s Persona: {}\n{}'s Persona: {}\n<START>\n", 
-                                            user.name, companion.name, rp, user.name, user.persona, companion.name, companion.persona);
+        format!("Text transcript of a conversation between {} and {}. {}\n{}'s Persona: {}\n{}'s Persona: {}\n<START>{}\n<START>\n", 
+                                            user.name, companion.name, rp, user.name, user.persona, companion.name, companion.persona, companion.example_dialogue);
     }
     let abstract_memory: Vec<String> = vector.get_matches(&received.prompt, companion.long_term_mem);
     for message in abstract_memory {
@@ -260,6 +260,17 @@ async fn change_companion_persona(received: web::Json<ChangeCompanionPersona>) -
 }
 
 #[derive(Deserialize)]
+struct ChangeCompanionExampleDialogue {
+    example_dialogue: String,
+}
+
+#[post("/api/change/companionExampleDialogue")]
+async fn change_companion_example_dialogue(received: web::Json<ChangeCompanionExampleDialogue>) -> HttpResponse {
+    Database::change_companion_example_dialogue(&received.example_dialogue);
+    HttpResponse::Ok().body("Changed companion example dialogue")
+}
+
+#[derive(Deserialize)]
 struct ChangeUserPersona {
     user_persona: String,
 }
@@ -275,6 +286,7 @@ struct ChangeCompanionData {
     id: u32,
     name: String,
     persona: String,
+    example_dialogue: String,
     first_message: String,
     long_term_mem: u32,
     short_term_mem: u32,
@@ -283,7 +295,7 @@ struct ChangeCompanionData {
 
 #[post("/api/change/companionData")]
 async fn change_companion_data(received: web::Json<ChangeCompanionData>) -> HttpResponse {
-    Database::change_companion(&received.name, &received.persona, &received.first_message, received.long_term_mem, received.short_term_mem, received.roleplay);
+    Database::change_companion(&received.name, &received.persona, &received.example_dialogue, &received.first_message, received.long_term_mem, received.short_term_mem, received.roleplay);
     HttpResponse::Ok().body("Data of your ai companion has been changed")
 }
 
@@ -365,11 +377,12 @@ struct CharacterJson {
     name: String,
     description: String,
     first_mes: String,
+    mes_example: String,
 }
 
 #[post("/api/import/characterJson")]
 async fn import_character_json(received: web::Json<CharacterJson>) -> HttpResponse {
-    Database::import_companion(&received.name, &received.description, &received.first_mes);
+    Database::import_companion(&received.name, &received.description, &received.mes_example, &received.first_mes);
     HttpResponse::Ok().body("Data of your ai companion has been changed")
 }
 
@@ -379,6 +392,7 @@ struct CharacterCard {
     name: String,
     description: String,
     first_mes: String,
+    mes_example: String,
 }
 
 #[post("/api/import/characterCard")]
@@ -395,7 +409,7 @@ async fn import_character_card(mut received: actix_web::web::Payload) -> HttpRes
     let character_bytes = base64::decode(&character_base64).unwrap();
     let character_text: &str = std::str::from_utf8(&character_bytes).unwrap();
     let character_data: CharacterCard = serde_json::from_str(character_text).expect("Your image file does not contain correct json data");
-    Database::import_companion(&character_data.name, &character_data.description, &character_data.first_mes);
+    Database::import_companion(&character_data.name, &character_data.description, &character_data.mes_example, &character_data.first_mes);
     if !fs::metadata("assets").is_ok() {
         fs::create_dir("assets").unwrap();
     }
@@ -455,6 +469,7 @@ async fn main() -> std::io::Result<()> {
             .service(change_first_message)
             .service(change_companion_name)
             .service(change_companion_persona)
+            .service(change_companion_example_dialogue)
             .service(change_companion_data)
             .service(fetch_companion_data)
             .service(fetch_user_data)

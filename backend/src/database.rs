@@ -15,6 +15,7 @@ pub struct CompanionData {
     pub id: u32,
     pub name: String,
     pub persona: String,
+    pub example_dialogue: String,
     pub first_message: String,
     pub long_term_mem: usize,
     pub short_term_mem: u32,
@@ -54,6 +55,7 @@ impl Database {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 persona TEXT NOT NULL,
+                example_dialogue TEXT NOT NULL,
                 first_message TEXT NOT NULL,
                 long_term_mem INTEGER NOT NULL,
                 short_term_mem INTEGER NOT NULL,
@@ -63,7 +65,7 @@ impl Database {
         ).unwrap();
         if Database::is_table_empty("companion", &con) {
             con.execute(
-                "INSERT INTO companion (id, name, persona, first_message, long_term_mem, short_term_mem, roleplay, avatar_path) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"hello user, how can i help you?\", 2, 5, 1, \"/assets/companion_avatar-4rust.jpg\")", []
+                "INSERT INTO companion (id, name, persona, example_dialogue, first_message, long_term_mem, short_term_mem, roleplay, avatar_path) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"\", \"hello user, how can i help you?\", 2, 5, 1, \"/assets/companion_avatar-4rust.jpg\")", []
             );
         }
         if Database::is_table_empty("user", &con) {
@@ -135,11 +137,12 @@ impl Database {
                 id: row.get(0)?,
                 name: row.get(1)?,
                 persona: row.get(2)?,
-                first_message: row.get(3)?,
-                long_term_mem: row.get(4)?,
-                short_term_mem: row.get(5)?,
-                roleplay: row.get(6)?,
-                avatar_path: row.get(7)?,
+                example_dialogue: row.get(3)?,
+                first_message: row.get(4)?,
+                long_term_mem: row.get(5)?,
+                short_term_mem: row.get(6)?,
+                roleplay: row.get(7)?,
+                avatar_path: row.get(8)?,
             })
         }).unwrap();
         let mut result: CompanionData = Default::default();
@@ -201,9 +204,14 @@ impl Database {
         con.execute(&format!("UPDATE companion SET persona=\"{}\"", persona), []).unwrap();
     }
 
-    pub fn change_companion(name: &str, persona: &str, first_message: &str, long_term_mem: u32, short_term_mem: u32, roleplay: bool) {
+    pub fn change_companion_example_dialogue(example_dialogue: &str) {
         let con = Connection::open("companion.db").unwrap();
-        con.execute(&format!("UPDATE companion SET name=\"{}\", persona=\"{}\", first_message=\"{}\", long_term_mem={}, short_term_mem={}, roleplay={}", name, persona, first_message, long_term_mem, short_term_mem, roleplay), []).unwrap();
+        con.execute(&format!("UPDATE companion SET example_dialogue=\"{}\"", example_dialogue), []).unwrap();
+    }
+
+    pub fn change_companion(name: &str, persona: &str, example_dialogue: &str, first_message: &str, long_term_mem: u32, short_term_mem: u32, roleplay: bool) {
+        let con = Connection::open("companion.db").unwrap();
+        con.execute(&format!("UPDATE companion SET name=?1, persona=?2, example_dialogue=?3, first_message=?4, long_term_mem={}, short_term_mem={}, roleplay={}", long_term_mem, short_term_mem, roleplay), &[&name, &persona, &example_dialogue, &first_message]).unwrap();
     }
 
     pub fn change_companion_avatar(path: &str) {
@@ -211,9 +219,9 @@ impl Database {
         con.execute(&format!("UPDATE companion SET avatar_path=\"{}\"", path), []).unwrap();
     }
 
-    pub fn import_companion(name: &str, persona: &str, first_message: &str) {
+    pub fn import_companion(name: &str, persona: &str, example_dialogue: &str, first_message: &str) {
         let con = Connection::open("companion.db").unwrap();
-        con.execute("UPDATE companion SET name=?1, persona=?2, first_message=?3", &[&name, &persona, &first_message]).unwrap();
+        con.execute("UPDATE companion SET name=?1, persona=?2, example_dialogue=?3, first_message=?4", &[&name, &persona, &example_dialogue, &first_message]).unwrap();
     }
 
     pub fn rm_message(id: u32) {
