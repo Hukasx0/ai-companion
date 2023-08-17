@@ -189,7 +189,7 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
                 <input onChange={handleChange} type="text" name="persona" id="persona" value={companionData && companionData.persona} />
                 <p className="py-4">Example dialogue</p>
                 <input onChange={handleChange} type="text" name="example_dialogue" id="example_dialogue" value={companionData && companionData.example_dialogue} />
-                <p className="py-4">First message with which the AI will start conversation</p>
+                <p className="py-4">First message with which the AI will start a conversation</p>
                 <input onChange={handleChange} type="text" name="first_message" id="first_message" value={companionData && companionData.first_message} />
                 <p className="py-4">long term memory entries (how much the ai has to recall things from long-term memory at a time)</p>
                 <input onChange={handleChange} type="number" name="long_term_mem" id="long_term_mem" value={companionData && companionData.long_term_mem} />

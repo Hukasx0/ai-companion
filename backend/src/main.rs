@@ -112,11 +112,11 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     if is_llama2 {
         base_prompt = 
         format!("<<SYS>>\nYou are {}, {}\nyou are talking with {}, {} is {}\n{}\n[INST]\n{}\n[/INST]",
-                companion.name, companion.persona, user.name, user.name, user.persona, rp, companion.example_dialogue);
+                companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), user.name, user.name, user.persona, rp, companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name));
     } else {
         base_prompt = 
         format!("Text transcript of a conversation between {} and {}. {}\n{}'s Persona: {}\n{}'s Persona: {}\n<START>{}\n<START>\n", 
-                                            user.name, companion.name, rp, user.name, user.persona, companion.name, companion.persona, companion.example_dialogue);
+                                            user.name, companion.name, rp, user.name, user.persona, companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name));
     }
     let abstract_memory: Vec<String> = vector.get_matches(&received.prompt, companion.long_term_mem);
     for message in abstract_memory {

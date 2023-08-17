@@ -3,6 +3,8 @@ import "./interfaces/MessagesInterface";
 import CompanionAvatar from "../assets/companion_avatar.jpg";
 
 const safe_eval = (text: string) => text.replace(/</g, '&lt;').replace(/>/g, "&gt;")
+                                    .replace(/\*\*\*([^*]+)\*\*\*/g, "<strong><em>$1</em></strong>")
+                                    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
                                     .replace(/\*([^*]+)\*/g, "<em>$1</em>");
 
 
