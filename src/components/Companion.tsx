@@ -157,6 +157,19 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
         fileReader.readAsArrayBuffer(imageBlob);
     }
   };
+
+  const eraseLongTermMem = async () => {
+    try {
+        await fetch('/api/erase/longTermMemory');
+    } catch (error) {
+        console.log(`Error while erasing long term memory: ${error}`);
+    }
+}
+
+const eraseButtonPressed = async () => {
+    await eraseLongTermMem();
+    window.location.reload();
+}
     
     return (
         <>
@@ -210,6 +223,10 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
                 <input type="file" className="file-input w-full max-w-xs" onChange={handleCardChange} />
                 <div className="flex justify-center">
                     <button className='btn btn-primary' onClick={handleCardSubmit}>Upload character Card</button>
+                </div>
+                <br />
+                <div className="flex justify-center">
+                  <button className='btn btn-outline btn-primary' onClick={eraseButtonPressed}>Erase AI's long term memory</button>
                 </div>
             </div>
             <label className="modal-backdrop" htmlFor="companionModal">Close</label>

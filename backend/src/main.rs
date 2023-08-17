@@ -120,7 +120,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     }
     let abstract_memory: Vec<String> = vector.get_matches(&received.prompt, companion.long_term_mem);
     for message in abstract_memory {
-        base_prompt += &message;
+        base_prompt += &message.replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
     }
     let ai_memory: Vec<Message> = Database::get_x_msgs(companion.short_term_mem);
     if is_llama2 {
@@ -172,7 +172,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     .next()
     .unwrap_or("");
     Database::add_message(&companion_text, true);
-    vector.add_entry(&format!("{}{}: {}\n{}: {}\n", formatted_date,user.name, &received.prompt, &companion.name, &companion_text));
+    vector.add_entry(&format!("{}{}: {}\n{}: {}\n", formatted_date, "{{user}}", &received.prompt, "{{char}}", &companion_text));
     return HttpResponse::Ok().body(serde_json::to_string(&PromptResponse {
         id: 0,
         ai: true,
