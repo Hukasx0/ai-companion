@@ -436,6 +436,40 @@ async fn change_companion_avatar(mut received: actix_web::web::Payload) -> HttpR
     HttpResponse::Ok().body("Changed avatar of your ai companion")
 }
 
+#[derive(Deserialize, Serialize)]
+struct MessagesJson {
+    messages: Vec<MessageImport>,
+}
+
+#[derive(Deserialize, Serialize)]
+struct MessageImport {
+    ai: bool,
+    text: String,
+}
+
+#[post("/api/import/messagesJson")]
+async fn import_messages_json(received: web::Json<MessagesJson>) -> HttpResponse {
+    for message in received.messages.iter() {
+        Database::add_message(&message.text, message.ai);
+    }
+    HttpResponse::Ok().body("Imported messages to your ai companion")
+}
+
+#[get("/api/messagesJson")]
+async fn get_messages_json() -> HttpResponse {
+    let messages: MessagesJson = MessagesJson { messages: Database::get_messages().iter().map(|message|
+        MessageImport {
+            ai: match message.ai.as_str() {
+                "true" => true,
+                "false" => false,
+                _ => panic!(),
+            },
+            text: message.text.clone(),
+        }
+    ).collect(), };
+    HttpResponse::Ok().body(serde_json::to_string_pretty(&messages).unwrap())
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -484,6 +518,8 @@ async fn main() -> std::io::Result<()> {
             .service(change_companion_avatar)
             .service(import_character_json)
             .service(import_character_card)
+            .service(import_messages_json)
+            .service(get_messages_json)
     })
     .bind((hostname, port))?
     .run()

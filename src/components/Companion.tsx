@@ -55,8 +55,16 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
         }
       }
 
-      const handleJsonSubmit = () => {
-        if (chrJson) {
+      const [msgsJson, setMsgsJson] = useState<File | null>(null);
+
+      const handleMsgsJsonChange = (event: React.ChangeEvent<HTMLInputElement>) =>  {
+        if (event.target.files && event.target.files.length > 0) {
+          setMsgsJson(event.target.files[0]);
+        }
+      }
+
+      const handleJsonSubmit = (type: number) => {
+        if (chrJson && type === 0) {
             fetch('/api/import/characterJson', {
                 method: 'POST',
                 headers: {
@@ -71,6 +79,22 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
             .catch((error) => {
               console.log("Error while updating companion data", error);
             });
+        }
+        else if (msgsJson && type === 1) {
+          fetch('/api/import/messagesJson', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+          },
+            body: msgsJson
+          })
+          .then((response) => {
+            console.log(response);
+            window.location.reload();
+          })
+          .catch((error) => {
+            console.log("Error while importing messages via json file", error);
+          });
         }
     };
 
@@ -217,12 +241,21 @@ const eraseButtonPressed = async () => {
                 <br />
                 <input type="file" className="file-input w-full max-w-xs" onChange={handleJsonChange} />
                 <div className="flex justify-center">
-                    <button className='btn btn-primary' onClick={handleJsonSubmit}>Upload character JSON</button>
+                    <button className='btn btn-primary' onClick={() => handleJsonSubmit(0)}>Upload character JSON</button>
                 </div>
                 <br />
                 <input type="file" className="file-input w-full max-w-xs" onChange={handleCardChange} />
                 <div className="flex justify-center">
                     <button className='btn btn-primary' onClick={handleCardSubmit}>Upload character Card</button>
+                </div>
+                <br />
+                <input type="file" className="file-input w-full max-w-xs" onChange={handleMsgsJsonChange} />
+                <div className="flex justify-center">
+                    <button className='btn btn-primary' onClick={() => handleJsonSubmit(1)}>Upload messages JSON</button>
+                </div>
+                <br />
+                <div className="flex justify-center">
+                  <a className="text-primary" href="/api/messagesJson">Export messages as JSON</a>
                 </div>
                 <br />
                 <div className="flex justify-center">
