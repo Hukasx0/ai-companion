@@ -102,8 +102,20 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     let mut session = llama.start_session(Default::default());
     let mut x = String::new();
     println!("Generating ai response...");
-    let companion: CompanionData = Database::get_companion_data();
-    let user: UserData = Database::get_user_data();
+    let companion: CompanionData = match Database::get_companion_data() {
+        Ok(cd) => cd,
+        Err(e) => {
+            eprintln!("Error while getting companion data from sqlite database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while generating output, check logs for more information");
+        }
+    };
+    let user: UserData = match Database::get_user_data() {
+        Ok(ud) => ud,
+        Err(e) => {
+            eprintln!("Error while getting user data from sqlite database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while generating output, check logs for more information");
+        }
+    };
     let mut base_prompt: String = String::new();
     let mut rp: &str = "";
     if companion.roleplay == 1 {
@@ -122,7 +134,13 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     for message in abstract_memory {
         base_prompt += &message.replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
     }
-    let ai_memory: Vec<Message> = Database::get_x_msgs(companion.short_term_mem);
+    let ai_memory: Vec<Message> = match Database::get_x_msgs(companion.short_term_mem) {
+        Ok(msgs) => msgs,
+        Err(e) => {
+            eprintln!("Error while getting messages from database/short-term memory: {}", e);
+            return HttpResponse::InternalServerError().body("Error while generating output, check logs for more information");
+        }
+    };
     if is_llama2 {
         for message in ai_memory {
             let prefix = if message.ai == "true" { &companion.name } else { &user.name };
@@ -171,7 +189,10 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     .split(&format!("\n{}: ", &companion.name))
     .next()
     .unwrap_or("");
-    Database::add_message(&companion_text, true);
+    match Database::add_message(&companion_text, true) {
+        Ok(_) => {},
+        Err(e) => eprintln!("Error while adding message to sqlite database: {}", e),
+    };
     vector.add_entry(&format!("{}{}: {}\n{}: {}\n", formatted_date, "{{user}}", &received.prompt, "{{char}}", &companion_text));
     return HttpResponse::Ok().body(serde_json::to_string(&PromptResponse {
         id: 0,
@@ -183,14 +204,23 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
 
 #[get("/api/messages")]
 async fn get_messages() -> HttpResponse {
-    let messages: Vec<Message> = Database::get_messages();
+    let messages: Vec<Message> = match Database::get_messages() {
+        Ok(msgs) => msgs,
+        Err(e) => {
+            eprintln!("Error while getting messages from sqlite database: {}", e);
+            Vec::new()
+        },
+    };
     let json = serde_json::to_string(&messages).unwrap();
     HttpResponse::Ok().body(format!("{}", json))
 }
 
 #[get("/api/clearMessages")]
 async fn clear_messages() -> HttpResponse {
-    Database::clear_messages();
+    match Database::clear_messages() {
+        Ok(_) => {},
+        Err(e) => eprintln!("Error while removing messages from sqlite database: {}", e),
+    };
     HttpResponse::Ok().body("Chat log cleared")
 }
 
@@ -201,18 +231,36 @@ struct RmMsg {
 
 #[post("/api/removeMessage")]
 async fn rm_message(received: web::Json<RmMsg>) -> HttpResponse {
-    Database::rm_message(received.id);
+    match Database::rm_message(received.id) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while removing message from sqlite database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while removing message, check logs for more information");
+        },
+    };
     HttpResponse::Ok().body("Removed message")
 }
 
 #[get("/api/companionData")]
 async fn fetch_companion_data() -> HttpResponse {
-    HttpResponse::Ok().body(serde_json::to_string(&Database::get_companion_data()).unwrap())
+    match Database::get_companion_data() {
+        Ok(companion_data) => HttpResponse::Ok().body(serde_json::to_string(&companion_data).unwrap_or(String::from("Error while encoding companion data as json"))),
+        Err(e) => {
+            eprintln!("Error while getting companion data from sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while fetching companion data, check logs for more information")
+        },
+    }
 }
 
 #[get("/api/userData")]
 async fn fetch_user_data() -> HttpResponse {
-    HttpResponse::Ok().body(serde_json::to_string(&Database::get_user_data()).unwrap())
+    match Database::get_user_data() {
+        Ok(user_data) => HttpResponse::Ok().body(serde_json::to_string(&user_data).unwrap_or(String::from("Error while encoding user data as json"))),
+        Err(e) => {
+            eprintln!("Error while getting user data from sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while fetching companion data, check logs for more information")
+        },
+    }
 }
 
 #[derive(Deserialize)]
@@ -222,8 +270,13 @@ struct ChangeFirstMessage {
 
 #[post("/api/change/firstMessage")]
 async fn change_first_message(received: web::Json<ChangeFirstMessage>) -> HttpResponse {
-    Database::change_first_message(&received.first_message);
-    HttpResponse::Ok().body("Changed first message")
+    match Database::change_first_message(&received.first_message) {
+        Ok(_) => HttpResponse::Ok().body("Changed first message"),
+        Err(e) => {
+            eprintln!("Error while changing companion's first message in sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while changing companion's first message, check logs for more information")
+        },
+    }
 }
 
 #[derive(Deserialize)]
@@ -233,8 +286,13 @@ struct ChangeCompanionName {
 
 #[post("/api/change/companionName")]
 async fn change_companion_name(received: web::Json<ChangeCompanionName>) -> HttpResponse {
-    Database::change_companion_name(&received.companion_name);
-    HttpResponse::Ok().body("Changed companion name")
+    match Database::change_companion_name(&received.companion_name) {
+        Ok(_) => HttpResponse::Ok().body("Changed companion name"),
+        Err(e) => {
+            eprintln!("Error while changing companion name in sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while changing companion name, check logs for more information")
+        },
+    }
 }
 
 #[derive(Deserialize)]
@@ -244,8 +302,13 @@ struct ChangeUsername {
 
 #[post("/api/change/userName")]
 async fn change_user_name(received: web::Json<ChangeUsername>) -> HttpResponse {
-    Database::change_username(&received.user_name);
-    HttpResponse::Ok().body("Changed user name")
+    match Database::change_username(&received.user_name) {
+        Ok(_) => HttpResponse::Ok().body("Changed user name"),
+        Err(e) => {
+            eprintln!("Error while changing username in sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while changing username, check logs for more information")
+        },
+    }
 }
 
 #[derive(Deserialize)]
@@ -255,8 +318,13 @@ struct ChangeCompanionPersona {
 
 #[post("/api/change/companionPersona")]
 async fn change_companion_persona(received: web::Json<ChangeCompanionPersona>) -> HttpResponse {
-    Database::change_companion_persona(&received.companion_persona);
-    HttpResponse::Ok().body("Changed companion persona")
+    match Database::change_companion_persona(&received.companion_persona) {
+        Ok(_) => HttpResponse::Ok().body("Changed companion persona"),
+        Err(e) => {
+            eprintln!("Error while changing companion persona in sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while changing companion persona, check logs for more information")
+        },
+    }
 }
 
 #[derive(Deserialize)]
@@ -266,8 +334,13 @@ struct ChangeCompanionExampleDialogue {
 
 #[post("/api/change/companionExampleDialogue")]
 async fn change_companion_example_dialogue(received: web::Json<ChangeCompanionExampleDialogue>) -> HttpResponse {
-    Database::change_companion_example_dialogue(&received.example_dialogue);
-    HttpResponse::Ok().body("Changed companion example dialogue")
+    match Database::change_companion_example_dialogue(&received.example_dialogue) {
+        Ok(_) => HttpResponse::Ok().body("Changed companion example dialogue"),
+        Err(e) => {
+            eprintln!("Error while changing companion example dialogue in sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while changing companion example dialogue, check logs for more information")
+        },
+    }
 }
 
 #[derive(Deserialize)]
@@ -277,8 +350,13 @@ struct ChangeUserPersona {
 
 #[post("/api/change/userPersona")]
 async fn change_user_persona(received: web::Json<ChangeUserPersona>) -> HttpResponse {
-    Database::change_user_persona(&received.user_persona);
-    HttpResponse::Ok().body("Changed user persona")
+    match Database::change_user_persona(&received.user_persona) {
+        Ok(_) => HttpResponse::Ok().body("Changed user persona"),
+        Err(e) => {
+            eprintln!("Error while changing user persona in sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while changing user persona, check logs for more information")
+        },
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -295,8 +373,13 @@ struct ChangeCompanionData {
 
 #[post("/api/change/companionData")]
 async fn change_companion_data(received: web::Json<ChangeCompanionData>) -> HttpResponse {
-    Database::change_companion(&received.name, &received.persona, &received.example_dialogue, &received.first_message, received.long_term_mem, received.short_term_mem, received.roleplay);
-    HttpResponse::Ok().body("Data of your ai companion has been changed")
+    match Database::change_companion(&received.name, &received.persona, &received.example_dialogue, &received.first_message, received.long_term_mem, received.short_term_mem, received.roleplay) {
+        Ok(_) => HttpResponse::Ok().body("Data of your ai companion has been changed"),
+        Err(e) => {
+            eprintln!("Error while changing companion data in sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while changing companion data, check logs for more information")
+        },
+    }
 }
 
 #[derive(Deserialize)]
@@ -308,8 +391,13 @@ struct ChangeUserData {
 
 #[post("/api/change/userData")]
 async fn change_user_data(received: web::Json<ChangeUserData>) -> HttpResponse {
-    Database::change_user(&received.name, &received.persona);
-    HttpResponse::Ok().body("Data of user has been changed")
+    match Database::change_user(&received.name, &received.persona) {
+        Ok(_) => HttpResponse::Ok().body("Data of user has been changed"),
+        Err(e) => {
+            eprintln!("Error while changing user data in sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while changing user data, check logs for more information")
+        },
+    }
 }
 
 #[derive(Deserialize)]
@@ -323,8 +411,8 @@ async fn add_custom_data(received: web::Json<AddData>) -> HttpResponse {
         Ok(vdb) => {
             vdb.add_entry(&(received.text.to_string()+"\n"));
             HttpResponse::Ok().body("Added custom data to AI long term memory")
-        }
-        Err(_) => HttpResponse::Ok().body("Error while connecting with AI long term memory")
+        },
+        Err(_) => HttpResponse::InternalServerError().body("Error while connecting with AI long term memory"),
     }
 }
 
@@ -334,8 +422,8 @@ async fn erase_longterm_mem() -> HttpResponse {
         Ok(vdb) => {
             vdb.erase_memory();
             HttpResponse::Ok().body("Erased AI's long term memory")
-        }
-        Err(_) => HttpResponse::Ok().body("Error while connecting with AI long term memory")
+        },
+        Err(_) => HttpResponse::InternalServerError().body("Error while connecting with AI long term memory"),
     }
 }
 
@@ -346,14 +434,24 @@ struct ChangeMemory {
 
 #[post("/api/change/longTermMemory")]
 async fn change_long_term_mem(received: web::Json<ChangeMemory>) -> HttpResponse {
-    Database::change_long_term_memory(received.limit);
-    HttpResponse::Ok().body("Changed long term memory limit for ai")
+    match Database::change_long_term_memory(received.limit) {
+        Ok(_) => HttpResponse::Ok().body("Changed long term memory limit for ai"),
+        Err(e) => {
+            eprintln!("Error while changing long-term memory limit in sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while changing long-term memory limit, check logs for more information")
+        }
+    }
 }
 
 #[post("/api/change/shortTermMemory")]
 async fn change_short_term_mem(received: web::Json<ChangeMemory>) -> HttpResponse {
-    Database::change_short_term_memory(received.limit);
-    HttpResponse::Ok().body("Changed short term memory limit for ai")
+    match Database::change_short_term_memory(received.limit) {
+        Ok(_) => HttpResponse::Ok().body("Changed short term memory limit for ai"),
+        Err(e) => {
+            eprintln!("Error while changing short-term memory limit in sqlite database: {}", e);
+            HttpResponse::InternalServerError().body("Error while changing short-term memory limit, check logs for more information")
+        },
+    }
 }
 
 #[derive(Deserialize)]
@@ -363,7 +461,13 @@ struct ChangeRoleplay {
 
 #[post("/api/change/roleplay")]
 async fn change_roleplay(received: web::Json<ChangeRoleplay>) -> HttpResponse {
-    Database::disable_enable_roleplay(received.enable);
+    match Database::disable_enable_roleplay(received.enable) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while enabling/disabling roleplay in sqlite database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while enabling/disabling roleplay, check logs for more information");
+        },
+    };
     if received.enable {
         HttpResponse::Ok().body("Enabled roleplay")
     } else {
@@ -382,8 +486,13 @@ struct CharacterJson {
 
 #[post("/api/import/characterJson")]
 async fn import_character_json(received: web::Json<CharacterJson>) -> HttpResponse {
-    Database::import_companion(&received.name, &received.description, &received.mes_example, &received.first_mes);
-    HttpResponse::Ok().body("Data of your ai companion has been changed")
+    match Database::import_companion(&received.name, &received.description, &received.mes_example, &received.first_mes) {
+        Ok(_) => HttpResponse::Ok().body("Data of your ai companion has been changed"),
+        Err(e) => {
+            eprintln!("Error while importing character via json to sqlite database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character data via json, check logs for more information");
+        },
+    }
 }
 
 // works with https://zoltanai.github.io/character-editor/
@@ -406,16 +515,40 @@ async fn import_character_card(mut received: actix_web::web::Payload) -> HttpRes
     let text_chunk_start = data.windows(9).position(|window| window == b"tEXtchara").expect("Looks like this image does not contain character data");
     let text_chunk_end = data.windows(4).rposition(|window| window == b"IEND").expect("Looks like this image does not contain character data");
     let character_base64 = (&data[text_chunk_start + 10..text_chunk_end - 8]);
-    let character_bytes = base64::decode(&character_base64).unwrap();
-    let character_text: &str = std::str::from_utf8(&character_bytes).unwrap();
+    let character_bytes = match base64::decode(&character_base64) {
+        Ok(b) => b,
+        Err(e) => {
+            eprintln!("Error while decoding base64 character data from character card: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
+    let character_text: &str = match std::str::from_utf8(&character_bytes) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error while parsing decoded base64 bytes to utf8 string: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
     let character_data: CharacterCard = serde_json::from_str(character_text).expect("Your image file does not contain correct json data");
-    Database::import_companion(&character_data.name, &character_data.description, &character_data.mes_example, &character_data.first_mes);
+    match Database::import_companion(&character_data.name, &character_data.description, &character_data.mes_example, &character_data.first_mes) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while importing companion data via character card: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
     if !fs::metadata("assets").is_ok() {
         fs::create_dir("assets").unwrap();
     }
     let mut avatar_file = File::create("assets/avatar.png").unwrap();
     avatar_file.write_all(&data);
-    Database::change_companion_avatar("assets/avatar.png");
+    match Database::change_companion_avatar("assets/avatar.png") {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while changing companion avatar using character card: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
     HttpResponse::Ok().body("Data of your ai companion has been changed")
 }
 
@@ -432,7 +565,13 @@ async fn change_companion_avatar(mut received: actix_web::web::Payload) -> HttpR
     }
     let mut avatar_file = File::create("assets/avatar.png").unwrap();
     avatar_file.write_all(&data);
-    Database::change_companion_avatar("assets/avatar.png");
+    match Database::change_companion_avatar("assets/avatar.png") {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while changing companion avatar: {}", e);
+            return HttpResponse::InternalServerError().body("Error while changing companion avatar, check logs for more information");
+        }
+    };
     HttpResponse::Ok().body("Changed avatar of your ai companion")
 }
 
@@ -451,7 +590,10 @@ struct MessageImport {
 async fn import_messages_json(received: web::Json<MessagesJson>) -> HttpResponse {
     let mut messages_iter = received.messages.iter();
     for message in messages_iter.to_owned() {
-        Database::add_message(&message.text, message.ai);
+        match Database::add_message(&message.text, message.ai) {
+            Ok(_) => {},
+            Err(e) => eprintln!("Error while adding message to database/short-term memory: {}", e),
+        };
     }
     let vector = VectorDatabase::connect().unwrap();
     while let Some(msg1) = messages_iter.next() {
@@ -465,7 +607,14 @@ async fn import_messages_json(received: web::Json<MessagesJson>) -> HttpResponse
 
 #[get("/api/messagesJson")]
 async fn get_messages_json() -> HttpResponse {
-    let messages: MessagesJson = MessagesJson { messages: Database::get_messages().iter().map(|message|
+    let database_messages = match Database::get_messages() {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("Error while fetching messages as json: {}", e);
+            return HttpResponse::InternalServerError().body("Error while fetching messages as json, check logs for more information");
+        }
+    };
+    let messages: MessagesJson = MessagesJson { messages: database_messages.iter().map(|message|
         MessageImport {
             ai: match message.ai.as_str() {
                 "true" => true,
