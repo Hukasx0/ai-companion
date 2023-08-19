@@ -5,8 +5,10 @@ import CompanionAvatar from "../assets/companion_avatar.jpg";
 
 const Modal = (companionData: CompanionData | undefined, setCompanionData: React.Dispatch<React.SetStateAction<CompanionData | undefined>> ) => {
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type, checked } = e.target;
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
+
+        const checked = e.target instanceof HTMLInputElement ? e.target.checked : undefined;
+        const { name, value, type } = e.target;
 
         const v2 = type === 'checkbox' ? checked : value;
 
@@ -223,11 +225,11 @@ const eraseButtonPressed = async () => {
                 <p className="py-4">Your AI companion's name</p>
                 <input onChange={handleChange} type="text" name="name" id="name" value={companionData && companionData.name} />
                 <p className="py-4">Your AI companion's persona (personality, look, backstory etc)</p>
-                <input onChange={handleChange} type="text" name="persona" id="persona" value={companionData && companionData.persona} />
+                <textarea style={{ width: '100%', maxWidth: '500px' }} onChange={handleChange} name="persona" id="persona" value={companionData && companionData.persona} />
                 <p className="py-4">Example dialogue</p>
-                <input onChange={handleChange} type="text" name="example_dialogue" id="example_dialogue" value={companionData && companionData.example_dialogue} />
+                <textarea style={{ width: '100%', maxWidth: '500px' }} onChange={handleChange} name="example_dialogue" id="example_dialogue" value={companionData && companionData.example_dialogue} />
                 <p className="py-4">First message with which the AI will start a conversation</p>
-                <input onChange={handleChange} type="text" name="first_message" id="first_message" value={companionData && companionData.first_message} />
+                <textarea style={{ width: '100%', maxWidth: '500px' }} onChange={handleChange} name="first_message" id="first_message" value={companionData && companionData.first_message} />
                 <p className="py-4">long term memory entries (how much the ai has to recall things from long-term memory at a time)</p>
                 <input onChange={handleChange} type="number" name="long_term_mem" id="long_term_mem" value={companionData && companionData.long_term_mem} />
                 <p className="py-4">short term memory entries (how many recent messages to remind ai at once)</p>
@@ -251,7 +253,7 @@ const eraseButtonPressed = async () => {
                 <br />
                 <input type="file" className="file-input w-full max-w-xs" onChange={handleMsgsJsonChange} />
                 <div className="flex justify-center">
-                    <button className='btn btn-primary' onClick={() => handleJsonSubmit(1)}>Upload messages JSON</button>
+                    <button className='btn btn-primary' onClick={() => handleJsonSubmit(1)}>Import messages JSON</button>
                 </div>
                 <br />
                 <div className="flex justify-center">
