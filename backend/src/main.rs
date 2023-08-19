@@ -449,8 +449,16 @@ struct MessageImport {
 
 #[post("/api/import/messagesJson")]
 async fn import_messages_json(received: web::Json<MessagesJson>) -> HttpResponse {
-    for message in received.messages.iter() {
+    let mut messages_iter = received.messages.iter();
+    for message in messages_iter.to_owned() {
         Database::add_message(&message.text, message.ai);
+    }
+    let vector = VectorDatabase::connect().unwrap();
+    while let Some(msg1) = messages_iter.next() {
+        if let Some(msg2) = messages_iter.next() {
+            let entry = format!("{} {}", msg1.text, msg2.text);
+            vector.add_entry(&format!("{}: {}\n{}: {}\n", if msg1.ai {"{{char}}"} else {"{{user}}"}, msg1.text, if msg2.ai {"{{char}}"} else {"{{user}}"}, msg2.text));
+        }
     }
     HttpResponse::Ok().body("Imported messages to your ai companion")
 }
