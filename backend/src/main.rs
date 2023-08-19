@@ -1,5 +1,5 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
-use llm::{Model, InferenceSession};
+use llm::Model;
 use std::io::Write;
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Local};
@@ -7,6 +7,7 @@ use futures_util::StreamExt as _;
 use std::fs;
 use std::fs::File;
 use std::io::Read;
+use base64::{Engine, engine::GeneralPurpose, engine::GeneralPurposeConfig, alphabet::STANDARD};
 mod database;
 use database::{Database, Message, CompanionData, UserData};
 mod vectordb;
@@ -24,9 +25,21 @@ async fn companion_default_avatar() -> HttpResponse {
 
 #[get("/assets/avatar.png")]
 async fn companion_avatar() -> HttpResponse {
-    let mut file = File::open("assets/avatar.png").unwrap();
+    let mut file = match File::open("assets/avatar.png") {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("Error while opening 'assets/avatar.png' file: {}", e);
+            return HttpResponse::InternalServerError().body("Error while sending image file, check logs for more information");
+        }
+    };
     let mut buffer = Vec::new();
-    file.read_to_end(&mut buffer).unwrap();
+    match file.read_to_end(&mut buffer) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while reading 'assets/avatar.png' file: {}", e);
+            return HttpResponse::InternalServerError().body("Error while sending image file, check logs for more information");
+        }
+    };
     HttpResponse::Ok().content_type("image/png").body(buffer)
 }
 
@@ -61,10 +74,22 @@ struct PromptResponse {
 #[post("/api/prompt")]
 async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
 
-    Database::add_message(&received.prompt, false);
-    let vector = VectorDatabase::connect().unwrap();
+    match Database::add_message(&received.prompt, false) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while adding message to database/short-term memory: {}", e);
+            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
+        },
+    };
+    let vector = match VectorDatabase::connect() {
+        Ok(vd) => vd,
+        Err(e) => {
+            eprintln!("Error while connecting to tantivy: {}", e);
+            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
+        }
+    };
     let local: DateTime<Local> = Local::now();
-    let formatted_date = local.format("* at %A %d.%m.%Y %H:%M*\n").to_string();
+    let formatted_date = local.format("* at %A %d.%m.%Y %H:%M *\n").to_string();
     let mut is_llama2: bool = false;
 
     // https://github.com/rustformers/llm
@@ -86,7 +111,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
             }
         }
     }
-    if model_path == "" {
+    if model_path.is_empty() {
         eprintln!("You need to put your AI model (with .bin format - ggml) in models/ folder");
         panic!();
     }
@@ -106,17 +131,17 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
         Ok(cd) => cd,
         Err(e) => {
             eprintln!("Error while getting companion data from sqlite database: {}", e);
-            return HttpResponse::InternalServerError().body("Error while generating output, check logs for more information");
+            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
         }
     };
     let user: UserData = match Database::get_user_data() {
         Ok(ud) => ud,
         Err(e) => {
             eprintln!("Error while getting user data from sqlite database: {}", e);
-            return HttpResponse::InternalServerError().body("Error while generating output, check logs for more information");
+            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
         }
     };
-    let mut base_prompt: String = String::new();
+    let mut base_prompt: String;
     let mut rp: &str = "";
     if companion.roleplay == 1 {
         rp = "gestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*)";
@@ -130,7 +155,13 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
         format!("Text transcript of a conversation between {} and {}. {}\n{}'s Persona: {}\n{}'s Persona: {}\n<START>{}\n<START>\n", 
                                             user.name, companion.name, rp, user.name, user.persona, companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name));
     }
-    let abstract_memory: Vec<String> = vector.get_matches(&received.prompt, companion.long_term_mem);
+    let abstract_memory: Vec<String> = match vector.get_matches(&received.prompt, companion.long_term_mem) {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("Error while getting messages from long-term memory: {}", e);
+            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
+        }
+    };
     for message in abstract_memory {
         base_prompt += &message.replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
     }
@@ -138,7 +169,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
         Ok(msgs) => msgs,
         Err(e) => {
             eprintln!("Error while getting messages from database/short-term memory: {}", e);
-            return HttpResponse::InternalServerError().body("Error while generating output, check logs for more information");
+            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
         }
     };
     if is_llama2 {
@@ -172,7 +203,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
                 llm::InferenceResponse::SnapshotToken(token) => {print!("{token}");}
                 llm::InferenceResponse::PromptToken(token) => {print!("{token}");}
                 llm::InferenceResponse::InferredToken(token) => {
-                    x = (x.clone()+&token).to_string();
+                    x = x.clone()+&token;
                     print!("{token}");
                 }
                 llm::InferenceResponse::EotToken => {}
@@ -189,17 +220,20 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     .split(&format!("\n{}: ", &companion.name))
     .next()
     .unwrap_or("");
-    match Database::add_message(&companion_text, true) {
+    match Database::add_message(companion_text, true) {
         Ok(_) => {},
-        Err(e) => eprintln!("Error while adding message to sqlite database: {}", e),
+        Err(e) => eprintln!("Error while adding message to database/short-term memory: {}", e),
     };
-    vector.add_entry(&format!("{}{}: {}\n{}: {}\n", formatted_date, "{{user}}", &received.prompt, "{{char}}", &companion_text));
-    return HttpResponse::Ok().body(serde_json::to_string(&PromptResponse {
+    match vector.add_entry(&format!("{}{}: {}\n{}: {}\n", formatted_date, "{{user}}", &received.prompt, "{{char}}", &companion_text)) {
+        Ok(_) => {},
+        Err(e) => eprintln!("Error while adding message to long-term memory: {}", e),
+    };
+    HttpResponse::Ok().body(serde_json::to_string(&PromptResponse {
         id: 0,
         ai: true,
         text: companion_text.to_string(),
         date: String::from("now"),
-    }).unwrap())
+    }).unwrap_or(String::from("Error while encoding companion response as json")))
 }
 
 #[get("/api/messages")]
@@ -211,8 +245,8 @@ async fn get_messages() -> HttpResponse {
             Vec::new()
         },
     };
-    let json = serde_json::to_string(&messages).unwrap();
-    HttpResponse::Ok().body(format!("{}", json))
+    let json = serde_json::to_string(&messages).unwrap_or(String::from("Error while encoding messages as json"));
+    HttpResponse::Ok().body(json)
 }
 
 #[get("/api/clearMessages")]
@@ -359,6 +393,7 @@ async fn change_user_persona(received: web::Json<ChangeUserPersona>) -> HttpResp
     }
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct ChangeCompanionData {
     id: u32,
@@ -382,6 +417,7 @@ async fn change_companion_data(received: web::Json<ChangeCompanionData>) -> Http
     }
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct ChangeUserData {
     id: u32,
@@ -409,10 +445,16 @@ struct AddData {
 async fn add_custom_data(received: web::Json<AddData>) -> HttpResponse {
     match VectorDatabase::connect() {
         Ok(vdb) => {
-            vdb.add_entry(&(received.text.to_string()+"\n"));
+            match vdb.add_entry(&(received.text.to_string()+"\n")) {
+                Ok(_) => {},
+                Err(e) => {
+                    eprintln!("Error while adding custom data to long-term memory: {}", e);
+                    return HttpResponse::InternalServerError().body("Error while adding data to AI long term memory, check logs for more information");
+                },
+            };
             HttpResponse::Ok().body("Added custom data to AI long term memory")
         },
-        Err(_) => HttpResponse::InternalServerError().body("Error while connecting with AI long term memory"),
+        Err(_) => HttpResponse::InternalServerError().body("Error while adding data to AI long term memory"),
     }
 }
 
@@ -420,7 +462,13 @@ async fn add_custom_data(received: web::Json<AddData>) -> HttpResponse {
 async fn erase_longterm_mem() -> HttpResponse {
     match VectorDatabase::connect() {
         Ok(vdb) => {
-            vdb.erase_memory();
+            match vdb.erase_memory() {
+                Ok(_) => {},
+                Err(e) => {
+                    eprintln!("Error while erasing data from long-term memory: {}", e);
+                    return HttpResponse::InternalServerError().body("Error while erasing long-term memory, check logs for more information");
+                }
+            };
             HttpResponse::Ok().body("Erased AI's long term memory")
         },
         Err(_) => HttpResponse::InternalServerError().body("Error while connecting with AI long term memory"),
@@ -490,7 +538,7 @@ async fn import_character_json(received: web::Json<CharacterJson>) -> HttpRespon
         Ok(_) => HttpResponse::Ok().body("Data of your ai companion has been changed"),
         Err(e) => {
             eprintln!("Error while importing character via json to sqlite database: {}", e);
-            return HttpResponse::InternalServerError().body("Error while importing character data via json, check logs for more information");
+            HttpResponse::InternalServerError().body("Error while importing character data via json, check logs for more information")
         },
     }
 }
@@ -514,8 +562,9 @@ async fn import_character_card(mut received: actix_web::web::Payload) -> HttpRes
     }
     let text_chunk_start = data.windows(9).position(|window| window == b"tEXtchara").expect("Looks like this image does not contain character data");
     let text_chunk_end = data.windows(4).rposition(|window| window == b"IEND").expect("Looks like this image does not contain character data");
-    let character_base64 = (&data[text_chunk_start + 10..text_chunk_end - 8]);
-    let character_bytes = match base64::decode(&character_base64) {
+    let character_base64 = &data[text_chunk_start + 10..text_chunk_end - 8];
+    let engine = GeneralPurpose::new(&STANDARD, GeneralPurposeConfig::new());
+    let character_bytes = match engine.decode(character_base64) {
         Ok(b) => b,
         Err(e) => {
             eprintln!("Error while decoding base64 character data from character card: {}", e);
@@ -537,11 +586,29 @@ async fn import_character_card(mut received: actix_web::web::Payload) -> HttpRes
             return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
         }
     };
-    if !fs::metadata("assets").is_ok() {
-        fs::create_dir("assets").unwrap();
+    if fs::metadata("assets").is_err() {
+        match fs::create_dir("assets") {
+            Ok(_) => {},
+            Err(e) => {
+                eprintln!("Error while creating 'assets' directory: {}", e);
+                return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+            }
+        };
     }
-    let mut avatar_file = File::create("assets/avatar.png").unwrap();
-    avatar_file.write_all(&data);
+    let mut avatar_file = match File::create("assets/avatar.png") {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("Error while creating 'avatar.png' file in a 'assets' folder: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
+    match avatar_file.write_all(&data) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while writing bytes to 'avatar.png' file in a 'assets' folder: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
     match Database::change_companion_avatar("assets/avatar.png") {
         Ok(_) => {},
         Err(e) => {
@@ -560,11 +627,29 @@ async fn change_companion_avatar(mut received: actix_web::web::Payload) -> HttpR
         let d = chunk.unwrap();
         data.extend_from_slice(&d);
     }
-    if !fs::metadata("assets").is_ok() {
-        fs::create_dir("assets").unwrap();
+    if fs::metadata("assets").is_err() {
+        match fs::create_dir("assets") {
+            Ok(_) => {},
+            Err(e) => {
+                eprintln!("Error while creating 'assets' directory: {}", e);
+                return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+            }
+        };
     }
-    let mut avatar_file = File::create("assets/avatar.png").unwrap();
-    avatar_file.write_all(&data);
+    let mut avatar_file = match File::create("assets/avatar.png") {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("Error while creating 'avatar.png' file in a 'assets' folder: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
+    match avatar_file.write_all(&data) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while writing bytes to 'avatar.png' file in a 'assets' folder: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
     match Database::change_companion_avatar("assets/avatar.png") {
         Ok(_) => {},
         Err(e) => {
@@ -595,14 +680,22 @@ async fn import_messages_json(received: web::Json<MessagesJson>) -> HttpResponse
             Err(e) => eprintln!("Error while adding message to database/short-term memory: {}", e),
         };
     }
-    let vector = VectorDatabase::connect().unwrap();
+    let vector = match VectorDatabase::connect() {
+        Ok(vd) => vd,
+        Err(e) => {
+            eprintln!("Error while connecting to tantivy: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing messages to long-term memory, check logs for more information");
+        }
+    };
     while let Some(msg1) = messages_iter.next() {
         if let Some(msg2) = messages_iter.next() {
-            let entry = format!("{} {}", msg1.text, msg2.text);
-            vector.add_entry(&format!("{}: {}\n{}: {}\n", if msg1.ai {"{{char}}"} else {"{{user}}"}, msg1.text, if msg2.ai {"{{char}}"} else {"{{user}}"}, msg2.text));
+            match vector.add_entry(&format!("{}: {}\n{}: {}\n", if msg1.ai {"{{char}}"} else {"{{user}}"}, msg1.text, if msg2.ai {"{{char}}"} else {"{{user}}"}, msg2.text)) {
+                Ok(_) => {},
+                Err(e) => eprintln!("Error while importing message to long-term memory: {}", e),
+            };
         }
     }
-    HttpResponse::Ok().body("Imported messages to your ai companion")
+    HttpResponse::Ok().body("Imported messages to your ai companion memory")
 }
 
 #[get("/api/messagesJson")]
@@ -624,7 +717,7 @@ async fn get_messages_json() -> HttpResponse {
             text: message.text.clone(),
         }
     ).collect(), };
-    HttpResponse::Ok().body(serde_json::to_string_pretty(&messages).unwrap())
+    HttpResponse::Ok().body(serde_json::to_string_pretty(&messages).unwrap_or(String::from("Error while encoding messages as json")))
 }
 
 #[actix_web::main]

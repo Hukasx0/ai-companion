@@ -66,28 +66,28 @@ impl Database {
         if Database::is_table_empty("companion", &con) {
             con.execute(
                 "INSERT INTO companion (id, name, persona, example_dialogue, first_message, long_term_mem, short_term_mem, roleplay, avatar_path) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"\", \"hello user, how can i help you?\", 2, 5, 1, \"/assets/companion_avatar-4rust.jpg\")", []
-            );
+            )?;
         }
         if Database::is_table_empty("user", &con) {
             con.execute(
                 "INSERT INTO user (id, name, persona) VALUES (NULL, \"user\", \"user chatting with artificial intelligence\")", []
-            );
+            )?;
         }
         if Database::is_table_empty("messages", &con) {
             let local: DateTime<Local> = Local::now();
             let formatted_date = local.format("%A %d.%m.%Y %H:%M").to_string();
-            let first_message: String = con.query_row("SELECT first_message FROM companion ASC LIMIT 1", [], |row| row.get(0)).unwrap();
-            return con.execute(
-                &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", ?1, \"{}\")", formatted_date), &[&first_message]
-            );
+            let first_message: String = con.query_row("SELECT first_message FROM companion ASC LIMIT 1", [], |row| row.get(0))?;
+            con.execute(
+                &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", ?1, \"{}\")", formatted_date), [&first_message]
+            )
         } else {
-            return Ok(0);
+            Ok(0)
         }
     }
 
     pub fn is_table_empty(table_name: &str, con: &Connection) -> bool {
         let count: i64 = con.query_row(&format!("SELECT COUNT(*) FROM {}",table_name), [], |row| row.get(0)).unwrap();
-        return count == 0;
+        count == 0
     }
 
     pub fn get_messages() -> Result<Vec<Message>> {
@@ -174,7 +174,7 @@ impl Database {
         let ai = &is_ai.to_string();
         let local: DateTime<Local> = Local::now();
         let formatted_date = &local.format("%A %d.%m.%Y %H:%M").to_string();
-        con.execute("INSERT INTO messages (id, ai, text, date) VALUES (NULL, ?1, ?2, ?3)", &[&ai.as_str(), &text, &formatted_date.as_str()])?;
+        con.execute("INSERT INTO messages (id, ai, text, date) VALUES (NULL, ?1, ?2, ?3)", [&ai.as_str(), &text, &formatted_date.as_str()])?;
         Ok(())
     }
 
@@ -185,8 +185,8 @@ impl Database {
         let local: DateTime<Local> = Local::now();
         let formatted_date = &local.format("%A %d.%m.%Y %H:%M").to_string();
         con.execute(
-            &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", ?1, \"{}\")", formatted_date), &[&first_message]
-        );
+            &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", ?1, \"{}\")", formatted_date), [&first_message]
+        )?;
         Ok(())
     }
 
@@ -216,7 +216,7 @@ impl Database {
 
     pub fn change_companion(name: &str, persona: &str, example_dialogue: &str, first_message: &str, long_term_mem: u32, short_term_mem: u32, roleplay: bool) -> Result<(), Error> {
         let con = Connection::open("companion.db")?;
-        con.execute(&format!("UPDATE companion SET name=?1, persona=?2, example_dialogue=?3, first_message=?4, long_term_mem={}, short_term_mem={}, roleplay={}", long_term_mem, short_term_mem, roleplay), &[&name, &persona, &example_dialogue, &first_message])?;
+        con.execute(&format!("UPDATE companion SET name=?1, persona=?2, example_dialogue=?3, first_message=?4, long_term_mem={}, short_term_mem={}, roleplay={}", long_term_mem, short_term_mem, roleplay), [&name, &persona, &example_dialogue, &first_message])?;
         Ok(())
     }
 
@@ -228,7 +228,7 @@ impl Database {
 
     pub fn import_companion(name: &str, persona: &str, example_dialogue: &str, first_message: &str) -> Result<(), Error> {
         let con = Connection::open("companion.db")?;
-        con.execute("UPDATE companion SET name=?1, persona=?2, example_dialogue=?3, first_message=?4", &[&name, &persona, &example_dialogue, &first_message])?;
+        con.execute("UPDATE companion SET name=?1, persona=?2, example_dialogue=?3, first_message=?4", [&name, &persona, &example_dialogue, &first_message])?;
         Ok(())
     }
 

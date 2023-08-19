@@ -3,22 +3,6 @@
 version = 3
 
 [[package]]
-name = "AI_companion"
-version = "0.9.0"
-dependencies = [
- "actix-web",
- "base64 0.21.2",
- "chrono",
- "futures-util",
- "llm",
- "rand",
- "rusqlite",
- "serde",
- "serde_json",
- "tantivy",
-]
-
-[[package]]
 name = "actix-codec"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -264,6 +248,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43f6cb1bf222025340178f382c426f13757b2960e89779dfcb319c32542a5a41"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "ai_companion"
+version = "0.9.0"
+dependencies = [
+ "actix-web",
+ "base64 0.21.2",
+ "chrono",
+ "futures-util",
+ "llm",
+ "rand",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "tantivy",
 ]
 
 [[package]]
