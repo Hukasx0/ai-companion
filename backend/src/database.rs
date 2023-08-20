@@ -95,10 +95,10 @@ impl Database {
         let mut stmt = con.prepare("SELECT id, ai, text, date FROM messages")?;
         let message_rows = stmt.query_map([], |row| {
             Ok(Message {
-                id: row.get(0).unwrap(),
-                ai: row.get(1).unwrap(),
-                text: row.get(2).unwrap(),
-                date: row.get(3).unwrap(),
+                id: row.get(0)?,
+                ai: row.get(1)?,
+                text: row.get(2)?,
+                date: row.get(3)?,
             })
         })?;
         let mut messages: Vec<Message> = Vec::new();
@@ -184,8 +184,10 @@ impl Database {
         let first_message: String = con.query_row("SELECT first_message FROM companion ASC LIMIT 1", [], |row| row.get(0))?;
         let local: DateTime<Local> = Local::now();
         let formatted_date = &local.format("%A %d.%m.%Y %H:%M").to_string();
+        let companion = Database::get_companion_data()?;
+        let user = Database::get_user_data()?;
         con.execute(
-            &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", ?1, \"{}\")", formatted_date), [&first_message]
+            &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", ?1, \"{}\")", formatted_date), [&first_message.replace("{{char}}", &companion.name).replace("{{user}}", &user.name)]
         )?;
         Ok(())
     }
