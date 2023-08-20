@@ -27,11 +27,11 @@ API documentation can be found [here](https://github.com/Hukasx0/ai-companion/bl
 ## installation
 
 ### Recommended
-go to https://github.com/Hukasx0/ai-companion/releases/tag/0.9.0
-and depending on your system select [download_linux.sh](https://github.com/Hukasx0/ai-companion/releases/download/0.9.0/download_linux.sh) or [download_windows.bat](https://github.com/Hukasx0/ai-companion/releases/download/0.9.0/download_windows.bat), after running the script, all files will be downloaded and placed in the correct folders
+go to https://github.com/Hukasx0/ai-companion/releases/tag/0.9.5
+and depending on your system select [download_linux.sh](https://github.com/Hukasx0/ai-companion/releases/download/0.9.5/download_linux.sh) or [download_windows.bat](https://github.com/Hukasx0/ai-companion/releases/download/0.9.5/download_windows.bat), after running the script, all files will be downloaded and placed in the correct folders
 
 ### Manual installation
-create a folder AI_companion, navigate to it, then install [AI_companion](https://github.com/Hukasx0/ai-companion/releases/download/0.9.0/AI_companion) or [AI_companion.exe](https://github.com/Hukasx0/ai-companion/releases/download/0.9.0/AI_companion.exe) (depending on your system), then create a folder 'models/' and put [AI model](#supported-ai-models) there,
+create a folder AI_companion, navigate to it, then install [AI_companion](https://github.com/Hukasx0/ai-companion/releases/download/0.9.5/AI_companion) or [AI_companion.exe](https://github.com/Hukasx0/ai-companion/releases/download/0.9.5/AI_companion.exe) (depending on your system), then create a folder 'models/' and put [AI model](#supported-ai-models) there,
 on linux that's it, on windows you still need:
 download sqlite from [here](https://www.sqlite.org/2023/sqlite-dll-win64-x64-3420000.zip)
 and extract in the same folder where AI_companion.exe is located
