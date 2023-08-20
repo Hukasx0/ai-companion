@@ -65,12 +65,12 @@ impl Database {
         )?;
         if Database::is_table_empty("companion", &con) {
             con.execute(
-                "INSERT INTO companion (id, name, persona, example_dialogue, first_message, long_term_mem, short_term_mem, roleplay, avatar_path) VALUES (NULL, \"Assistant\", \"Assistant is an artificial intelligence model designed to help the user\", \"\", \"hello user, how can i help you?\", 2, 5, 1, \"/assets/companion_avatar-4rust.jpg\")", []
+                "INSERT INTO companion (id, name, persona, example_dialogue, first_message, long_term_mem, short_term_mem, roleplay, avatar_path) VALUES (NULL, \"Assistant\", \"{{char}} is an artificial intelligence chatbot designed to help {{user}}. {{char}} is an artificial intelligence created in ai-companion backend\", \"{{user}}: What is ai-companion?\n{{char}}: AI Companion is a project that aims to provide users with their own personal AI chatbot on their computer. It allows users to engage in friendly and natural conversations with their AI, creating a unique and personalized experience. This software can also be used as a backend or API for other projects that require a personalised AI chatbot.\n{{user}}: Can you tell me about the creator of ai-companion?\n{{char}}: the creator of the ai-companion program is 'Hubert Kasperek', he is a young programmer from Poland who is mostly interested in: web development (Backend), cybersecurity and computer science concepts\", \"Hello {{user}}, how can i help you?\", 2, 5, 1, \"/assets/companion_avatar-4rust.jpg\")", []
             )?;
         }
         if Database::is_table_empty("user", &con) {
             con.execute(
-                "INSERT INTO user (id, name, persona) VALUES (NULL, \"user\", \"user chatting with artificial intelligence\")", []
+                "INSERT INTO user (id, name, persona) VALUES (NULL, \"user\", \"{{user}} is chatting with {{char}} using ai-companion web user interface\")", []
             )?;
         }
         if Database::is_table_empty("messages", &con) {
@@ -78,7 +78,7 @@ impl Database {
             let formatted_date = local.format("%A %d.%m.%Y %H:%M").to_string();
             let first_message: String = con.query_row("SELECT first_message FROM companion ASC LIMIT 1", [], |row| row.get(0))?;
             con.execute(
-                &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", ?1, \"{}\")", formatted_date), [&first_message]
+                &format!("INSERT INTO messages (id, ai, text, date) VALUES (NULL, \"true\", ?1, \"{}\")", formatted_date), [&first_message.replace("{{char}}", "Assistant").replace("{{user}}", "user")]
             )
         } else {
             Ok(0)

@@ -288,7 +288,7 @@ const UserModal = () => {
         fetchData();
     }, []);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setUserData((prevState) => ({
           ...prevState,
@@ -323,7 +323,7 @@ const UserModal = () => {
                 <p className="py-4">Your name</p>
                 <input onChange={handleChange} type="text" name="name" id="name" value={userData && userData.name} />
                 <p className="py-4">Your persona (personality, look, backstory etc)</p>
-                <input onChange={handleChange} type="text" name="persona" id="persona" value={userData && userData.persona} /> <br /> <br />
+                <textarea style={{ width: '100%', maxWidth: '500px' }} onChange={handleChange} name="persona" id="persona" value={userData && userData.persona} /> <br /> <br />
                 <div className="flex justify-center">
                     <button className='btn btn-primary' onClick={handleSubmit}>Update</button>
                 </div>
