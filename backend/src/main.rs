@@ -200,8 +200,8 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
         &mut Default::default(),
         |t| {
             match t {
-                llm::InferenceResponse::SnapshotToken(token) => {print!("{token}");}
-                llm::InferenceResponse::PromptToken(token) => {print!("{token}");}
+                llm::InferenceResponse::SnapshotToken(_) => {/*print!("{token}");*/}
+                llm::InferenceResponse::PromptToken(_) => {/*print!("{token}");*/}
                 llm::InferenceResponse::InferredToken(token) => {
                     x = x.clone()+&token;
                     print!("{token}");

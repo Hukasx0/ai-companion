@@ -16,12 +16,12 @@ impl VectorDatabase {
         let mut schema_builder = SchemaBuilder::default();
         let chat_field = schema_builder.add_text_field("chat", TEXT | STORED);
         let schema = schema_builder.build();
-        if !Path::new("companion_vector").exists() {
-            fs::create_dir("companion_vector")?;
+        if !Path::new("longterm_mem").exists() {
+            fs::create_dir("longterm_mem")?;
         }
-        let companion_vector = match Index::open_in_dir("companion_vector") {
+        let companion_vector = match Index::open_in_dir("longterm_mem") {
             Ok(index) => index,
-            Err(_) => Index::create_in_dir("companion_vector", schema)?,
+            Err(_) => Index::create_in_dir("longterm_mem", schema)?,
         };
         Ok(VectorDatabase {
             index: companion_vector,
