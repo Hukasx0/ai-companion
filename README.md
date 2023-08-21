@@ -8,6 +8,10 @@ This software can also be used as a backend or API for other projects that requi
 ## Features
 - works locally - does not require API keys for other services, which makes it completely free to use (well, apart from electricity costs - your computer must work somehow), also does not require the Internet to work
 - privacy - all conversations are kept locally in the SQLite database, which means that your conversations or the characteristics of your AI stay only on your computer
+- [API](https://github.com/Hukasx0/ai-companion/blob/main/docs/api_docs.md) - you can use it as a backend for your other projects that requires LLMs, custom ai chatbots or custom ai characters
+- speed - wrote in Rust shows good efficiency when it comes to CPU (nothing slows your generation) and RAM (you don't need to use weaker ai models)
+- ease of use - [API is documented](https://github.com/Hukasx0/ai-companion/blob/main/docs/api_docs.md), everything can be changed in web user interface, and everything is compiled into a single binary file that can be launched on your machine (no need for playing with hundreds of confusing
+files, and no need to fight with wrong library/interpreter/framework versions)
 - customization - you can change the AI's name, personality, appearance and the first message sent. Also short term and long term memory of ai can be modified
 - short-term memory - artificial intelligence remembers recently received/sent messages
 - long-term memory - AI can remember conversations even thousands of prompts later using long-term memory - associating things with different words, phrases or sentences
@@ -15,7 +19,8 @@ This software can also be used as a backend or API for other projects that requi
 - feeding ai with custom data - using the API, it is possible to save to the AI's long-term memory, e.g. fragments of documents, articles, song lyrics, poems
 - roleplay - ai chatbot can (if enabled) perform actions between asterisks (*) e.g. *moves closer*, *waves hello*
 - you can load character files in .json or .png (character cards) format. For example, you can create your own [here](https://zoltanai.github.io/character-editor/)
-- .. That's all the pros for now, maybe more in the future
+- import and export messages via json
+- you can use {{char}} and {{user}} in companion's persona, example dialogue, first message and user persona (if you change username or companion name, you don't need to change these, it will automatically change)
 
 ## API documentation
 API documentation can be found [here](https://github.com/Hukasx0/ai-companion/blob/main/docs/api_docs.md)
