@@ -44,7 +44,7 @@ and extract in the same folder where AI_companion.exe is located
 ## Supported AI models
 small list of tested and working AI models:
 - [LLaMa 2 7b chat](https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGML)
-- [Pygmalion 7b](https://huggingface.co/TehVenom/Pygmalion-7b-4bit-Q4_1-GGML)
+- [Pygmalion 7b](https://huggingface.co/TheBloke/Pygmalion-7B-SuperHOT-8K-GGML)
 - [Wizard Vicuna 7b](https://huggingface.co/TheBloke/Wizard-Vicuna-7B-Uncensored-GGML)
 - [Vicuna 7b](https://huggingface.co/TheBloke/vicuna-7B-v1.3-GGML)
 - [LLaMa 2 13b chat](https://huggingface.co/TheBloke/Llama-2-13B-chat-GGML)
