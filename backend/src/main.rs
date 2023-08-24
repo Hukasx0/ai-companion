@@ -125,7 +125,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     .unwrap_or_else(|err| panic!("Failed to load model: {err}"));
     
     let mut session = llama.start_session(Default::default());
-    let mut x = String::new();
+    let mut x: String;
     println!("Generating ai response...");
     let companion: CompanionData = match Database::get_companion_data() {
         Ok(cd) => cd,
@@ -188,6 +188,8 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
             base_prompt += &formatted_message;
         }
     }
+    let mut endOfGeneration = String::new();
+    let eog = format!("\n{}:", user.name);
     let res = session.infer::<std::convert::Infallible>(
         &llama,
         &mut rand::thread_rng(),
@@ -203,8 +205,12 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
                 llm::InferenceResponse::SnapshotToken(_) => {/*print!("{token}");*/}
                 llm::InferenceResponse::PromptToken(_) => {/*print!("{token}");*/}
                 llm::InferenceResponse::InferredToken(token) => {
-                    x = x.clone()+&token;
+                    //x = x.clone()+&token;
+                    endOfGeneration.push_str(&token);
                     print!("{token}");
+                    if endOfGeneration.contains(&eog) {
+                        return Ok(llm::InferenceFeedback::Halt);          
+                    }
                 }
                 llm::InferenceResponse::EotToken => {}
             }
@@ -212,6 +218,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
             Ok(llm::InferenceFeedback::Continue)
         }
     );
+    x = endOfGeneration.replace(&eog, "");
     match res {
         Ok(result) => println!("\n\nInference stats:\n{result}"),
         Err(err) => println!("\n{err}"),

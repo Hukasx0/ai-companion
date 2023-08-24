@@ -47,9 +47,12 @@ small list of tested and working AI models:
 - [Pygmalion 7b](https://huggingface.co/TheBloke/Pygmalion-7B-SuperHOT-8K-GGML)
 - [Wizard Vicuna 7b](https://huggingface.co/TheBloke/Wizard-Vicuna-7B-Uncensored-GGML)
 - [Vicuna 7b](https://huggingface.co/TheBloke/vicuna-7B-v1.3-GGML)
+- [Kimiko 7b](https://huggingface.co/TheBloke/Kimiko-7B-GGML)
 - [LLaMa 2 13b chat](https://huggingface.co/TheBloke/Llama-2-13B-chat-GGML)
 - [Wizard Vicuna 13b](https://huggingface.co/TheBloke/Wizard-Vicuna-13B-Uncensored-SuperHOT-8K-GGML)
 - [Pygmalion 13b](https://huggingface.co/TheBloke/Pygmalion-13B-SuperHOT-8K-GGML)
+- [Kimiko 13b](https://huggingface.co/TheBloke/Kimiko-13B-GGML)
+- [MythoMax 13b](https://huggingface.co/TheBloke/MythoMax-L2-13B-GGML)
 
   (Default installation downloads Wizard Vicuna 13b)
 
