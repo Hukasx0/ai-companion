@@ -1,0 +1,63 @@
+name: Build Project
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64, x86]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (React)
+        run: npm install
+
+      - name: Build React
+        run: npm run build
+
+      - name: Build Backend (Rust)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+        run: cargo build --release --target ${{ matrix.target }}
+        working-directory: backend/
+
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [x64, x86]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (React)
+        run: npm install
+
+      - name: Build React
+        run: npm run build
+
+      - name: Build Backend (Rust)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+        run: cargo build --release --target ${{ matrix.target }}
+        working-directory: backend/
