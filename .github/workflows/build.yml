@@ -33,7 +33,7 @@ jobs:
           toolchain: stable
 
       - name: Build Backend (Rust)
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release
         working-directory: backend/
 
   windows:
@@ -63,5 +63,5 @@ jobs:
           toolchain: stable
 
       - name: Build Backend (Rust)
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release
         working-directory: backend/
