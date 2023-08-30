@@ -27,10 +27,12 @@ jobs:
       - name: Build React
         run: npm run build
 
-      - name: Build Backend (Rust)
+      - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+
+      - name: Build Backend (Rust)
         run: cargo build --release --target ${{ matrix.target }}
         working-directory: backend/
 
@@ -55,9 +57,11 @@ jobs:
       - name: Build React
         run: npm run build
 
-      - name: Build Backend (Rust)
+      - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+
+      - name: Build Backend (Rust)
         run: cargo build --release --target ${{ matrix.target }}
         working-directory: backend/
