@@ -29,6 +29,9 @@ API documentation can be found [here](https://github.com/Hukasx0/ai-companion/bl
 - [local assistant](https://github.com/Hukasx0/local-assistant) - llm powered ai virtual assistant
 - [matrix companion bot](https://github.com/Hukasx0/matrix-companion-bot) - AI-based chat bot running on the Matrix protocol 
 
+## Use as python library
+If you are looking for a Python library that allows you to use the ai-companion backend in your projects, it is available here [ai-companion-py](https://github.com/Hukasx0/ai-companion-py)
+
 ## installation
 
 ### Recommended
