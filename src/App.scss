@@ -11,3 +11,36 @@
         }
     }
 }
+
+.chat-container {
+    width: 900px;
+    margin: 0 auto;
+  }
+  
+@media (max-width: 910px) {
+    .chat-container {
+      width: 100%;
+    }
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+@media (max-width: 400px) {
+    .footer {
+      position: relative;
+      z-index: auto;
+    }
+}
+
+@media (max-height: 800px) {
+    .footer {
+      position: relative;
+      z-index: auto;
+    }
+}
