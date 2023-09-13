@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 openssl-sys = { version = "0.9.92", features = ["vendored"] }
-actix-web = "4.3.1"
+actix-web = "4.4.0"
 llm = { git = "https://github.com/rustformers/llm" , branch = "main" }
 rand = "0.8.5"
 rusqlite = { version = "0.29.0", features = ["bundled"] }
