@@ -45,7 +45,7 @@ const MessagesList = (companionData: CompanionData | undefined, messages: Messag
                             {companionData && companionData.name ? companionData.name : "AI companion"}
                             <time className="text-xs opacity-50"> {message.date}</time>
                         </div>
-                        <div className="chat-bubble" dangerouslySetInnerHTML={{ __html: safe_eval(message.text) }}></div>
+                        <div className="chat-bubble" style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: safe_eval(message.text) }}></div>
                         <div className="chat-footer opacity-50 cursor-pointer" onClick={() => removeMsg(message.id)}>
                             Remove message
                         </div>
@@ -63,7 +63,7 @@ const MessagesList = (companionData: CompanionData | undefined, messages: Messag
                             you
                             <time className="text-xs opacity-50"> {message.date}</time>
                         </div>
-                        <div className="chat-bubble" dangerouslySetInnerHTML={{ __html: safe_eval(message.text) }}></div>
+                        <div className="chat-bubble" style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: safe_eval(message.text) }}></div>
                         <div className="chat-footer opacity-50 cursor-pointer" onClick={() => removeMsg(message.id)}>
                             Remove message
                         </div>
