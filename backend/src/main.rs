@@ -159,7 +159,7 @@ async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
         Ok(m) => m,
         Err(e) => {
             eprintln!("Error while getting messages from long-term memory: {}", e);
-            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
+            Vec::new() // If there is a error with long-term memory, just display error, don't interrupt generation
         }
     };
     for message in abstract_memory {
