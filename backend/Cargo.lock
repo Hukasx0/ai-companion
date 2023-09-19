@@ -1020,7 +1020,7 @@ dependencies = [
 [[package]]
 name = "ggml"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#c3b868acd55b91892f84de75ebb191ef363089cd"
+source = "git+https://github.com/rustformers/llm?branch=main#84800b02a7a96f62c0c9c03a38c36cb23bf4b2ec"
 dependencies = [
  "ggml-sys",
  "memmap2 0.5.10",
@@ -1030,7 +1030,7 @@ dependencies = [
 [[package]]
 name = "ggml-sys"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#c3b868acd55b91892f84de75ebb191ef363089cd"
+source = "git+https://github.com/rustformers/llm?branch=main#84800b02a7a96f62c0c9c03a38c36cb23bf4b2ec"
 dependencies = [
  "cc",
 ]
@@ -1375,7 +1375,7 @@ checksum = "57bcfdad1b858c2db7c38303a6d2ad4dfaf5eb53dfeb0910128b2c26d6158503"
 [[package]]
 name = "llm"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#c3b868acd55b91892f84de75ebb191ef363089cd"
+source = "git+https://github.com/rustformers/llm?branch=main#84800b02a7a96f62c0c9c03a38c36cb23bf4b2ec"
 dependencies = [
  "llm-base",
  "llm-bloom",
@@ -1391,7 +1391,7 @@ dependencies = [
 [[package]]
 name = "llm-base"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#c3b868acd55b91892f84de75ebb191ef363089cd"
+source = "git+https://github.com/rustformers/llm?branch=main#84800b02a7a96f62c0c9c03a38c36cb23bf4b2ec"
 dependencies = [
  "bytemuck",
  "ggml",
@@ -1411,7 +1411,7 @@ dependencies = [
 [[package]]
 name = "llm-bloom"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#c3b868acd55b91892f84de75ebb191ef363089cd"
+source = "git+https://github.com/rustformers/llm?branch=main#84800b02a7a96f62c0c9c03a38c36cb23bf4b2ec"
 dependencies = [
  "llm-base",
 ]
@@ -1419,7 +1419,7 @@ dependencies = [
 [[package]]
 name = "llm-gpt2"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#c3b868acd55b91892f84de75ebb191ef363089cd"
+source = "git+https://github.com/rustformers/llm?branch=main#84800b02a7a96f62c0c9c03a38c36cb23bf4b2ec"
 dependencies = [
  "bytemuck",
  "llm-base",
@@ -1428,7 +1428,7 @@ dependencies = [
 [[package]]
 name = "llm-gptj"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#c3b868acd55b91892f84de75ebb191ef363089cd"
+source = "git+https://github.com/rustformers/llm?branch=main#84800b02a7a96f62c0c9c03a38c36cb23bf4b2ec"
 dependencies = [
  "llm-base",
 ]
@@ -1436,7 +1436,7 @@ dependencies = [
 [[package]]
 name = "llm-gptneox"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#c3b868acd55b91892f84de75ebb191ef363089cd"
+source = "git+https://github.com/rustformers/llm?branch=main#84800b02a7a96f62c0c9c03a38c36cb23bf4b2ec"
 dependencies = [
  "llm-base",
 ]
@@ -1444,7 +1444,7 @@ dependencies = [
 [[package]]
 name = "llm-llama"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#c3b868acd55b91892f84de75ebb191ef363089cd"
+source = "git+https://github.com/rustformers/llm?branch=main#84800b02a7a96f62c0c9c03a38c36cb23bf4b2ec"
 dependencies = [
  "llm-base",
  "tracing",
@@ -1453,7 +1453,7 @@ dependencies = [
 [[package]]
 name = "llm-mpt"
 version = "0.2.0-dev"
-source = "git+https://github.com/rustformers/llm?branch=main#c3b868acd55b91892f84de75ebb191ef363089cd"
+source = "git+https://github.com/rustformers/llm?branch=main#84800b02a7a96f62c0c9c03a38c36cb23bf4b2ec"
 dependencies = [
  "llm-base",
 ]
@@ -2665,9 +2665,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokenizers"
-version = "0.13.3"
+version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5cf49017523bf0bc01c9966f172c5f120bbb7b96cccd1708772dd42e767fb9f5"
+checksum = "aea68938177975ab09da68552b720eac941779ff386baceaf77e0f5f9cea645f"
 dependencies = [
  "aho-corasick 0.7.20",
  "cached-path",
@@ -2686,7 +2686,7 @@ dependencies = [
  "rayon",
  "rayon-cond",
  "regex",
- "regex-syntax 0.6.29",
+ "regex-syntax 0.7.4",
  "reqwest",
  "serde",
  "serde_json",
