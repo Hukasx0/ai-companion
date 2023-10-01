@@ -39,10 +39,11 @@ impl VectorDatabase {
     }
 
     pub fn get_matches(&self, query_string: &str, limit: usize) -> Result<Vec<String>, TantivyError> {
+        let sanitized_query = query_string.chars().filter(|c| c.is_alphanumeric() || c.is_whitespace()).collect::<String>().to_lowercase();
         let reader = self.index.reader()?;
         let searcher = reader.searcher();
         let qp = QueryParser::for_index(&self.index, vec![self.chat_field]);
-        let query = qp.parse_query(query_string)?;
+        let query = qp.parse_query(&sanitized_query)?;
         if limit == 0 {
             return Ok(Vec::new());
         }
