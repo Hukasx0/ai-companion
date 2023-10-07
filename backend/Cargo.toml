@@ -6,7 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-openssl-sys = { version = "0.9.92", features = ["vendored"] }
 actix-web = "4.4.0"
 llm = { git = "https://github.com/rustformers/llm" , branch = "main" }
 rand = "0.8.5"
