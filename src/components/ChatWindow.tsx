@@ -35,7 +35,7 @@ const MessagesList = (companionData: CompanionData | undefined, messages: Messag
         <>
             {messages.map((message: Message) => message.ai ? 
                 <>
-                    <div className="chat chat-start">
+                    <div className="chat chat-start pl-2">
                         <div className="chat-image avatar">
                             <div className="w-10 rounded-full">
                                 <img src={companionData && companionData.avatar_path ? companionData.avatar_path : CompanionAvatar} />
@@ -46,14 +46,14 @@ const MessagesList = (companionData: CompanionData | undefined, messages: Messag
                             <time className="text-xs opacity-50"> {message.date}</time>
                         </div>
                         <div className="chat-bubble" style={{ whiteSpace: "pre-line" }} dangerouslySetInnerHTML={{ __html: safe_eval(message.text) }}></div>
-                        <div className="chat-footer opacity-50 cursor-pointer" onClick={() => removeMsg(message.id)}>
+                        <div className="chat-footer tiny-text opacity-50 cursor-pointer" onClick={() => removeMsg(message.id)}>
                             Remove message
                         </div>
                         </div>
                 </> :
 
                 <>
-                    <div className="chat chat-end">
+                    <div className="chat chat-end pr-2">
                         <div className="chat-image avatar">
                             <div className="w-10 rounded-full">
                                 
