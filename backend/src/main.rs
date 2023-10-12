@@ -1,17 +1,17 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
-use llm::Model;
 use std::io::Write;
 use serde::{Deserialize, Serialize};
-use chrono::{DateTime, Local};
 use futures_util::StreamExt as _;
 use std::fs;
 use std::fs::File;
 use std::io::Read;
 use base64::{Engine, engine::GeneralPurpose, engine::GeneralPurposeConfig, alphabet::STANDARD};
 mod database;
-use database::{Database, Message, CompanionData, UserData};
+use database::{Database, Message};
 mod vectordb;
 use vectordb::VectorDatabase;
+mod prompt;
+use prompt::prompt;
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -72,175 +72,52 @@ struct PromptResponse {
 }
 
 #[post("/api/prompt")]
-async fn test_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
-
+async fn do_prompt(received: web::Json<ReceivedPrompt>) -> HttpResponse {
     match Database::add_message(&received.prompt, false) {
         Ok(_) => {},
         Err(e) => {
             eprintln!("Error while adding message to database/short-term memory: {}", e);
-            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
+            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information".to_string());
         },
     };
-    let vector = match VectorDatabase::connect() {
-        Ok(vd) => vd,
-        Err(e) => {
-            eprintln!("Error while connecting to tantivy: {}", e);
-            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
-        }
-    };
-    let local: DateTime<Local> = Local::now();
-    let formatted_date = local.format("* at %A %d.%m.%Y %H:%M *\n").to_string();
-    let mut is_llama2: bool = false;
 
-    // https://github.com/rustformers/llm
-    // https://docs.rs/llm/latest/llm/
+    match prompt(&received.prompt) {
+        Ok(text) => HttpResponse::Ok().body(serde_json::to_string(&PromptResponse {
+                id: 0,
+                ai: true,
+                text: text,
+                date: String::from("now"),
+            }).unwrap_or("Error while encoding companion response as json".to_string())),
+        Err(error) => HttpResponse::InternalServerError().body(error)
+    }
+}
 
-    // get .bin file (ai model) from models/ folder
-    let mut model_path: String = String::from("");
-    let dir_path = "models/";
-    if let Ok(entries) = fs::read_dir(dir_path) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                if let Some(file_name) = entry.file_name().to_str() {
-                    if file_name.ends_with(".bin") {
-                        model_path = "models/".to_owned()+file_name;
-                        println!("loaded model models/{}", file_name);
-                        is_llama2 = file_name.contains("llama");
-                    }
-                }
-            }
-        }
-    }
-    if model_path.is_empty() {
-        eprintln!("You need to put your AI model (with .bin format - ggml) in models/ folder");
-        panic!();
-    }
-
-    let llama = llm::load::<llm::models::Llama>(
-        std::path::Path::new(&model_path),
-        llm::TokenizerSource::Embedded,
-        llm::ModelParameters::default(),
-        llm::load_progress_callback_stdout
-    )
-    .unwrap_or_else(|err| panic!("Failed to load model: {err}"));
-    
-    let mut session = llama.start_session(Default::default());
-    let x: String;
-    println!("Generating ai response...");
-    let companion: CompanionData = match Database::get_companion_data() {
-        Ok(cd) => cd,
-        Err(e) => {
-            eprintln!("Error while getting companion data from sqlite database: {}", e);
-            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
-        }
-    };
-    let user: UserData = match Database::get_user_data() {
-        Ok(ud) => ud,
-        Err(e) => {
-            eprintln!("Error while getting user data from sqlite database: {}", e);
-            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
-        }
-    };
-    let mut base_prompt: String;
-    let mut rp: &str = "";
-    if companion.roleplay == 1 {
-        rp = "gestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*)";
-    }
-    if is_llama2 {
-        base_prompt = 
-        format!("<<SYS>>\nYou are {}, {}\nyou are talking with {}, {} is {}\n{}\n[INST]\n{}\n[/INST]",
-                companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), user.name, user.name, user.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), rp, companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name));
-    } else {
-        base_prompt = 
-        format!("Text transcript of a conversation between {} and {}. {}\n{}'s Persona: {}\n{}'s Persona: {}\n<START>{}\n<START>\n", 
-                                            user.name, companion.name, rp, user.name, user.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name));
-    }
-    let abstract_memory: Vec<String> = match vector.get_matches(&received.prompt, companion.long_term_mem) {
-        Ok(m) => m,
-        Err(e) => {
-            eprintln!("Error while getting messages from long-term memory: {}", e);
-            Vec::new() // If there is a error with long-term memory, just display error, don't interrupt generation
-        }
-    };
-    for message in abstract_memory {
-        base_prompt += &message.replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
-    }
-    let ai_memory: Vec<Message> = match Database::get_x_msgs(companion.short_term_mem) {
-        Ok(msgs) => msgs,
-        Err(e) => {
-            eprintln!("Error while getting messages from database/short-term memory: {}", e);
-            return HttpResponse::InternalServerError().body("Error while generating output message, check logs for more information");
-        }
-    };
-    if is_llama2 {
-        for message in ai_memory {
-            let prefix = if message.ai == "true" { &companion.name } else { &user.name };
-            let text = message.text;
-            let formatted_message = format!("{}: {}\n", prefix, text);
-            base_prompt += &("[INST]".to_owned() + &formatted_message + "[/INST]\n");
-        }
-        base_prompt += "<</SYS>>";
-    } else {
-        for message in ai_memory {
-            let prefix = if message.ai == "true" { &companion.name } else { &user.name };
-            let text = message.text;
-            let formatted_message = format!("{}: {}\n", prefix, text);
-            base_prompt += &formatted_message;
-        }
-    }
-    let mut end_of_generation = String::new();
-    let eog = format!("\n{}:", user.name);
-    let res = session.infer::<std::convert::Infallible>(
-        &llama,
-        &mut rand::thread_rng(),
-        &llm::InferenceRequest {
-            prompt: llm::Prompt::Text(&format!("{}{}:", &base_prompt, companion.name)),
-            parameters: &llm::InferenceParameters::default(),
-            play_back_previous_tokens: false,
-            maximum_token_count: None,
-        },
-        &mut Default::default(),
-        |t| {
-            match t {
-                llm::InferenceResponse::SnapshotToken(_) => {/*print!("{token}");*/}
-                llm::InferenceResponse::PromptToken(_) => {/*print!("{token}");*/}
-                llm::InferenceResponse::InferredToken(token) => {
-                    //x = x.clone()+&token;
-                    end_of_generation.push_str(&token);
-                    print!("{token}");
-                    if end_of_generation.contains(&eog) {
-                        return Ok(llm::InferenceFeedback::Halt);          
-                    }
-                }
-                llm::InferenceResponse::EotToken => {}
-            }
-            std::io::stdout().flush().unwrap();
-            Ok(llm::InferenceFeedback::Continue)
-        }
-    );
-    x = end_of_generation.replace(&eog, "");
-    match res {
-        Ok(result) => println!("\n\nInference stats:\n{result}"),
-        Err(err) => println!("\n{err}"),
-    }
-    let companion_text = x
-    .split(&format!("\n{}: ", &companion.name))
-    .next()
-    .unwrap_or("");
-    match Database::add_message(companion_text, true) {
+#[post("/api/regenerate_message")]
+async fn regenerate_message() -> HttpResponse {
+    match Database::remove_latest_message() {
         Ok(_) => {},
-        Err(e) => eprintln!("Error while adding message to database/short-term memory: {}", e),
+        Err(e) => {
+            eprintln!("Error while removing latest message from sqlite database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while regenerating latest message, check logs for more information");
+        }
+    }
+    let previous_prompt = match Database::get_x_msgs(1) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("Error while fetching previous prompt from sqlite database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while regenerating latest message, check logs for more information");
+        }
     };
-    match vector.add_entry(&format!("{}{}: {}\n{}: {}\n", formatted_date, "{{user}}", &received.prompt, "{{char}}", &companion_text)) {
-        Ok(_) => {},
-        Err(e) => eprintln!("Error while adding message to long-term memory: {}", e),
-    };
-    HttpResponse::Ok().body(serde_json::to_string(&PromptResponse {
-        id: 0,
-        ai: true,
-        text: companion_text.to_string(),
-        date: String::from("now"),
-    }).unwrap_or(String::from("Error while encoding companion response as json")))
+    let previous_prompt_str = &previous_prompt[0].text;
+    match prompt(previous_prompt_str) {
+        Ok(text) => HttpResponse::Ok().body(serde_json::to_string(&PromptResponse {
+            id: 0,
+            ai: true,
+            text: text,
+            date: String::from("now"),
+        }).unwrap_or("Error while encoding companion response as json".to_string())),
+        Err(error) => HttpResponse::InternalServerError().body(error)
+    }
 }
 
 #[get("/api/messages")]
@@ -263,6 +140,24 @@ async fn clear_messages() -> HttpResponse {
         Err(e) => eprintln!("Error while removing messages from sqlite database: {}", e),
     };
     HttpResponse::Ok().body("Chat log cleared")
+}
+
+#[derive(Deserialize)]
+struct ModMsg {
+    new_text: String,
+    id: u32,
+}
+
+#[post("/api/editMessage")]
+async fn edit_message(received: web::Json<ModMsg>) -> HttpResponse {
+    match Database::modify_message(&received.new_text, received.id) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while removing message from sqlite database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while removing message, check logs for more information");
+        },
+    };
+    HttpResponse::Ok().body("Removed message")
 }
 
 #[derive(Deserialize)]
@@ -774,8 +669,10 @@ async fn main() -> std::io::Result<()> {
             .service(companion_avatar)
             .service(companion_default_avatar)
             .service(project_logo)
-            .service(test_prompt)
+            .service(do_prompt)
+            .service(regenerate_message)
             .service(get_messages)
+            .service(edit_message)
             .service(clear_messages)
             .service(rm_message)
             .service(change_first_message)
