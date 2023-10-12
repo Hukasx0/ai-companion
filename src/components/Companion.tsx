@@ -230,6 +230,9 @@ const eraseButtonPressed = async () => {
                 <textarea style={{ width: '100%', maxWidth: '500px' }} onChange={handleChange} name="example_dialogue" id="example_dialogue" value={companionData && companionData.example_dialogue} />
                 <p className="py-4">First message with which the AI will start a conversation</p>
                 <textarea style={{ width: '100%', maxWidth: '500px' }} onChange={handleChange} name="first_message" id="first_message" value={companionData && companionData.first_message} />
+                <div className="flex justify-center">
+                  <a className="text-primary" href="/api/characterJson">Export character as JSON</a>
+                </div>
                 <p className="py-4">long term memory entries (how much the ai has to recall things from long-term memory at a time)</p>
                 <input onChange={handleChange} type="number" name="long_term_mem" id="long_term_mem" value={companionData && companionData.long_term_mem} />
                 <p className="py-4">short term memory entries (how many recent messages to remind ai at once)</p>

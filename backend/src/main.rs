@@ -531,7 +531,8 @@ async fn change_roleplay(received: web::Json<ChangeRoleplay>) -> HttpResponse {
 }
 
 // works with https://zoltanai.github.io/character-editor/
-#[derive(Deserialize)]
+// and with https://github.com/Hukasx0/aichar
+#[derive(Serialize, Deserialize)]
 struct CharacterJson {
     name: String,
     description: String,
@@ -551,6 +552,7 @@ async fn import_character_json(received: web::Json<CharacterJson>) -> HttpRespon
 }
 
 // works with https://zoltanai.github.io/character-editor/
+// and with https://github.com/Hukasx0/aichar
 #[derive(Deserialize)]
 struct CharacterCard {
     name: String,
@@ -727,6 +729,25 @@ async fn get_messages_json() -> HttpResponse {
     HttpResponse::Ok().body(serde_json::to_string_pretty(&messages).unwrap_or(String::from("Error while encoding messages as json")))
 }
 
+#[get("/api/characterJson")]
+async fn get_character_json() -> HttpResponse {
+    let companion_data = match Database::get_companion_data() {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("Error while fetching companion data: {}", e);
+            return HttpResponse::InternalServerError().body("Error while fetching companion data as json, check logs for more information");
+        }
+    };
+    let character_data: CharacterJson = CharacterJson {
+        name: companion_data.name,
+        description: companion_data.persona,
+        first_mes: companion_data.first_message,
+        mes_example: companion_data.example_dialogue,
+    };
+    HttpResponse::Ok().body(serde_json::to_string_pretty(&character_data).unwrap_or(String::from("Error while encoding companion data as json")))
+}
+
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -777,6 +798,7 @@ async fn main() -> std::io::Result<()> {
             .service(import_character_card)
             .service(import_messages_json)
             .service(get_messages_json)
+            .service(get_character_json)
     })
     .bind((hostname, port))?
     .run()
