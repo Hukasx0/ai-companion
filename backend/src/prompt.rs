@@ -127,8 +127,8 @@ pub fn prompt(text_prompt: &str) -> Result<String, String> {
         &mut Default::default(),
         |t| {
             match t {
-                llm::InferenceResponse::SnapshotToken(token) => {print!("{token}");}
-                llm::InferenceResponse::PromptToken(token) => {print!("{token}");}
+                llm::InferenceResponse::SnapshotToken(_) => {/*print!("{token}");*/}
+                llm::InferenceResponse::PromptToken(_) => {/*print!("{token}");*/}
                 llm::InferenceResponse::InferredToken(token) => {
                     //x = x.clone()+&token;
                     end_of_generation.push_str(&token);
