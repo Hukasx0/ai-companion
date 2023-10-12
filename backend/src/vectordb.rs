@@ -51,7 +51,7 @@ impl VectorDatabase {
         let mut result: Vec<String> = Vec::new();
         for (_, text_addr) in matches {
             let retrieved = searcher.doc(text_addr)?;
-            let r = retrieved.get_first(self.chat_field).and_then(|val| val.as_text()).unwrap_or_else(|| "");
+            let r = retrieved.get_first(self.chat_field).and_then(|val| val.as_text()).unwrap_or("");
             result.push(r.to_string());
         }
         Ok(result)

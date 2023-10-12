@@ -178,6 +178,18 @@ impl Database {
         Ok(())
     }
 
+    pub fn modify_message(text: &str, msg_id: u32) -> Result<(), Error> {
+        let con = Connection::open("companion.db")?;
+        con.execute("UPDATE messages SET text = ? WHERE id = ?", [&text, &msg_id.to_string().as_str()])?;
+        Ok(())
+    }
+
+    pub fn remove_latest_message() -> Result<(), Error> {
+        let con = Connection::open("companion.db")?;
+        con.execute("DELETE FROM messages WHERE rowid = (SELECT max(rowid) FROM messages)", [])?;
+        Ok(())
+    }
+
     pub fn clear_messages() -> Result<(), Error> {
         let con = Connection::open("companion.db")?;
         con.execute("DELETE FROM messages", [])?;
