@@ -44,3 +44,14 @@
       z-index: auto;
     }
 }
+
+.chat-footer {
+  svg {
+    fill: #555A63;
+    transition: fill 0.3s;
+
+    &:hover {
+      fill: white;
+    }
+  }
+}
