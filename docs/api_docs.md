@@ -27,6 +27,23 @@ Response (if everything was successful):
 }
 ```
 
+## Endpoint `/api/regenerate_message`
+
+Method: GET
+
+Description: removes the last ai response, and regenerates it again
+
+Response (if everything was successful):
+- Returns HTTP status code 200 (OK) with the following JSON body:
+```
+{
+    "id": 0,                            // int
+    "ai": true,                         // bool
+    "text": <ai generated reply>,       // string
+    "date": "now"                       // string
+}
+```
+
 ## Endpoint `/api/messages`
 
 Method: GET
@@ -45,6 +62,26 @@ Response (if everything was successful):
     },
 ]
 ```
+
+## Endpoint '/api/editMessage'
+
+Method: POST
+
+Description: This endpoint allows you to edit the text of the message, which may belong to ai or to the user
+
+Input parameters:
+JSON object containing new text and ID of the message
+- `new_text` (type: `String`)
+- `id` (type: `Int`)
+```
+{
+    "new_text": <new message text>,           // string
+    "id": <message id>,                       // int
+}
+```
+
+Response (if everything was successful):
+- Returns HTTP status code 200 (OK) with the plain text message "Removed message".
 
 ## Endpoint `/api/clearMessages`
 
@@ -448,5 +485,21 @@ JSON object containing messages from ai's short-term memory.
     },
     // ... can be one or more messages
   ]
+}
+```
+
+## Endpoint '/api/characterJson'
+
+Method: GET
+
+Description: This endpoint allows you to extract companion data in the form of JSON
+
+Response (if everything was successful):
+```
+{
+  "name": <companion's name>,                            // string
+  "description": <companion's description>,              // string
+  "first_mes": <companion's first message>,              // string
+  "mes_example": <companion's example messages>          // string
 }
 ```
