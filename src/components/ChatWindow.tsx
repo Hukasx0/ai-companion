@@ -5,7 +5,8 @@ import CompanionAvatar from "../assets/companion_avatar.jpg";
 const safe_eval = (text: string) => text.replace(/</g, '&lt;').replace(/>/g, "&gt;")
                                     .replace(/\*\*\*([^*]+)\*\*\*/g, "<strong><em>$1</em></strong>")
                                     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-                                    .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+                                    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+                                    .replace(/```([^`]+)```/g, "<pre><code style='background-color: black; color: white;'>$1</code></pre>");
 
 
 const MessagesList = (companionData: CompanionData | undefined, messages: Messages) => {
@@ -217,6 +218,15 @@ const ChatWindow = (companionData: CompanionData | undefined) => {
     const sendMessage = () => {
         if (inputText !== '') {
             setInputText('');
+            setMsgs((prevMsgs) => [
+                ...prevMsgs,
+                {
+                    id: 0,
+                    ai: true,
+                    text: `${companionData?.name} is typing...`,
+                    date: "",
+                }
+            ]);
             const requestOptions =  {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
@@ -224,10 +234,7 @@ const ChatWindow = (companionData: CompanionData | undefined) => {
             }   
             fetch(`${window.location.href}api/prompt`, requestOptions)
             .then(response => response.json())
-            .then(jdata => setMsgs((prevMsgs) => [
-                ...prevMsgs,
-                jdata
-            ]));
+            .then(() => window.location.reload());
         }
     }
 
