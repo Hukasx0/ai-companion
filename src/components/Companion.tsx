@@ -22,16 +22,19 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
 
       const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (companionData && companionData.roleplay) {
-          companionData.roleplay = Boolean(companionData.roleplay)
-        }
-        fetch('/api/change/companionData', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(companionData)
-        })
+        if (companionData) {
+          const updatedCompanionData = {
+            ...companionData,
+            roleplay: Boolean(companionData.roleplay)
+          };
+      
+          fetch('/api/change/companionData', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedCompanionData)
+          })
           .then((response) => {
             console.log(response);
             window.location.reload();
@@ -39,6 +42,7 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
           .catch((error) => {
             console.log("Error while updating companion data", error);
           });
+        }
       };
 
       const [chrJson, setChrJson] = useState<File | null>(null);
