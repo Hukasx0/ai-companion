@@ -12,6 +12,8 @@ mod vectordb;
 use vectordb::VectorDatabase;
 mod prompt;
 use prompt::prompt;
+mod dialogue_tuning;
+use dialogue_tuning::DialogueTuning;
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -120,6 +122,24 @@ async fn regenerate_message() -> HttpResponse {
     }
 }
 
+#[post("/api/saveTunedDialogue")]
+async fn save_tuned_dialogue() -> HttpResponse {
+    let messages = match Database::get_x_msgs(2) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("Error while fetching two previous messages from sqlite database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while adding tuned dialogue, check logs for more information");
+        }
+    };
+    match DialogueTuning::add_dialogue(&messages[0].text, &messages[1].text) {
+        Ok(_) => HttpResponse::Ok().body("Saved messages as tuned dialogue"),
+        Err(e) => {
+            eprintln!("Error while saving messages as tuned dialogue: {}", e);
+            return HttpResponse::InternalServerError().body("Error while adding tuned dialogue, check logs for more information");
+        },
+    }
+}
+
 #[get("/api/messages")]
 async fn get_messages() -> HttpResponse {
     let messages: Vec<Message> = match Database::get_messages() {
@@ -140,6 +160,15 @@ async fn clear_messages() -> HttpResponse {
         Err(e) => eprintln!("Error while removing messages from sqlite database: {}", e),
     };
     HttpResponse::Ok().body("Chat log cleared")
+}
+
+#[get("/api/clearTuningMessages")]
+async fn clear_tuning_dialogues() -> HttpResponse {
+    match DialogueTuning::clear_dialogues() {
+        Ok(_) => {},
+        Err(e) => eprintln!("Error while removing tuning dialogue messages from sqlite database: {}", e),
+    };
+    HttpResponse::Ok().body("Tuning dialogue messages erased")
 }
 
 #[derive(Deserialize)]
@@ -306,11 +335,12 @@ struct ChangeCompanionData {
     long_term_mem: u32,
     short_term_mem: u32,
     roleplay: bool,
+    dialogue_tuning: bool
 }
 
 #[post("/api/change/companionData")]
 async fn change_companion_data(received: web::Json<ChangeCompanionData>) -> HttpResponse {
-    match Database::change_companion(&received.name, &received.persona, &received.example_dialogue, &received.first_message, received.long_term_mem, received.short_term_mem, received.roleplay) {
+    match Database::change_companion(&received.name, &received.persona, &received.example_dialogue, &received.first_message, received.long_term_mem, received.short_term_mem, received.roleplay, received.dialogue_tuning) {
         Ok(_) => HttpResponse::Ok().body("Data of your ai companion has been changed"),
         Err(e) => {
             eprintln!("Error while changing companion data in sqlite database: {}", e);
@@ -405,12 +435,12 @@ async fn change_short_term_mem(received: web::Json<ChangeMemory>) -> HttpRespons
 }
 
 #[derive(Deserialize)]
-struct ChangeRoleplay {
+struct ChangeSwitch {
     enable: bool,
 }
 
 #[post("/api/change/roleplay")]
-async fn change_roleplay(received: web::Json<ChangeRoleplay>) -> HttpResponse {
+async fn change_roleplay(received: web::Json<ChangeSwitch>) -> HttpResponse {
     match Database::disable_enable_roleplay(received.enable) {
         Ok(_) => {},
         Err(e) => {
@@ -422,6 +452,22 @@ async fn change_roleplay(received: web::Json<ChangeRoleplay>) -> HttpResponse {
         HttpResponse::Ok().body("Enabled roleplay")
     } else {
         HttpResponse::Ok().body("Disabled roleplay")
+    }
+}
+
+#[post("/api/change/dialogue_tuning")]
+async fn change_dialogue_tuning(received: web::Json<ChangeSwitch>) -> HttpResponse {
+    match Database::disable_enable_dialogue_tuning(received.enable) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while enabling/disabling dialogue tuning in sqlite database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while enabling/disabling dialogue tuning, check logs for more information");
+        },
+    };
+    if received.enable {
+        HttpResponse::Ok().body("Enabled dialogue tuning")
+    } else {
+        HttpResponse::Ok().body("Disabled dialogue tuning")
     }
 }
 
@@ -659,6 +705,11 @@ async fn main() -> std::io::Result<()> {
         Err(e) => { eprintln!("Cannot connect to tantivy because of: {}",e); }
     }
 
+    match DialogueTuning::create() {
+        Ok(_) => {},
+        Err(e) => { eprintln!("Cannot create Dialogue Tuning table in Sqlite database because of {}", e); }
+    }
+
     println!("AI companion works at:\n -> http://{}:{}/", hostname, port);
     println!("You can access it, by entering a link in your browser:\n -> http://localhost:{}/", port);
     HttpServer::new(|| {
@@ -671,9 +722,11 @@ async fn main() -> std::io::Result<()> {
             .service(project_logo)
             .service(do_prompt)
             .service(regenerate_message)
+            .service(save_tuned_dialogue)
             .service(get_messages)
             .service(edit_message)
             .service(clear_messages)
+            .service(clear_tuning_dialogues)
             .service(rm_message)
             .service(change_first_message)
             .service(change_companion_name)
@@ -690,6 +743,7 @@ async fn main() -> std::io::Result<()> {
             .service(change_long_term_mem)
             .service(change_short_term_mem)
             .service(change_roleplay)
+            .service(change_dialogue_tuning)
             .service(change_companion_avatar)
             .service(import_character_json)
             .service(import_character_card)
