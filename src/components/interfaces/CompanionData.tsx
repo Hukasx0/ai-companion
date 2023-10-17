@@ -7,5 +7,6 @@ interface CompanionData {
     long_term_mem?: number;
     short_term_mem?: number;
     roleplay?: boolean;
+    dialogue_tuning?: boolean;
     avatar_path?: string;
 }
