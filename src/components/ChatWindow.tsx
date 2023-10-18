@@ -276,19 +276,19 @@ const ChatWindow = (companionData: CompanionData | undefined) => {
     }
 
     return (
-        <div className="chat-container mockup-window border bg-base-300 h-3/5 overflow-y-scroll flex flex-col">
+        <div className="chat-container mockup-window border bg-base-300 h-3/5 overflow-y-scroll flex flex-col-reverse">
+          <div className="flex-shrink-0 p-4">
+            <input
+                type="text"
+                placeholder="Send a message"
+                value={inputText}
+                onKeyDown={enterPress}
+                onChange={(v) => handleSentMessage(v.target.value)}
+                className="input input-bordered w-full"
+            />
+        </div>
         <div className="flex-grow">
           {MessagesList(companionData, msgs)}
-        </div>
-        <div className="flex-shrink-0 p-4">
-          <input
-            type="text"
-            placeholder="Send a message"
-            value={inputText}
-            onKeyDown={enterPress}
-            onChange={(v) => handleSentMessage(v.target.value)}
-            className="input input-bordered w-full"
-          />
         </div>
       </div>
     );

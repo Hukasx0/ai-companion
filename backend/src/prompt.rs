@@ -143,7 +143,7 @@ pub fn prompt(text_prompt: &str) -> Result<String, String> {
                     //x = x.clone()+&token;
                     end_of_generation.push_str(&token);
                     print!("{token}");
-                    if end_of_generation.contains(&eog) {
+                    if end_of_generation.contains(&eog) || end_of_generation.contains("[/INST]") || end_of_generation.contains("<</SYS>>") {
                         return Ok(llm::InferenceFeedback::Halt);          
                     }
                 }
@@ -153,7 +153,7 @@ pub fn prompt(text_prompt: &str) -> Result<String, String> {
             Ok(llm::InferenceFeedback::Continue)
         }
     );
-    let x: String = end_of_generation.replace(&eog, "");
+    let x: String = end_of_generation.replace(&eog, "").replace("[/INST]", "").replace("<</SYS>>", "");
     match res {
         Ok(result) => println!("\n\nInference stats:\n{result}"),
         Err(err) => println!("\n{err}"),
