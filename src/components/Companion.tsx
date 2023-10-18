@@ -25,7 +25,8 @@ const Modal = (companionData: CompanionData | undefined, setCompanionData: React
         if (companionData) {
           const updatedCompanionData = {
             ...companionData,
-            roleplay: Boolean(companionData.roleplay)
+            roleplay: Boolean(companionData.roleplay),
+            dialogue_tuning: Boolean(companionData.dialogue_tuning)
           };
       
           fetch('/api/change/companionData', {
@@ -200,6 +201,15 @@ const eraseButtonPressed = async () => {
     await eraseLongTermMem();
     window.location.reload();
 }
+
+const eraseDialogueTuningMsgs = async () => {
+  try {
+    await fetch('/api/clearTuningMessages');
+    window.location.reload();
+  } catch (error) {
+    console.log(`Error while erasing tuning messages: ${error}`);
+  }
+}
     
     return (
         <>
@@ -242,7 +252,10 @@ const eraseButtonPressed = async () => {
                 <p className="py-4">short term memory entries (how many recent messages to remind ai at once)</p>
                 <input onChange={handleChange} type="number" name="short_term_mem" id="short_term_mem" value={companionData && companionData.short_term_mem} /> <br /> <br />
                 <input onChange={handleChange} type="checkbox" name="roleplay" id="roleplay" checked={companionData && companionData.roleplay} />
-                <label htmlFor="rp" className="py-4"> roleplay</label>
+                <label htmlFor="rp" className="py-4"> roleplay</label> <br />
+                <input onChange={handleChange} type="checkbox" name="dialogue_tuning" id="dialogue_tuning" checked={companionData && companionData.dialogue_tuning} />
+                <label htmlFor="rp" className="py-4"> dialogue tuning</label> <br />
+                <a className="text-primary" style={{ cursor: "pointer" }} onClick={eraseDialogueTuningMsgs}>Erase liked responses</a>
                  <br /> <br />
                 <div className="flex justify-center">
                     <button className='btn btn-primary' onClick={handleSubmit}>Update</button>

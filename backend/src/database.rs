@@ -20,6 +20,7 @@ pub struct CompanionData {
     pub long_term_mem: usize,
     pub short_term_mem: u32,
     pub roleplay: u32,
+    pub dialogue_tuning: u32,
     pub avatar_path: String,
 }
 
@@ -60,12 +61,13 @@ impl Database {
                 long_term_mem INTEGER NOT NULL,
                 short_term_mem INTEGER NOT NULL,
                 roleplay INTEGER NOT NULL,
+                dialogue_tuning INTEGER NOT NULL,
                 avatar_path STRING NOT NULL
             )", [],
         )?;
         if Database::is_table_empty("companion", &con) {
             con.execute(
-                "INSERT INTO companion (id, name, persona, example_dialogue, first_message, long_term_mem, short_term_mem, roleplay, avatar_path) VALUES (NULL, \"Assistant\", \"{{char}} is an artificial intelligence chatbot designed to help {{user}}. {{char}} is an artificial intelligence created in ai-companion backend\", \"{{user}}: What is ai-companion?\n{{char}}: AI Companion is a project that aims to provide users with their own personal AI chatbot on their computer. It allows users to engage in friendly and natural conversations with their AI, creating a unique and personalized experience. This software can also be used as a backend or API for other projects that require a personalised AI chatbot.\n{{user}}: Can you tell me about the creator of ai-companion?\n{{char}}: the creator of the ai-companion program is 'Hubert Kasperek', he is a young programmer from Poland who is mostly interested in: web development (Backend), cybersecurity and computer science concepts\", \"Hello {{user}}, how can i help you?\", 2, 5, 1, \"/assets/companion_avatar-4rust.jpg\")", []
+                "INSERT INTO companion (id, name, persona, example_dialogue, first_message, long_term_mem, short_term_mem, roleplay, dialogue_tuning, avatar_path) VALUES (NULL, \"Assistant\", \"{{char}} is an artificial intelligence chatbot designed to help {{user}}. {{char}} is an artificial intelligence created in ai-companion backend\", \"{{user}}: What is ai-companion?\n{{char}}: AI Companion is a project that aims to provide users with their own personal AI chatbot on their computer. It allows users to engage in friendly and natural conversations with their AI, creating a unique and personalized experience. This software can also be used as a backend or API for other projects that require a personalised AI chatbot.\n{{user}}: Can you tell me about the creator of ai-companion?\n{{char}}: the creator of the ai-companion program is 'Hubert Kasperek', he is a young programmer from Poland who is mostly interested in: web development (Backend), cybersecurity and computer science concepts\", \"Hello {{user}}, how can i help you?\", 2, 5, 1, 1, \"/assets/companion_avatar-4rust.jpg\")", []
             )?;
         }
         if Database::is_table_empty("user", &con) {
@@ -141,7 +143,8 @@ impl Database {
                 long_term_mem: row.get(5)?,
                 short_term_mem: row.get(6)?,
                 roleplay: row.get(7)?,
-                avatar_path: row.get(8)?,
+                dialogue_tuning: row.get(8)?,
+                avatar_path: row.get(9)?,
             })
         })?;
         let mut result: CompanionData = Default::default();
@@ -228,9 +231,9 @@ impl Database {
         Ok(())
     }
 
-    pub fn change_companion(name: &str, persona: &str, example_dialogue: &str, first_message: &str, long_term_mem: u32, short_term_mem: u32, roleplay: bool) -> Result<(), Error> {
+    pub fn change_companion(name: &str, persona: &str, example_dialogue: &str, first_message: &str, long_term_mem: u32, short_term_mem: u32, roleplay: bool, dialogue_tuning: bool) -> Result<(), Error> {
         let con = Connection::open("companion.db")?;
-        con.execute(&format!("UPDATE companion SET name=?1, persona=?2, example_dialogue=?3, first_message=?4, long_term_mem={}, short_term_mem={}, roleplay={}", long_term_mem, short_term_mem, roleplay), [&name, &persona, &example_dialogue, &first_message])?;
+        con.execute(&format!("UPDATE companion SET name=?1, persona=?2, example_dialogue=?3, first_message=?4, long_term_mem={}, short_term_mem={}, roleplay={}, dialogue_tuning={}", long_term_mem, short_term_mem, roleplay, dialogue_tuning), [&name, &persona, &example_dialogue, &first_message])?;
         Ok(())
     }
 
@@ -285,6 +288,12 @@ impl Database {
     pub fn disable_enable_roleplay(op: bool) -> Result<(), Error> {
         let con = Connection::open("companion.db")?;
         con.execute(&format!("UPDATE companion SET roleplay={}", op), [])?;
+        Ok(())
+    }
+
+    pub fn disable_enable_dialogue_tuning(op: bool) -> Result<(), Error> {
+        let con = Connection::open("companion.db")?;
+        con.execute(&format!("UPDATE companion SET dialogue_tuning={}", op), [])?;
         Ok(())
     }
 }

@@ -5,6 +5,7 @@ use chrono::{DateTime, Local};
 use crate::Database;
 use crate::database::{Message, CompanionData, UserData};
 use crate::vectordb::VectorDatabase;
+use crate::dialogue_tuning::DialogueTuning;
 
 pub fn prompt(text_prompt: &str) -> Result<String, String> {
     let vector = match VectorDatabase::connect() {
@@ -68,17 +69,26 @@ pub fn prompt(text_prompt: &str) -> Result<String, String> {
     };
     let mut base_prompt: String;
     let mut rp: &str = "";
+    let mut tuned_dialogue: String = String::from("");
     if companion.roleplay == 1 {
         rp = "gestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*)";
     }
+    if companion.dialogue_tuning == 1 {
+        match DialogueTuning::get_random_dialogue() {
+            Ok(dialogue) => {
+                tuned_dialogue = format!("{}: {}\n{}: {}", &user.name, &dialogue.user_msg, &companion.name, &dialogue.ai_msg);
+            },
+            Err(_) => {},
+        };
+    }
     if is_llama2 {
         base_prompt = 
-        format!("<<SYS>>\nYou are {}, {}\nyou are talking with {}, {} is {}\n{}\n[INST]\n{}\n[/INST]",
-                companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), user.name, user.name, user.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), rp, companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name));
+        format!("<<SYS>>\nYou are {}, {}\nyou are talking with {}, {} is {}\n{}\n[INST]\n{}\n{}\n[/INST]",
+                companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), user.name, user.name, user.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), rp, companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), &tuned_dialogue);
     } else {
         base_prompt = 
-        format!("Text transcript of a conversation between {} and {}. {}\n{}'s Persona: {}\n{}'s Persona: {}\n<START>{}\n<START>\n", 
-                                            user.name, companion.name, rp, user.name, user.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name));
+        format!("Text transcript of a conversation between {} and {}. {}\n{}'s Persona: {}\n{}'s Persona: {}\n<START>\n{}\n<START>\n{}\n<START>\n", 
+                                            user.name, companion.name, rp, user.name, user.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), &tuned_dialogue);
     }
     let abstract_memory: Vec<String> = match vector.get_matches(text_prompt, companion.long_term_mem) {
         Ok(m) => m,
