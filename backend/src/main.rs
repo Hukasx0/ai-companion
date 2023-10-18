@@ -710,8 +710,11 @@ async fn main() -> std::io::Result<()> {
         Err(e) => { eprintln!("Cannot create Dialogue Tuning table in Sqlite database because of {}", e); }
     }
 
-    println!("AI companion works at:\n -> http://{}:{}/", hostname, port);
-    println!("You can access it, by entering a link in your browser:\n -> http://localhost:{}/", port);
+    println!("\nAI-Companion 0.9.8 successfully launched");
+    println!("https://github.com/Hukasx0/ai-companion\n");
+
+    println!("You can access it, by entering a link in your browser:\n  -> http://{}:{}/", hostname, port);
+    println!("  -> http://localhost:{}/", port);
     HttpServer::new(|| {
         App::new()
             .service(index)
