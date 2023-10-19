@@ -25,7 +25,7 @@ files, and no need to fight with wrong library/interpreter/framework versions)
 ## API documentation
 API documentation can be found [here](https://github.com/Hukasx0/ai-companion/blob/main/docs/api_docs.md)
 
-## Projects based on ai-companion Backend/API
+## Projects based on ai-companion Backend/API/Library
 - [local assistant](https://github.com/Hukasx0/local-assistant) - llm powered ai virtual assistant
 - [matrix companion bot](https://github.com/Hukasx0/matrix-companion-bot) - AI-based chat bot running on the Matrix protocol 
 
@@ -35,11 +35,11 @@ If you are looking for a Python library that allows you to use the ai-companion 
 ## installation
 
 ### Recommended
-go to https://github.com/Hukasx0/ai-companion/releases/tag/0.9.7
-and depending on your system select [download_linux.sh](https://github.com/Hukasx0/ai-companion/releases/download/0.9.7/download_linux.sh) or [download_windows.bat](https://github.com/Hukasx0/ai-companion/releases/download/0.9.7/download_windows.bat), after running the script, all files will be downloaded and placed in the correct folders
+go to https://github.com/Hukasx0/ai-companion/releases/tag/0.9.8
+and depending on your system select [download_linux.sh](https://github.com/Hukasx0/ai-companion/releases/download/0.9.8/download_linux.sh) or [download_windows.bat](https://github.com/Hukasx0/ai-companion/releases/download/0.9.8/download_windows.bat), after running the script, all files will be downloaded and placed in the correct folders
 
 ### Manual installation
-create a folder AI_companion, navigate to it, then install [AI_companion](https://github.com/Hukasx0/ai-companion/releases/download/0.9.7/ai_companion) or [AI_companion.exe](https://github.com/Hukasx0/ai-companion/releases/download/0.9.7/ai_companion.exe) (depending on your system), then create a folder 'models/' and put [AI model](#supported-ai-models) there,
+create a folder AI_companion, navigate to it, then install [AI_companion](https://github.com/Hukasx0/ai-companion/releases/download/0.9.8/ai_companion) or [AI_companion.exe](https://github.com/Hukasx0/ai-companion/releases/download/0.9.8/ai_companion.exe) (depending on your system), then create a folder 'models/' and put [AI model](#supported-ai-models) there,
 on linux that's it, on windows you still need:
 download sqlite from [here](https://www.sqlite.org/2023/sqlite-dll-win64-x64-3420000.zip)
 and extract in the same folder where AI_companion.exe is located
