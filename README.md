@@ -57,9 +57,11 @@ small list of tested and working AI models:
 - [Kimiko 13b](https://huggingface.co/TheBloke/Kimiko-13B-GGML)
 - [MythoMax 13b](https://huggingface.co/TheBloke/MythoMax-L2-13B-GGML)
 
-  (Default installation downloads Wizard Vicuna 13b)
+  (Default installation downloads LLaMa 2 7b chat)
 
 ## Compilation from source code:
+To build an executable file you need: [Node.js and npm](https://nodejs.org/), [Rust and cargo](https://www.rust-lang.org/)
+
 make a git clone of the repository:
 ```
 git clone https://github.com/Hukasx0/ai-companion
