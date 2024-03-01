@@ -9,7 +9,7 @@ edition = "2021"
 winres = "0.1.12"
 
 [dependencies]
-actix-web = "4.4.0"
+actix-web = "4.5.1"
 llm = { git = "https://github.com/rustformers/llm" , branch = "main" }
 rand = "0.8.5"
 rusqlite = { version = "0.29.0", features = ["bundled"] }
