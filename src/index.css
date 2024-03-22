@@ -59,6 +59,11 @@
   }
 }
 
+body {
+  height: 100vh;
+  padding: 0;
+}
+
 @layer utilities {
   .max-container {
     @apply max-w-5xl mx-auto sm:px-16 pb-12 px-8 h-full flex flex-col gap-2 items-center;
