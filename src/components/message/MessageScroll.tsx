@@ -26,8 +26,7 @@ export function MessageScroll() {
         <div className="flex flex-col gap-5">
         {tags.map((tag) => (
           <>
-            <Message key={tag} / >
-              {tag}
+            <Message key={tag} sent={+tag % 2 === 0} / >
           </>
         ))}
         </div>

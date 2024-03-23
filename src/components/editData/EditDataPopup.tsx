@@ -23,6 +23,7 @@ import {
     DrawerTitle,
     DrawerTrigger,
   } from "../../components/ui/drawer"
+import { Settings } from "lucide-react"
 
 export function EditDataPopup() {
     let isMobile = false;
@@ -33,7 +34,9 @@ export function EditDataPopup() {
     <>
     {isMobile ? 
     <Drawer>
-    <DrawerTrigger>Open</DrawerTrigger>
+    <DrawerTrigger>
+      <Button variant="outline" size={"sm"}><Settings /></Button>
+    </DrawerTrigger>
     <DrawerContent>
       <DrawerHeader>
         <DrawerTitle>Are you absolutely sure?</DrawerTitle>
@@ -62,7 +65,7 @@ export function EditDataPopup() {
     :
     <Dialog>
     <DialogTrigger asChild>
-      <Button variant="outline">Edit Profile</Button>
+      <Button variant="outline" size={"sm"}><Settings /></Button>
     </DialogTrigger>
     <DialogContent className="sm:max-w-[425px]">
     <Tabs defaultValue="companion" className="w-full">
