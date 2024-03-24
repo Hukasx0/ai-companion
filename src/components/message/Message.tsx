@@ -25,7 +25,7 @@ const UserMessage = () => {
     Assistant
   </div>
   <div className="chat-bubble">Hello user!</div> 
-  <div className="chat-footer opacity-50 flex flex-row">
+  <div className="chat-footer opacity-50 flex flex-row gap-2 mt-1">
     <Pencil />
     <Trash2 />
   </div>
@@ -33,7 +33,7 @@ const UserMessage = () => {
     )
 }
 
-const AiMessage = () => {
+const AiMessage = ({ regenerate }: { regenerate: boolean }) => {
   return (
 <div className='chat chat-start'>
   <div className="chat-image avatar">
@@ -48,11 +48,15 @@ const AiMessage = () => {
     Assistant
     <time className="text-xs ml-3 opacity-50">12:45</time>
   </div>
+  {regenerate ? 
   <div className="flex flex-row gap-2 items-center">
   <div className="chat-bubble">Hello user!</div> 
-  <RotateCw />
-  </div>
-  <div className="chat-footer opacity-50 flex flex-row">
+   <RotateCw />
+</div>
+:
+<div className="chat-bubble">Hello user!</div> 
+  }
+  <div className="chat-footer opacity-50 flex flex-row gap-2 mt-1">
     <Pencil />
     <Star />
     <Trash2 />
@@ -61,10 +65,10 @@ const AiMessage = () => {
   )
 }
 
-  export function Message({ key, sent }: { key: string; sent: boolean }) {
+  export function Message({ key, sent, regenerate }: { key: string; sent: boolean, regenerate: boolean }) {
     return (
       <>
-        {sent ? <UserMessage /> : <AiMessage />}
+        {sent ? <UserMessage /> : <AiMessage regenerate={regenerate} />}
       </>
     )
   }

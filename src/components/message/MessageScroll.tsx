@@ -24,9 +24,9 @@ export function MessageScroll() {
       <div className="p-4 h-full">
         <h4 className="mb-4 text-sm font-medium leading-none text-center text-primary">Load previous messages</h4>
         <div className="flex flex-col gap-5">
-        {tags.map((tag) => (
+        {tags.map((tag, index) => (
           <>
-            <Message key={tag} sent={+tag % 2 === 0} / >
+            <Message key={tag} sent={index % 2 === 0} regenerate={index === tags.length - 1} />
           </>
         ))}
         </div>

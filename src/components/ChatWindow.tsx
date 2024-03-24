@@ -3,7 +3,7 @@ import { ModeToggle } from "./mode-toggle";
 import { EditDataPopup } from "./editData/EditDataPopup";
 import { MessageScroll } from "./message/MessageScroll";
 import { Textarea } from "./ui/textarea";
-import { Menu } from "lucide-react";
+import { Menu, SendHorizontal } from "lucide-react";
 import { Button } from "./ui/button";
 
 import {
@@ -36,14 +36,15 @@ const ChatWindow = () => {
             </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-                <DropdownMenuLabel>Options</DropdownMenuLabel>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem>Regenerate</DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem>Continue</DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem>Impersonate</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
-          <Textarea  cols={1} placeholder="Type your message here." />
+          <Textarea  cols={1} placeholder="Type your message" />
+          <Button size={"sm"}><SendHorizontal /></Button>
           </div>
         </>
     )
