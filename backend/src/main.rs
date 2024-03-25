@@ -5,11 +5,6 @@ async fn index() -> HttpResponse {
     HttpResponse::Ok().body(include_str!("../../dist/index.html"))
 }
 
-#[get("/vite.svg")]
-async fn vite_logo() -> HttpResponse {
-    HttpResponse::Ok().content_type("image/svg+xml").body(include_str!("../../dist/vite.svg"))
-}
-
 #[get("/assets/index-4rust.js")]
 async fn js() -> HttpResponse {
     HttpResponse::Ok().content_type("application/javascript").body(include_str!("../../dist/assets/index-4rust.js"))
@@ -20,9 +15,9 @@ async fn css() -> HttpResponse {
     HttpResponse::Ok().content_type("text/css").body(include_str!("../../dist/assets/index-4rust.css"))
 }
 
-#[get("/assets/react-4rust.svg")]
-async fn react_logo() -> HttpResponse {
-    HttpResponse::Ok().content_type("image/svg+xml").body(include_str!("../../dist/assets/react-4rust.svg"))
+#[get("/ai_companion_logo.jpg")]
+async fn project_logo() -> HttpResponse {
+    HttpResponse::Ok().content_type("image/jpeg").body(&include_bytes!("../../dist/ai_companion_logo.jpg")[..])
 }
 
 #[actix_web::main]
@@ -37,8 +32,7 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(js)
             .service(css)
-            .service(vite_logo)
-            .service(react_logo)
+            .service(project_logo)
     })
     .bind((hostname, port))?
     .run()

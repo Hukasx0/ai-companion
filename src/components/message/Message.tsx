@@ -1,11 +1,3 @@
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-  } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Pencil, RotateCw, Star, Trash2 } from "lucide-react";
 
@@ -65,7 +57,7 @@ const AiMessage = ({ regenerate }: { regenerate: boolean }) => {
   )
 }
 
-  export function Message({ key, sent, regenerate }: { key: string; sent: boolean, regenerate: boolean }) {
+  export function Message({ sent, regenerate }: { sent: boolean, regenerate: boolean }) {
     return (
       <>
         {sent ? <UserMessage /> : <AiMessage regenerate={regenerate} />}
