@@ -2,11 +2,8 @@ import { Button } from "../../components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTrigger,
 } from "../../components/ui/dialog"
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
 
 import {
     Drawer,
@@ -15,10 +12,10 @@ import {
     DrawerDescription,
     DrawerFooter,
     DrawerHeader,
-    DrawerTitle,
     DrawerTrigger,
   } from "../../components/ui/drawer"
 import { Settings } from "lucide-react"
+import { EditData } from "./EditData"
 
 export function EditDataPopup() {
     let isMobile = false;
@@ -34,23 +31,11 @@ export function EditDataPopup() {
     </DrawerTrigger>
     <DrawerContent>
       <DrawerHeader>
-        <DrawerTitle>Are you absolutely sure?</DrawerTitle>
-        <DrawerDescription>This action cannot be undone.</DrawerDescription>
       </DrawerHeader>
       <DrawerDescription>
-      <Tabs defaultValue="companion" className="w-full">
-      <DialogHeader>
-<TabsList>
-  <TabsTrigger value="companion">Companion</TabsTrigger>
-  <TabsTrigger value="user">User</TabsTrigger>
-</TabsList>
-</DialogHeader>
-<TabsContent value="account">Make changes to your account here.</TabsContent>
-<TabsContent value="password">Change your password here.</TabsContent>
-</Tabs>
+        <EditData />
       </DrawerDescription>
       <DrawerFooter>
-        
         <DrawerClose>
           <Button variant="outline">Cancel</Button>
         </DrawerClose>
@@ -63,16 +48,7 @@ export function EditDataPopup() {
       <Button variant="outline" size={"sm"}><Settings /></Button>
     </DialogTrigger>
     <DialogContent className="sm:max-w-[425px]">
-    <Tabs defaultValue="companion" className="w-full">
-      <DialogHeader>
-<TabsList>
-  <TabsTrigger value="companion">Companion</TabsTrigger>
-  <TabsTrigger value="user">User</TabsTrigger>
-</TabsList>
-</DialogHeader>
-<TabsContent value="account">Make changes to your account here.</TabsContent>
-<TabsContent value="password">Change your password here.</TabsContent>
-</Tabs>
+      <EditData />
     </DialogContent>
   </Dialog>
     }
