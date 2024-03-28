@@ -1,4 +1,6 @@
 use actix_web::{get, post, delete, put, App, web, HttpResponse, HttpServer};
+use crate::database::Database;
+use crate::memory::LongTermMem;
 
 
 #[get("/")]
@@ -41,33 +43,62 @@ async fn message(query_params: web::Query<MessageQuery>) -> HttpResponse {
     let limit: usize = query_params.limit.unwrap_or(15).min(50);
 
     // query to database, and return messages
-
-    HttpResponse::Ok().body(format!("{} {}", start_index, limit))
+    let messages: Vec<Message> = match Database::get_x_messages(limit, start_index) {
+        Ok(v) => v,
+        Err(e) => {
+            println!("Failed to get messages from database: {}", e);
+            return HttpResponse::InternalServerError().finish();
+        },
+    };
+    let messages_json = serde_json::to_string(&messages).unwrap_or(String::from("Error serializing messages as JSON"));
+    HttpResponse::Ok().body(messages_json)
 }
 
 #[delete("/api/message")]
 async fn clear_messages() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+    match Database::clear_messages() {
+        Ok(_) => HttpResponse::Ok().body("Chat log cleared!"),
+        Err(e) => {
+            println!("Failed to clear chat log: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
 }
 
 #[get("/api/message/{id}")]
 async fn message_id(id: web::Path<String>) -> HttpResponse {
-    HttpResponse::Ok().body(format!("{}!", id))
+    let message: Message = match Database::get_message(id) {
+        Ok(v) => v,
+        Err(e) => {
+            println!("Failed to get message: {}", e);
+            return HttpResponse::InternalServerError().finish()
+        }
+    };
+    let message_json = serde_json::to_string(&message).unwrap_or(String::from("Error serializing message as JSON"));
+    HttpResponse::Ok().body(message_json)
 }
 
 #[put("/api/message/{id}")]
 async fn message_put(id: web::Path<String>) -> HttpResponse {
-    HttpResponse::Ok().body(format!("{}!", id))
+    match Database::edit_message(id) {
+        
+    }
 }
 
 #[delete("/api/message/{id}")]
 async fn message_delete(id: web::Path<String>) -> HttpResponse {
-    HttpResponse::Ok().body(format!("{}!", id))
+    match Database::delete_message(id) {
+        Ok(_) => HttpResponse::Ok().body("Message deleted!"),
+        Err(e) => {
+            println!("Failed to delete message: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
 }
 
 #[post("/api/message/{id}")]
 async fn message_post(id: web::Path<String>) -> HttpResponse {
-    HttpResponse::Ok().body(format!("{}!", id))
+    
 }
 
 
@@ -75,16 +106,32 @@ async fn message_post(id: web::Path<String>) -> HttpResponse {
 
 #[get("/api/companion")]
 async fn companion() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+    let companion_data: Companion = match Database::get_companion_data() {
+        Ok(v) => v,
+        Err(e) => {
+            println!("Failed to get companion data: {}", e);
+            return HttpResponse::InternalServerError().finish();
+        }
+    };
+    let companion_json: String = serde_json::to_string(&companion_data).unwrap_or(String::from("Error serializing companion data as JSON"));
+    HttpResponse::Ok().body(companion_json)
 }
 
 #[put("/api/companion")]
-async fn companion_put() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+async fn companion_edit_data() -> HttpResponse {
+    
+}
+
+#[derive(Deserialize)]
+struct CharacterCard {
+    name: String,
+    description: String,
+    first_mes: String,
+    mes_example: String,
 }
 
 #[post("/api/companion/card")]
-async fn companion_card() -> HttpResponse {
+async fn companion_card(mut received: actix_web::web::Payload) -> HttpResponse {
     HttpResponse::Ok().body("Hello, world!")
 }
 
@@ -113,7 +160,15 @@ async fn companion_avatar() -> HttpResponse {
 
 #[get("/api/user")]
 async fn user() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+    let user_data: User = match Database::get_user_data() {
+        Ok(v) => v,
+        Err(e) => {
+            println!("Failed to get user data: {}", e);
+            return HttpResponse::InternalServerError().finish();
+        }
+    };
+    let user_json: String = serde_json::to_string(&user_data).unwrap_or(String::from("Error serializing user data as JSON"));
+    HttpResponse::Ok().body(user_json)
 }
 
 #[put("/api/user")]
@@ -179,7 +234,17 @@ async fn regenerate_prompt() -> HttpResponse {
 async fn main() -> std::io::Result<()> {
 
     let port: u16 = 3000;
-    let hostname: &str = "127.0.0.1";
+    let hostname: &str = "0.0.0.0";
+
+    match Database::new() {
+        Ok(_) => { }
+        Err(e) => println!("Failed to connect to sqlite database: {}", e),
+    }
+
+    match LongTermMem::connect() {
+        Ok(_) => { }
+        Err(e) => println!("Failed to connect to tantivy: {}", e),
+    }
 
     println!("Started Rust backend server at:\n -> http://{}:{}/", hostname, port);
     HttpServer::new(|| {
@@ -188,6 +253,30 @@ async fn main() -> std::io::Result<()> {
             .service(js)
             .service(css)
             .service(project_logo)
+            .service(message)
+            .service(clear_messages)
+            .service(message_id)
+            .service(message_put)
+            .service(message_delete)
+            .service(message_post)
+            .service(companion)
+            .service(companion_edit_data)
+            .service(companion_card)
+            .service(get_companion_card)
+            .service(companion_character_json)
+            .service(get_companion_character_json)
+            .service(companion_avatar)
+            .service(user)
+            .service(user_put)
+            .service(memory_long_term)
+            .service(add_memory_long_term_message)
+            .service(erase_long_term)
+            .service(dialogue_tuning)
+            .service(add_tuning_message)
+            .service(erase_tuning_message)
+            .service(prompt)
+            .service(prompt_message)
+            .service(regenerate_prompt)
     })
     .bind((hostname, port))?
     .run()
