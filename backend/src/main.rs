@@ -238,13 +238,24 @@ async fn main() -> std::io::Result<()> {
 
     match Database::new() {
         Ok(_) => { }
-        Err(e) => println!("Failed to connect to sqlite database: {}", e),
+        Err(e) => eprintln!("⚠️ Failed to connect to sqlite database: {}", e),
     }
 
     match LongTermMem::connect() {
         Ok(_) => { }
-        Err(e) => println!("Failed to connect to tantivy: {}", e),
+        Err(e) => eprintln!("⚠️ Failed to connect to tantivy: {}", e),
     }
+
+    match DialogueTuning::create() {
+        Ok(_) => { }
+        Err(e) => eprintln!("⚠️ Failed to create dialogue tuning table in sqlite database: {}", e),
+    }
+
+    // try to load character from "character.card.png"
+    // if not then try to load character from "character.json"
+    // if not, then skip, and load default character
+
+    println!("\nAI Companion v1 successfully launched! 🚀\n");
 
     println!("Started Rust backend server at:\n -> http://{}:{}/", hostname, port);
     HttpServer::new(|| {
