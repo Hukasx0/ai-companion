@@ -4,14 +4,6 @@ import { Pencil, RotateCw, Star, Trash2 } from "lucide-react";
 const UserMessage = () => {
     return (
       <div className='chat chat-end'>
-  <div className="chat-image avatar">
-    <div className="w-10 rounded-full">
-      <Avatar>
-        <AvatarImage src="https://avatars.githubusercontent.com/u/82332291?v=4" alt="@Hukasx0" />
-        <AvatarFallback>H</AvatarFallback>
-      </Avatar>
-    </div>
-  </div>
   <div className="chat-header">
     <time className="text-xs mr-3 opacity-50">12:45</time>
     Assistant

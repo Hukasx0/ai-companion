@@ -49,14 +49,12 @@ pub struct User {
     pub id: i32,
     pub name: String,
     pub persona: String,
-    pub avatar_path: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct UserView {
     pub name: String,
     pub persona: String,
-    pub avatar_path: String,
 }
 
 pub struct Database {}
@@ -131,6 +129,7 @@ impl Database {
                 ]
             )
         }
+        Ok(0)
     }
 
     pub fn is_table_empty(table_name: &str, con: &Connection) -> Result<bool> {
@@ -140,7 +139,7 @@ impl Database {
         Ok(count == 0)
     }
 
-    pub fn get_messages(&self) -> Result<Vec<Message>> {
+    pub fn get_messages() -> Result<Vec<Message>> {
         let con = Connection::open("companion_database.db")?;
         let mut stmt = con.prepare("SELECT id, ai, content, created_at FROM messages")?;
         let rows = stmt.query_map([], |row| {
@@ -176,7 +175,7 @@ impl Database {
         Ok(messages)
     }
 
-    pub fn get_companion_data(&self) -> Result<CompanionView> {
+    pub fn get_companion_data() -> Result<CompanionView> {
         let con = Connection::open("companion_database.db")?;
         let mut stmt = con.prepare("SELECT name, persona, example_dialogue, first_message, long_term_mem, short_term_mem, roleplay, dialogue_tuning, avatar_path FROM companion LIMIT 1")?;
         let row = stmt.query_row([], |row| {
@@ -195,20 +194,19 @@ impl Database {
         Ok(row)
     }
 
-    pub fn get_user_data(&self) -> Result<UserView> {
+    pub fn get_user_data() -> Result<UserView> {
         let con = Connection::open("companion_database.db")?;
-        let mut stmt = con.prepare("SELECT name, persona, avatar_path FROM user LIMIT 1")?;
-        let row = stmt.query_row([], |row| {
-            Ok(User {
+        let mut stmt = con.prepare("SELECT name, persona FROM user LIMIT 1")?;
+        let row: UserView = stmt.query_row([], |row| {
+            Ok(UserView {
                 name: row.get(0)?,
                 persona: row.get(1)?,
-                avatar_path: row.get(2)?,
             })
         })?;
         Ok(row)
     }
 
-    pub fn get_message(&self, id: i32) -> Result<Message> {
+    pub fn get_message(id: i32) -> Result<Message> {
         let con = Connection::open("companion_database.db")?;
         let mut stmt = con.prepare("SELECT id, ai, content, created_at FROM messages WHERE id = ?")?;
         let row = stmt.query_row([id], |row| {
@@ -222,7 +220,7 @@ impl Database {
         Ok(row)
     }
 
-    pub fn insert_message(&self, message: NewMessage) -> Result<(), Error> {
+    pub fn insert_message(message: NewMessage) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
             "INSERT INTO messages (ai, content, created_at) VALUES (?, ?, ?)",
@@ -235,7 +233,7 @@ impl Database {
         Ok(())
     }
 
-    pub fn edit_message(&self, id: i32, message: NewMessage) -> Result<(), Error> {
+    pub fn edit_message(id: i32, message: NewMessage) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
             "UPDATE messages SET ai = ?, content = ? WHERE id = ?",
@@ -248,16 +246,16 @@ impl Database {
         Ok(())
     }
 
-    pub fn delete_message(&self, id: i32) -> Result<(), Error> {
+    pub fn delete_message(id: i32) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
             "DELETE FROM messages WHERE id = ?",
-            &[id],
+            [id],
         )?;
         Ok(())
     }
 
-    pub fn delete_latest_message(&self) -> Result<(), Error> {
+    pub fn delete_latest_message() -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
             "DELETE FROM messages ORDER BY id DESC LIMIT 1",
@@ -266,7 +264,7 @@ impl Database {
         Ok(())
     }
 
-    pub fn erase_messages(&self) -> Result<(), Error> {
+    pub fn erase_messages() -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
             "DELETE FROM messages",
@@ -275,7 +273,7 @@ impl Database {
         Ok(())
     }
 
-    pub fn edit_companion(&self, companion: CompanionView) -> Result<(), Error> {
+    pub fn edit_companion(companion: CompanionView) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
             "UPDATE companion SET name = ?, persona = ?, example_dialogue = ?, first_message = ?, long_term_mem = ?, short_term_mem = ?, roleplay = ?, dialogue_tuning = ?, avatar_path = ? WHERE id = ?",
@@ -295,14 +293,25 @@ impl Database {
         Ok(())
     }
 
-    pub fn edit_user(&self, user: UserView) -> Result<(), Error> {
+    pub fn change_companion_avatar(avatar_path: &str) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "UPDATE user SET name = ?, persona = ?, avatar_path = ? WHERE id = ?",
+            "UPDATE companion SET avatar_path = ? WHERE id = ?",
+            &[
+                avatar_path,
+                0
+            ]
+        )?;
+        Ok(())
+    }
+
+    pub fn edit_user(user: UserView) -> Result<(), Error> {
+        let con = Connection::open("companion_database.db")?;
+        con.execute(
+            "UPDATE user SET name = ?, persona = ? WHERE id = ?",
             &[
                 user.name,
                 user.persona,
-                user.avatar_path,
                 0
             ]
         )?;

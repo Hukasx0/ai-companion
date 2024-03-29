@@ -1,7 +1,13 @@
 use actix_web::{get, post, delete, put, App, web, HttpResponse, HttpServer};
-use crate::database::Database;
-use crate::memory::LongTermMem;
+mod database;
+use database::{Database, Message, NewMessage, CompanionView, UserView};
+mod long_term_mem;
+use long_term_mem::LongTermMem;
+mod dialogue_tuning;
+use dialogue_tuning::DialogueTuning;
 
+use std::fs;
+use std::fs::File;
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -67,7 +73,7 @@ async fn message_post(received: web::Json<NewMessage>) -> HttpResponse {
 
 #[delete("/api/message")]
 async fn clear_messages() -> HttpResponse {
-    match Database::clear_messages() {
+    match Database::erase_messages() {
         Ok(_) => HttpResponse::Ok().body("Chat log cleared!"),
         Err(e) => {
             println!("Failed to clear chat log: {}", e);
@@ -77,21 +83,21 @@ async fn clear_messages() -> HttpResponse {
 }
 
 #[get("/api/message/{id}")]
-async fn message_id(id: web::Path<String>) -> HttpResponse {
-    let message: Message = match Database::get_message(id) {
+async fn message_id(id: web::Path<i32>) -> HttpResponse {
+    let msg: Message = match Database::get_message(*id) {
         Ok(v) => v,
         Err(e) => {
             println!("Failed to get message at id {}: {}", id, e);
             return HttpResponse::InternalServerError().body(format!("Error while getting message at id {}, check logs for more information", id));
         }
     };
-    let message_json = serde_json::to_string(&message).unwrap_or(String::from("Error serializing message as JSON"));
+    let message_json = serde_json::to_string(&msg).unwrap_or(String::from("Error serializing message as JSON"));
     HttpResponse::Ok().body(message_json)
 }
 
 #[put("/api/message/{id}")]
-async fn message_put(id: web::Path<String>, received: web::Json<NewMessage>) -> HttpResponse {
-    match Database::edit_message(id, received.into_inner()) {
+async fn message_put(id: web::Path<i32>, received: web::Json<NewMessage>) -> HttpResponse {
+    match Database::edit_message(*id, received.into_inner()) {
         Ok(_) => HttpResponse::Ok().body(format!("Message edited at id {}!", id)),
         Err(e) => {
             println!("Failed to edit message at id {}: {}", id, e);
@@ -101,8 +107,8 @@ async fn message_put(id: web::Path<String>, received: web::Json<NewMessage>) -> 
 }
 
 #[delete("/api/message/{id}")]
-async fn message_delete(id: web::Path<String>) -> HttpResponse {
-    match Database::delete_message(id) {
+async fn message_delete(id: web::Path<i32>) -> HttpResponse {
+    match Database::delete_message(*id) {
         Ok(_) => HttpResponse::Ok().body(format!("Message deleted at id {}!", id)),
         Err(e) => {
             println!("Failed to delete message at id {}: {}", id, e);
@@ -128,21 +134,13 @@ async fn companion() -> HttpResponse {
 
 #[put("/api/companion")]
 async fn companion_edit_data(received: web::Json<CompanionView>) -> HttpResponse {
-    match Database::edit_companion_data(received.into_inner()) {
+    match Database::edit_companion(received.into_inner()) {
         Ok(_) => HttpResponse::Ok().body("Companion data edited!"),
         Err(e) => {
             println!("Failed to edit companion data: {}", e);
             HttpResponse::InternalServerError().body("Error while editing companion data, check logs for more information")
         }
     }
-}
-
-#[derive(Deserialize)]
-struct CharacterCard {
-    name: String,
-    description: String,
-    first_mes: String,
-    mes_example: String,
 }
 
 #[post("/api/companion/card")]
@@ -211,7 +209,7 @@ async fn companion_avatar(mut received: actix_web::web::Payload) -> HttpResponse
 
 #[get("/api/user")]
 async fn user() -> HttpResponse {
-    let user_data: User = match Database::get_user_data() {
+    let user_data: UserView = match Database::get_user_data() {
         Ok(v) => v,
         Err(e) => {
             println!("Failed to get user data: {}", e);
@@ -247,7 +245,7 @@ async fn erase_long_term() -> HttpResponse {
 }
 
 #[put("/api/memory/dialogueTuning")]
-async fn dialogue_tuning() -> HttpResponse {
+async fn enable_dialogue_tuning() -> HttpResponse {
     HttpResponse::Ok().body("Hello, world!")
 }
 
@@ -265,7 +263,7 @@ async fn erase_tuning_message() -> HttpResponse {
 //              Prompting
 
 #[get("/api/prompt")]
-async fn prompt() -> HttpResponse {
+async fn generate() -> HttpResponse {
     HttpResponse::Ok().body("Hello, world!")
 }
 
@@ -333,10 +331,10 @@ async fn main() -> std::io::Result<()> {
             .service(memory_long_term)
             .service(add_memory_long_term_message)
             .service(erase_long_term)
-            .service(dialogue_tuning)
+            .service(enable_dialogue_tuning)
             .service(add_tuning_message)
             .service(erase_tuning_message)
-            .service(prompt)
+            .service(generate)
             .service(prompt_message)
             .service(regenerate_prompt)
     })
