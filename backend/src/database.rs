@@ -2,6 +2,8 @@ use rusqlite::{Connection, Result, Error};
 use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Local};
 
+use crate::character_card::CharacterCard;
+
 
 #[derive(Serialize, Deserialize)]
 pub struct Message {
@@ -57,6 +59,23 @@ pub struct UserView {
     pub persona: String,
 }
 
+enum Device {
+    CPU,
+    GPU,
+    Metal,
+}
+
+struct Config {
+    id: i32,
+    device: Device,
+    llm_model_path: String,
+}
+
+struct ConfigView {
+    device: Device,
+    llm_model_path: String,
+}
+
 pub struct Database {}
 
 impl Database {
@@ -90,6 +109,13 @@ impl Database {
                 name TEXT,
                 persona TEXT,
                 avatar_path TEXT
+            )", []
+        )?;
+        con.execute(
+            "CREATE TABLE IF NOT EXISTS config (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                device INTEGER,
+                llm_model_path TEXT
             )", []
         )?;
         if Database::is_table_empty("companion", &con)? {
@@ -127,8 +153,17 @@ impl Database {
                     first_message,
                     Local::now()
                 ]
-            )
+            )?;
         }
+        if Database::is_table_empty("config", &con)? {
+            con.execute(
+                "INSERT INTO config (device, llm_model_path) VALUES (?, ?)",
+                &[
+                     Device.CPU,
+                    ""
+                ]
+            )?;
+        } 
         Ok(0)
     }
 
@@ -189,6 +224,20 @@ impl Database {
                 roleplay: row.get(6)?,
                 dialogue_tuning: row.get(7)?,
                 avatar_path: row.get(8)?,
+            })
+        })?;
+        Ok(row)
+    }
+
+    pub fn get_companion_card_data() -> Result<CharacterCard> {
+        let con = Connection::open("companion_database.db")?;
+        let mut stmt = con.prepare("SELECT name, persona, example_dialogue, first_message FROM companion LIMIT 1")?;
+        let row = stmt.query_row([], |row| {
+            Ok(CharacterCard {
+                name: row.get(0)?,
+                description: row.get(1)?,
+                first_mes: row.get(2)?,
+                mes_example: row.get(3)?,
             })
         })?;
         Ok(row)
@@ -293,6 +342,36 @@ impl Database {
         Ok(())
     }
 
+    pub fn import_character_json(companion: CharacterCard) -> Result<(), Error> {
+        let con = Connection::open("companion_database.db")?;
+        con.execute(
+            "INSERT INTO companion (name, persona, example_dialogue, first_message) VALUES (?, ?, ?, ?)",
+            &[
+                companion.name,
+                companion.description,
+                companion.first_mes,
+                companion.mes_example
+            ]
+        )?;
+        Ok(())
+    }
+
+    pub fn import_character_card(companion: CharacterCard, image_path: &str) -> Result<(), Error> {
+        let con = Connection::open("companion_database.db")?;
+        con.execute(
+            "INSERT INTO companion (name, persona, example_dialogue, first_message, avatar_path) VALUES (?, ?, ?, ?, ?)",
+            &[
+                companion.name,
+                companion.description,
+                companion.first_mes,
+                companion.mes_example,
+                String::from(image_path)
+            ]
+        )?;
+        Ok(())
+    }
+        
+
     pub fn change_companion_avatar(avatar_path: &str) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
@@ -312,6 +391,31 @@ impl Database {
             &[
                 user.name,
                 user.persona,
+                0
+            ]
+        )?;
+        Ok(())
+    }
+
+    pub fn get_config() -> Result<ConfigView> {
+        let con = Connection::open("companion_database.db")?;
+        let mut stmt = con.prepare("SELECT device, llm_model_path FROM config LIMIT 1")?;
+        let row = stmt.query_row([], |row| {
+            Ok(ConfigView {
+                device: row.get(0)?,
+                llm_model_path: row.get(1)?,
+            })
+        })?;
+        Ok(row)
+    }
+
+    pub fn change_config(config: Config) -> Result<(), Error> {
+        let con = Connection::open("companion_database.db")?;
+        con.execute(
+            "UPDATE config SET device = ?, llm_model_path = ? WHERE id = ?",
+            &[
+                config.device,
+                config.llm_model_path,
                 0
             ]
         )?;

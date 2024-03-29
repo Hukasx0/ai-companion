@@ -5,6 +5,8 @@ mod long_term_mem;
 use long_term_mem::LongTermMem;
 mod dialogue_tuning;
 use dialogue_tuning::DialogueTuning;
+mod character_card;
+use character_card::CharacterCard;
 
 use std::fs;
 use std::fs::File;
@@ -145,27 +147,73 @@ async fn companion_edit_data(received: web::Json<CompanionView>) -> HttpResponse
 
 #[post("/api/companion/card")]
 async fn companion_card(mut received: actix_web::web::Payload) -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
-}
+    // curl -X POST -H "Content-Type: image/png" -T card.png http://localhost:3000/api/companion/card
+    let mut data = web::BytesMut::new();
+    while let Some(chunk) = received.next().await {
+        let d = chunk.unwrap();
+        data.extend_from_slice(&d);
+    }
+    let character_card: CharacterCard = match CharacterCard::load_character_card(&data) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Error while loading character card from a file: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
+    let mut avatar_file = match File::create("assets/avatar.png") {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("Error while creating 'avatar.png' file in a 'assets' folder: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
+    match avatar_file.write_all(&data) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while writing bytes to 'avatar.png' file in a 'assets' folder: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
+    match Database::change_companion_avatar("assets/avatar.png") {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while changing companion avatar using character card: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
+    println!("Character \"{}\" imported successfully!", character_card.name);
+    HttpResponse::Ok().body("Updated companion data via character card!")
 
-#[get("/api/companion/card")]
-async fn get_companion_card() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
 }
 
 #[post("/api/companion/characterJson")]
-async fn companion_character_json() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+async fn companion_character_json(received: web::Json<CharacterCard>) -> HttpResponse {
+    match Database::import_character_json(received.into_inner()) {
+        Ok(_) => HttpResponse::Ok().body("Character json imported successfully!"),
+        Err(e) => {
+            println!("Failed to import character json: {}", e);
+            HttpResponse::InternalServerError().body("Error while importing character json, check logs for more information")
+        }
+    }
 }
 
 #[get("/api/companion/characterJson")]
 async fn get_companion_character_json() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+    match Database::get_companion_card_data() {
+        Ok(v: CharacterCard) => { 
+            let character_json: String = serde_json::to_string(&v).unwrap_or(String::from("Error serializing companion data as JSON"));
+            return HttpResponse::Ok().body(character_json);
+        },
+        Err(e) => {
+            println!("Failed to get companion card data: {}", e);
+            return HttpResponse::InternalServerError().body("Error while getting companion card data, check logs for more information");
+        },
+    }
 }
 
 #[post("/api/companion/avatar")]
 async fn companion_avatar(mut received: actix_web::web::Payload) -> HttpResponse {
-    // curl -X POST -H "Content-Type: image/png" -T card.png http://localhost:3000/api/change/companionAvatar
+    // curl -X POST -H "Content-Type: image/png" -T avatar.png http://localhost:3000/api/companion/avatar
     let mut data = web::BytesMut::new();
     while let Some(chunk) = received.next().await {
         let d = chunk.unwrap();
@@ -221,32 +269,58 @@ async fn user() -> HttpResponse {
 }
 
 #[put("/api/user")]
-async fn user_put() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+async fn user_put(received: web::Json<UserView>) -> HttpResponse {
+    match Database::edit_user(received.into_inner()) {
+        Ok(_) => HttpResponse::Ok().body("User data edited!"),
+        Err(e) => {
+            println!("Failed to edit user data: {}", e);
+            HttpResponse::InternalServerError().body("Error while editing user data, check logs for more information")
+        }
+    }
 }
 
 
 
 //              Memory
 
-#[put("/api/memory/shortTerm")]
-async fn memory_long_term() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+struct LongTermMemMessage {
+    entry: String
 }
 
 #[post("/api/memory/longTerm")]
-async fn add_memory_long_term_message() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+async fn add_memory_long_term_message(received: web::Json<LongTermMemMessage>) -> HttpResponse {
+    let ltm = match LongTermMem::connect() {
+        Ok(v) => v,
+        Err(e) => {
+            println!("Failed to connect to long term memory: {}", e);
+            return HttpResponse::InternalServerError().body("Error while connecting to long term memory, check logs for more information");
+        }
+    };
+    match ltm.add_entry(&received.into_inner().entry) {
+        Ok(_) => HttpResponse::Ok().body("Long term memory entry added!"),
+        Err(e) => {
+            println!("Failed to add long term memory entry: {}", e);
+            HttpResponse::InternalServerError().body("Error while adding long term memory entry, check logs for more information")
+        }
+    }
 }
 
 #[delete("/api/memory/longTerm")]
 async fn erase_long_term() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
-}
-
-#[put("/api/memory/dialogueTuning")]
-async fn enable_dialogue_tuning() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+    let ltm = match LongTermMem::connect() {
+        Ok(v) => v,
+        Err(e) => {
+            println!("Failed to connect to long term memory: {}", e);
+            return HttpResponse::InternalServerError().body("Error while connecting to long term memory, check logs for more information");
+        }
+    };
+    match ltm.erase_memory() {
+        Ok(_) => HttpResponse::Ok().body("Long term memory cleared!"),
+        Err(e) => {
+            println!("Failed to clear long term memory: {}", e);
+            HttpResponse::InternalServerError().body("Error while clearing long term memory, check logs for more information")
+        }
+    }
 }
 
 #[post("/api/memory/dialogueTuning")]
@@ -256,16 +330,17 @@ async fn add_tuning_message() -> HttpResponse {
 
 #[delete("/api/memory/dialogueTuning")]
 async fn erase_tuning_message() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+    match DialogueTuning::clear_dialogues() {
+        Ok(_) => HttpResponse::Ok().body("Dialogue tuning memory cleared!"),
+        Err(e) => {
+            println!("Failed to clear dialogue tuning: {}", e);
+            HttpResponse::InternalServerError().body("Error while clearing dialogue tuning, check logs for more information")
+        }
+    }
 }
 
 
 //              Prompting
-
-#[get("/api/prompt")]
-async fn generate() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
-}
 
 #[post("/api/prompt")]
 async fn prompt_message() -> HttpResponse {
@@ -302,7 +377,43 @@ async fn main() -> std::io::Result<()> {
 
     // try to load character from "character.card.png"
     // if not then try to load character from "character.json"
-    // if not, then skip, and load default character
+    // if not, then skip, and use default character
+
+    let mut character_file: Option<File> = match File::open("character.card.png") {
+        Ok(f) => Some(f),
+        Err(_) => {
+            match File::open("character.json") {
+                Ok(f) => Some(f),
+                Err(_) => {
+                        None
+                    }
+                }
+            }
+    };
+    let mut character_bytes = Vec::new();
+    if character_file.is_some() {
+        match character_file.unwrap().read_to_end(&mut character_bytes) {
+            Ok(_) => {},
+            Err(e) => {
+                eprintln!("Error while reading character card: {}", e);
+                return Ok(());
+            }
+        }
+    }
+    let character_card = match CharacterCard::load_character_card(&character_bytes) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Error while loading character card from a file: {}", e);
+            return Ok(());
+        }
+    };
+    match Database::import_character_card(character_card, "assets/avatar.png") {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while importing character card: {}", e);
+            return Ok(());
+        }
+    };
 
     println!("\nAI Companion v1 successfully launched! 🚀\n");
 
@@ -322,19 +433,15 @@ async fn main() -> std::io::Result<()> {
             .service(companion)
             .service(companion_edit_data)
             .service(companion_card)
-            .service(get_companion_card)
             .service(companion_character_json)
             .service(get_companion_character_json)
             .service(companion_avatar)
             .service(user)
             .service(user_put)
-            .service(memory_long_term)
             .service(add_memory_long_term_message)
             .service(erase_long_term)
-            .service(enable_dialogue_tuning)
             .service(add_tuning_message)
             .service(erase_tuning_message)
-            .service(generate)
             .service(prompt_message)
             .service(regenerate_prompt)
     })

@@ -35,10 +35,8 @@ const ChatWindow = () => {
                 <Menu />
             </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent side="top">
                 <DropdownMenuItem>Regenerate</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Continue</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Impersonate</DropdownMenuItem>
             </DropdownMenuContent>
