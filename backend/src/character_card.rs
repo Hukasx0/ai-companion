@@ -6,20 +6,14 @@ struct CharacterCard {
     mes_example: String,
 }
 
-
-fn load_character_json(json: &str) -> PyResult<CharacterClass> {
-    let char_data: LoadCharacterClass = serde_json::from_str(json).expect("Error while parsing json string");
-    Ok(CharacterClass {
-        name: char_data.char_name.unwrap_or(char_data.name.unwrap_or(String::from(""))),
-        summary: char_data.summary.unwrap_or(char_data.description.unwrap_or(String::from(""))),
-        personality: char_data.char_persona.unwrap_or(char_data.personality.unwrap_or(String::from(""))),
-        scenario: char_data.world_scenario.unwrap_or(char_data.scenario.unwrap_or(String::from(""))),
-        greeting_message: char_data.char_greeting.unwrap_or(char_data.first_mes.unwrap_or(String::from(""))),
-        example_messages: char_data.example_dialogue.unwrap_or(char_data.mes_example.unwrap_or(String::from(""))),
-        image_path: None,
-        created_time: char_data.metadata.and_then(|time_metadata| time_metadata.created),
-    })
+impl CharacterCard {
+    fn load_character_json(json: &str) -> &self {
+        let char_data: CharacterCard = serde_json::from_str(json).expect("Error while parsing json string");
+        char_data
+    }
 }
+
+/* 
 
 fn load_character_card(bytes: &[u8]) -> PyResult<CharacterClass> {
     let decoder = png::Decoder::new(Cursor::new(bytes));
@@ -70,3 +64,4 @@ fn load_character_card(bytes: &[u8]) -> PyResult<CharacterClass> {
     })
 }
 
+*/

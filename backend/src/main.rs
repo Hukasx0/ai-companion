@@ -47,11 +47,22 @@ async fn message(query_params: web::Query<MessageQuery>) -> HttpResponse {
         Ok(v) => v,
         Err(e) => {
             println!("Failed to get messages from database: {}", e);
-            return HttpResponse::InternalServerError().finish();
+            return HttpResponse::InternalServerError().body("Error while getting messages from database, check logs for more information");
         },
     };
     let messages_json = serde_json::to_string(&messages).unwrap_or(String::from("Error serializing messages as JSON"));
     HttpResponse::Ok().body(messages_json)
+}
+
+#[post("/api/message")]
+async fn message_post(received: web::Json<NewMessage>) -> HttpResponse {
+    match Database::insert_message(received.into_inner()) {
+        Ok(_) => HttpResponse::Ok().body("Message added!"),
+        Err(e) => {
+            println!("Failed to add message: {}", e);
+            HttpResponse::InternalServerError().body("Error while adding message, check logs for more information")
+        }
+    }
 }
 
 #[delete("/api/message")]
@@ -60,7 +71,7 @@ async fn clear_messages() -> HttpResponse {
         Ok(_) => HttpResponse::Ok().body("Chat log cleared!"),
         Err(e) => {
             println!("Failed to clear chat log: {}", e);
-            HttpResponse::InternalServerError().finish()
+            HttpResponse::InternalServerError().body("Error while clearing chat log, check logs for more information")
         }
     }
 }
@@ -70,8 +81,8 @@ async fn message_id(id: web::Path<String>) -> HttpResponse {
     let message: Message = match Database::get_message(id) {
         Ok(v) => v,
         Err(e) => {
-            println!("Failed to get message: {}", e);
-            return HttpResponse::InternalServerError().finish()
+            println!("Failed to get message at id {}: {}", id, e);
+            return HttpResponse::InternalServerError().body(format!("Error while getting message at id {}, check logs for more information", id));
         }
     };
     let message_json = serde_json::to_string(&message).unwrap_or(String::from("Error serializing message as JSON"));
@@ -79,38 +90,36 @@ async fn message_id(id: web::Path<String>) -> HttpResponse {
 }
 
 #[put("/api/message/{id}")]
-async fn message_put(id: web::Path<String>) -> HttpResponse {
-    match Database::edit_message(id) {
-        
+async fn message_put(id: web::Path<String>, received: web::Json<NewMessage>) -> HttpResponse {
+    match Database::edit_message(id, received.into_inner()) {
+        Ok(_) => HttpResponse::Ok().body(format!("Message edited at id {}!", id)),
+        Err(e) => {
+            println!("Failed to edit message at id {}: {}", id, e);
+            HttpResponse::InternalServerError().body(format!("Error while editing message at id {}, check logs for more information", id))
+        }
     }
 }
 
 #[delete("/api/message/{id}")]
 async fn message_delete(id: web::Path<String>) -> HttpResponse {
     match Database::delete_message(id) {
-        Ok(_) => HttpResponse::Ok().body("Message deleted!"),
+        Ok(_) => HttpResponse::Ok().body(format!("Message deleted at id {}!", id)),
         Err(e) => {
-            println!("Failed to delete message: {}", e);
-            HttpResponse::InternalServerError().finish()
+            println!("Failed to delete message at id {}: {}", id, e);
+            HttpResponse::InternalServerError().body(format!("Error while deleting message at id {}, check logs for more information", id))
         }
     }
 }
-
-#[post("/api/message/{id}")]
-async fn message_post(id: web::Path<String>) -> HttpResponse {
-    
-}
-
 
 //              Companion
 
 #[get("/api/companion")]
 async fn companion() -> HttpResponse {
-    let companion_data: Companion = match Database::get_companion_data() {
+    let companion_data: CompanionView = match Database::get_companion_data() {
         Ok(v) => v,
         Err(e) => {
             println!("Failed to get companion data: {}", e);
-            return HttpResponse::InternalServerError().finish();
+            return HttpResponse::InternalServerError().body("Error while getting companion data, check logs for more information");
         }
     };
     let companion_json: String = serde_json::to_string(&companion_data).unwrap_or(String::from("Error serializing companion data as JSON"));
@@ -118,8 +127,14 @@ async fn companion() -> HttpResponse {
 }
 
 #[put("/api/companion")]
-async fn companion_edit_data() -> HttpResponse {
-    
+async fn companion_edit_data(received: web::Json<CompanionView>) -> HttpResponse {
+    match Database::edit_companion_data(received.into_inner()) {
+        Ok(_) => HttpResponse::Ok().body("Companion data edited!"),
+        Err(e) => {
+            println!("Failed to edit companion data: {}", e);
+            HttpResponse::InternalServerError().body("Error while editing companion data, check logs for more information")
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -151,8 +166,44 @@ async fn get_companion_character_json() -> HttpResponse {
 }
 
 #[post("/api/companion/avatar")]
-async fn companion_avatar() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+async fn companion_avatar(mut received: actix_web::web::Payload) -> HttpResponse {
+    // curl -X POST -H "Content-Type: image/png" -T card.png http://localhost:3000/api/change/companionAvatar
+    let mut data = web::BytesMut::new();
+    while let Some(chunk) = received.next().await {
+        let d = chunk.unwrap();
+        data.extend_from_slice(&d);
+    }
+    if fs::metadata("assets").is_err() {
+        match fs::create_dir("assets") {
+            Ok(_) => {},
+            Err(e) => {
+                eprintln!("Error while creating 'assets' directory: {}", e);
+                return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+            }
+        };
+    }
+    let mut avatar_file = match File::create("assets/avatar.png") {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("Error while creating 'avatar.png' file in a 'assets' folder: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
+    match avatar_file.write_all(&data) {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while writing bytes to 'avatar.png' file in a 'assets' folder: {}", e);
+            return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
+        }
+    };
+    match Database::change_companion_avatar("assets/avatar.png") {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("Error while changing companion avatar: {}", e);
+            return HttpResponse::InternalServerError().body("Error while changing companion avatar, check logs for more information");
+        }
+    };
+    HttpResponse::Ok().body("Companion avatar changed!")
 }
 
 

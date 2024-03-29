@@ -12,6 +12,12 @@ pub struct Message {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct NewMessage {
+    pub ai: bool,
+    pub content: String,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct Companion {
     pub id: i32,
     pub name: String,
@@ -26,8 +32,28 @@ pub struct Companion {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct CompanionView {
+    pub name: String,
+    pub persona: String,
+    pub example_dialogue: String,
+    pub first_message: String,
+    pub long_term_mem: usize,
+    pub short_term_mem: usize,
+    pub roleplay: bool,
+    pub dialogue_tuning: bool,
+    pub avatar_path: String,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct User {
     pub id: i32,
+    pub name: String,
+    pub persona: String,
+    pub avatar_path: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct UserView {
     pub name: String,
     pub persona: String,
     pub avatar_path: String,
@@ -76,7 +102,7 @@ impl Database {
                     "I am an AI companion.",
                     "Hello, my name is Companion. I am here to help you with your AI needs. How can I help you today?",
                     "Hello, my name is Companion. I am here to help you with your AI needs. How can I help you today?",
-                    100,
+                    5,
                     10,
                     true,
                     true,
@@ -150,35 +176,33 @@ impl Database {
         Ok(messages)
     }
 
-    pub fn get_companion_data(&self) -> Result<Companion> {
+    pub fn get_companion_data(&self) -> Result<CompanionView> {
         let con = Connection::open("companion_database.db")?;
-        let mut stmt = con.prepare("SELECT id, name, persona, example_dialogue, first_message, long_term_mem, short_term_mem, roleplay, dialogue_tuning, avatar_path FROM companion LIMIT 1")?;
+        let mut stmt = con.prepare("SELECT name, persona, example_dialogue, first_message, long_term_mem, short_term_mem, roleplay, dialogue_tuning, avatar_path FROM companion LIMIT 1")?;
         let row = stmt.query_row([], |row| {
-            Ok(Companion {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                persona: row.get(2)?,
-                example_dialogue: row.get(3)?,
-                first_message: row.get(4)?,
-                long_term_mem: row.get(5)?,
-                short_term_mem: row.get(6)?,
-                roleplay: row.get(7)?,
-                dialogue_tuning: row.get(8)?,
-                avatar_path: row.get(9)?,
+            Ok(CompanionView {
+                name: row.get(0)?,
+                persona: row.get(1)?,
+                example_dialogue: row.get(2)?,
+                first_message: row.get(3)?,
+                long_term_mem: row.get(4)?,
+                short_term_mem: row.get(5)?,
+                roleplay: row.get(6)?,
+                dialogue_tuning: row.get(7)?,
+                avatar_path: row.get(8)?,
             })
         })?;
         Ok(row)
     }
 
-    pub fn get_user_data(&self) -> Result<User> {
+    pub fn get_user_data(&self) -> Result<UserView> {
         let con = Connection::open("companion_database.db")?;
-        let mut stmt = con.prepare("SELECT id, name, persona, avatar_path FROM user LIMIT 1")?;
+        let mut stmt = con.prepare("SELECT name, persona, avatar_path FROM user LIMIT 1")?;
         let row = stmt.query_row([], |row| {
             Ok(User {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                persona: row.get(2)?,
-                avatar_path: row.get(3)?,
+                name: row.get(0)?,
+                persona: row.get(1)?,
+                avatar_path: row.get(2)?,
             })
         })?;
         Ok(row)
@@ -198,7 +222,7 @@ impl Database {
         Ok(row)
     }
 
-    pub fn insert_message(&self, message: Message) -> Result<(), Error> {
+    pub fn insert_message(&self, message: NewMessage) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
             "INSERT INTO messages (ai, content, created_at) VALUES (?, ?, ?)",
@@ -211,14 +235,14 @@ impl Database {
         Ok(())
     }
 
-    pub fn edit_message(&self, message: Message) -> Result<(), Error> {
+    pub fn edit_message(&self, id: i32, message: NewMessage) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "UPDATE messages SET ai = ?, content = ?, created_at = ? WHERE id = ?",
+            "UPDATE messages SET ai = ?, content = ? WHERE id = ?",
             &[
                 message.ai,
                 message.content,
-                Local::now(),
+                id
             ]
         )?;
         Ok(())
@@ -251,7 +275,7 @@ impl Database {
         Ok(())
     }
 
-    pub fn edit_companion(&self, companion: Companion) -> Result<(), Error> {
+    pub fn edit_companion(&self, companion: CompanionView) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
             "UPDATE companion SET name = ?, persona = ?, example_dialogue = ?, first_message = ?, long_term_mem = ?, short_term_mem = ?, roleplay = ?, dialogue_tuning = ?, avatar_path = ? WHERE id = ?",
@@ -271,7 +295,7 @@ impl Database {
         Ok(())
     }
 
-    pub fn edit_user(&self, user: User) -> Result<(), Error> {
+    pub fn edit_user(&self, user: UserView) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
             "UPDATE user SET name = ?, persona = ?, avatar_path = ? WHERE id = ?",
