@@ -7,6 +7,8 @@ mod dialogue_tuning;
 use dialogue_tuning::DialogueTuning;
 mod character_card;
 use character_card::CharacterCard;
+mod llm;
+use crate::llm::prompt;
 
 use std::fs;
 use std::fs::File;
@@ -208,7 +210,7 @@ async fn get_companion_character_json() -> HttpResponse {
             println!("Failed to get companion card data: {}", e);
             return HttpResponse::InternalServerError().body("Error while getting companion card data, check logs for more information");
         },
-    }
+    };
 }
 
 #[post("/api/companion/avatar")]
@@ -325,7 +327,20 @@ async fn erase_long_term() -> HttpResponse {
 
 #[post("/api/memory/dialogueTuning")]
 async fn add_tuning_message() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+    let messages = match Database::get_x_messages(2, 0) {
+        Ok(v) => v,
+        Err(e) => {
+            println!("Failed to get last 2 messages from database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while getting last 2 messages from database, check logs for more information");
+        }
+    };
+    match DialogueTuning::insert(&messages[0].text, &messages[1].text) {
+        Ok(_) => HttpResponse::Ok().body("Saved previous dialogue as template dialogue"),
+        Err(e) => {
+            println!("Failed to save previous dialogue as template dialogue: {}", e);
+            HttpResponse::InternalServerError().body("Error while saving previous dialogue as template dialogue, check logs for more information")
+        }
+    }
 }
 
 #[delete("/api/memory/dialogueTuning")]
@@ -342,14 +357,37 @@ async fn erase_tuning_message() -> HttpResponse {
 
 //              Prompting
 
+struct Prompt {
+    prompt: String
+}
+
 #[post("/api/prompt")]
-async fn prompt_message() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+async fn prompt_message(received: web::Json<Prompt>) -> HttpResponse {
+    match prompt(received.into_inner().prompt) {
+        Ok(v) => HttpResponse::Ok().body(v),
+        Err(e) => {
+            println!("Failed to generate prompt: {}", e);
+            HttpResponse::InternalServerError().body("Error while generating prompt, check logs for more information")
+        }
+    }
 }
 
 #[get("/api/prompt/regenerate")]
-async fn regenerate_prompt() -> HttpResponse {
-    HttpResponse::Ok().body("Hello, world!")
+async fn regenerate_prompt(received: web::Json<Prompt>) -> HttpResponse {
+    match Database::delete_latest_message() {
+        Ok(_) => {},
+        Err(e) => {
+            println!("Failed to delete latest message: {}", e);
+            return HttpResponse::InternalServerError().body("Error while deleting latest message, check logs for more information");
+        }
+    }
+    match prompt(received.into_inner().prompt) {
+        Ok(v) => HttpResponse::Ok().body(v),
+        Err(e) => {
+            println!("Failed to re-generate prompt: {}", e);
+            HttpResponse::InternalServerError().body("Error while generating prompt, check logs for more information")
+        }
+    }
 }
 
 //

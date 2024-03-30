@@ -65,15 +65,23 @@ enum Device {
     Metal,
 }
 
+enum PromptTemplate {
+    Default,
+    Llama2,
+    Mistral
+}
+
 struct Config {
     id: i32,
     device: Device,
     llm_model_path: String,
+    prompt_template: PromptTemplate
 }
 
-struct ConfigView {
-    device: Device,
-    llm_model_path: String,
+pub struct ConfigView {
+    pub device: Device,
+    pub llm_model_path: String,
+    pub prompt_template: PromptTemplate
 }
 
 pub struct Database {}
@@ -115,7 +123,8 @@ impl Database {
             "CREATE TABLE IF NOT EXISTS config (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 device INTEGER,
-                llm_model_path TEXT
+                llm_model_path TEXT,
+                prompt_template INTEGER
             )", []
         )?;
         if Database::is_table_empty("companion", &con)? {
@@ -157,10 +166,11 @@ impl Database {
         }
         if Database::is_table_empty("config", &con)? {
             con.execute(
-                "INSERT INTO config (device, llm_model_path) VALUES (?, ?)",
+                "INSERT INTO config (device, llm_model_path, prompt_template) VALUES (?, ?, ?)",
                 &[
                      Device.CPU,
-                    ""
+                    "",
+                    PromptTemplate::Default
                 ]
             )?;
         } 
