@@ -1,10 +1,3 @@
-interface Config {
-    id: number;
-    device: Device;
-    llm_model_path: string;
-    prompt_template: PromptTemplate;
-}
-
 interface Device {
     CPU: number;
     GPU: number;
@@ -17,7 +10,7 @@ enum PromptTemplate {
     Mistral = "mistral"
 }
 
-interface ConfigView {
+export interface ConfigInterface {
     device: Device;
     llm_model_path: string;
     prompt_template: PromptTemplate;

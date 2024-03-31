@@ -1,8 +1,8 @@
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use base64::{Engine, engine::GeneralPurpose, engine::GeneralPurposeConfig, alphabet::STANDARD};
 use std::io::Cursor;
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct CharacterCard {
     pub name: String,
     pub description: String,

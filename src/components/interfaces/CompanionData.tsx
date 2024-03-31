@@ -1,4 +1,4 @@
-interface CompanionData {
+export interface CompanionData {
     name?: string;
     persona?: string;
     example_dialogue?: string;

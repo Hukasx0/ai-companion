@@ -17,7 +17,7 @@ impl DialogueTuning {
         )", [])
     }
 
-    pub fn insert(user_msg: String, ai_msg: String) -> Result<usize, Error> {
+    pub fn insert(user_msg: &str, ai_msg: &str) -> Result<usize, Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute("INSERT INTO dialogue_tuning (user_msg, ai_msg) VALUES (?1, ?2)", [user_msg, ai_msg])
     }

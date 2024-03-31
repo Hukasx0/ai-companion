@@ -1,4 +1,5 @@
 use actix_web::{get, post, delete, put, App, web, HttpResponse, HttpServer};
+use futures_util::StreamExt as _;
 mod database;
 use database::{Database, Message, NewMessage, CompanionView, UserView};
 mod long_term_mem;
@@ -7,11 +8,13 @@ mod dialogue_tuning;
 use dialogue_tuning::DialogueTuning;
 mod character_card;
 use character_card::CharacterCard;
+use serde::Deserialize;
 mod llm;
 use crate::llm::prompt;
 
 use std::fs;
 use std::fs::File;
+use std::io::Write;
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -202,8 +205,8 @@ async fn companion_character_json(received: web::Json<CharacterCard>) -> HttpRes
 #[get("/api/companion/characterJson")]
 async fn get_companion_character_json() -> HttpResponse {
     match Database::get_companion_card_data() {
-        Ok(v: CharacterCard) => { 
-            let character_json: String = serde_json::to_string(&v).unwrap_or(String::from("Error serializing companion data as JSON"));
+        Ok(v) => { 
+            let character_json: String = serde_json::to_string(&v as &CharacterCard).unwrap_or(String::from("Error serializing companion data as JSON"));
             return HttpResponse::Ok().body(character_json);
         },
         Err(e) => {
@@ -285,6 +288,7 @@ async fn user_put(received: web::Json<UserView>) -> HttpResponse {
 
 //              Memory
 
+#[derive(Deserialize)]
 struct LongTermMemMessage {
     entry: String
 }
@@ -334,7 +338,7 @@ async fn add_tuning_message() -> HttpResponse {
             return HttpResponse::InternalServerError().body("Error while getting last 2 messages from database, check logs for more information");
         }
     };
-    match DialogueTuning::insert(&messages[0].text, &messages[1].text) {
+    match DialogueTuning::insert(&messages[0].content, &messages[1].content) {
         Ok(_) => HttpResponse::Ok().body("Saved previous dialogue as template dialogue"),
         Err(e) => {
             println!("Failed to save previous dialogue as template dialogue: {}", e);
@@ -357,13 +361,14 @@ async fn erase_tuning_message() -> HttpResponse {
 
 //              Prompting
 
+#[derive(Deserialize)]
 struct Prompt {
     prompt: String
 }
 
 #[post("/api/prompt")]
 async fn prompt_message(received: web::Json<Prompt>) -> HttpResponse {
-    match prompt(received.into_inner().prompt) {
+    match prompt(&received.into_inner().prompt) {
         Ok(v) => HttpResponse::Ok().body(v),
         Err(e) => {
             println!("Failed to generate prompt: {}", e);
@@ -381,7 +386,7 @@ async fn regenerate_prompt(received: web::Json<Prompt>) -> HttpResponse {
             return HttpResponse::InternalServerError().body("Error while deleting latest message, check logs for more information");
         }
     }
-    match prompt(received.into_inner().prompt) {
+    match prompt(&received.into_inner().prompt) {
         Ok(v) => HttpResponse::Ok().body(v),
         Err(e) => {
             println!("Failed to re-generate prompt: {}", e);
@@ -412,46 +417,6 @@ async fn main() -> std::io::Result<()> {
         Ok(_) => { }
         Err(e) => eprintln!("⚠️ Failed to create dialogue tuning table in sqlite database: {}", e),
     }
-
-    // try to load character from "character.card.png"
-    // if not then try to load character from "character.json"
-    // if not, then skip, and use default character
-
-    let mut character_file: Option<File> = match File::open("character.card.png") {
-        Ok(f) => Some(f),
-        Err(_) => {
-            match File::open("character.json") {
-                Ok(f) => Some(f),
-                Err(_) => {
-                        None
-                    }
-                }
-            }
-    };
-    let mut character_bytes = Vec::new();
-    if character_file.is_some() {
-        match character_file.unwrap().read_to_end(&mut character_bytes) {
-            Ok(_) => {},
-            Err(e) => {
-                eprintln!("Error while reading character card: {}", e);
-                return Ok(());
-            }
-        }
-    }
-    let character_card = match CharacterCard::load_character_card(&character_bytes) {
-        Ok(c) => c,
-        Err(e) => {
-            eprintln!("Error while loading character card from a file: {}", e);
-            return Ok(());
-        }
-    };
-    match Database::import_character_card(character_card, "assets/avatar.png") {
-        Ok(_) => {},
-        Err(e) => {
-            eprintln!("Error while importing character card: {}", e);
-            return Ok(());
-        }
-    };
 
     println!("\nAI Companion v1 successfully launched! 🚀\n");
 

@@ -59,13 +59,15 @@ pub struct UserView {
     pub persona: String,
 }
 
-enum Device {
+#[derive(PartialEq)]
+pub enum Device {
     CPU,
     GPU,
     Metal,
 }
 
-enum PromptTemplate {
+#[derive(PartialEq)]
+pub enum PromptTemplate {
     Default,
     Llama2,
     Mistral
@@ -135,10 +137,10 @@ impl Database {
                     "I am an AI companion.",
                     "Hello, my name is Companion. I am here to help you with your AI needs. How can I help you today?",
                     "Hello, my name is Companion. I am here to help you with your AI needs. How can I help you today?",
-                    5,
-                    10,
-                    true,
-                    true,
+                    "5",
+                    "10",
+                    "true",
+                    "true",
                     "/assets/companion_avatar-4rust.jpg"
                 ]
             )?;
@@ -158,7 +160,7 @@ impl Database {
             con.execute(
                 "INSERT INTO messages (ai, content, created_at) VALUES (?, ?, ?)",
                 &[
-                    true,
+                    true.to_string(),
                     first_message,
                     Local::now()
                 ]
@@ -297,9 +299,9 @@ impl Database {
         con.execute(
             "UPDATE messages SET ai = ?, content = ? WHERE id = ?",
             &[
-                message.ai,
-                message.content,
-                id
+                &message.ai.to_string(),
+                &message.content,
+                &id.to_string()
             ]
         )?;
         Ok(())
@@ -337,16 +339,16 @@ impl Database {
         con.execute(
             "UPDATE companion SET name = ?, persona = ?, example_dialogue = ?, first_message = ?, long_term_mem = ?, short_term_mem = ?, roleplay = ?, dialogue_tuning = ?, avatar_path = ? WHERE id = ?",
             &[
-                companion.name,
-                companion.persona,
-                companion.example_dialogue,
-                companion.first_message,
-                companion.long_term_mem,
-                companion.short_term_mem,
-                companion.roleplay,
-                companion.dialogue_tuning,
-                companion.avatar_path,
-                0
+                &companion.name,
+                &companion.persona,
+                &companion.example_dialogue,
+                &companion.first_message,
+                &companion.long_term_mem.to_string(),
+                &companion.short_term_mem.to_string(),
+                &companion.roleplay.to_string(),
+                &companion.dialogue_tuning.to_string(),
+                &companion.avatar_path,
+                "0"
             ]
         )?;
         Ok(())
@@ -357,10 +359,10 @@ impl Database {
         con.execute(
             "INSERT INTO companion (name, persona, example_dialogue, first_message) VALUES (?, ?, ?, ?)",
             &[
-                companion.name,
-                companion.description,
-                companion.first_mes,
-                companion.mes_example
+                &companion.name,
+                &companion.description,
+                &companion.first_mes,
+                &companion.mes_example
             ]
         )?;
         Ok(())
@@ -371,11 +373,11 @@ impl Database {
         con.execute(
             "INSERT INTO companion (name, persona, example_dialogue, first_message, avatar_path) VALUES (?, ?, ?, ?, ?)",
             &[
-                companion.name,
-                companion.description,
-                companion.first_mes,
-                companion.mes_example,
-                String::from(image_path)
+                &companion.name,
+                &companion.description,
+                &companion.first_mes,
+                &companion.mes_example,
+                image_path
             ]
         )?;
         Ok(())
@@ -388,7 +390,7 @@ impl Database {
             "UPDATE companion SET avatar_path = ? WHERE id = ?",
             &[
                 avatar_path,
-                0
+                "0"
             ]
         )?;
         Ok(())
@@ -399,9 +401,9 @@ impl Database {
         con.execute(
             "UPDATE user SET name = ?, persona = ? WHERE id = ?",
             &[
-                user.name,
-                user.persona,
-                0
+                &user.name,
+                &user.persona,
+                "0"
             ]
         )?;
         Ok(())
@@ -409,11 +411,12 @@ impl Database {
 
     pub fn get_config() -> Result<ConfigView> {
         let con = Connection::open("companion_database.db")?;
-        let mut stmt = con.prepare("SELECT device, llm_model_path FROM config LIMIT 1")?;
+        let mut stmt = con.prepare("SELECT device, llm_model_path, prompt_template FROM config LIMIT 1")?;
         let row = stmt.query_row([], |row| {
             Ok(ConfigView {
                 device: row.get(0)?,
                 llm_model_path: row.get(1)?,
+                prompt_template: row.get(2)?
             })
         })?;
         Ok(row)

@@ -1,4 +1,4 @@
-use crate::database::{Database, NewMessage, ConfigView, UserView, CompanionView};
+use crate::database::{Database, NewMessage, Message, ConfigView, UserView, CompanionView, PromptTemplate};
 use crate::dialogue_tuning::DialogueTuning;
 use crate::long_term_mem::LongTermMem;
 
@@ -50,7 +50,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
     if companion.dialogue_tuning {
         match DialogueTuning::get_random_dialogue() {
             Ok(dialogue) => {
-                tuned_dialogue = format!("{}: {}\n{}: {}", &user.name, &dialogue.user_msg, &companion.name, &dialogue.ai_msg);
+                tuned_dialogue = &format!("{}: {}\n{}: {}", &user.name, &dialogue.user_msg, &companion.name, &dialogue.ai_msg);
             }
             Err(_) => {}
         };
@@ -70,7 +70,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
         format!("<<SYS>>\nYou are {}, {}\nyou are talking with {}, {} is {}\n{}\n[INST]\n{}\n{}\n[/INST]",
                 companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), user.name, user.name, user.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), rp, companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), &tuned_dialogue);
     }
-    let long_term_memory_entries: Vec<String> = match LongTermMem::get_matches(prompt, companion.long_term_mem) {
+    let long_term_memory_entries: Vec<String> = match long_term_memory.get_matches(prompt, companion.long_term_mem) {
         Ok(entries) => entries,
         Err(e) => {
             eprintln!("Error while getting long term memory entries: {}", e);
@@ -80,7 +80,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
     for entry in long_term_memory_entries {
         base_prompt += &entry.replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
     }
-    let short_term_memory_entries: Vec<String> = match Database::get_x_messages(companion.short_term_mem, 0) {
+    let short_term_memory_entries: Vec<Message> = match Database::get_x_messages(companion.short_term_mem, 0) {
         Ok(entries) => entries,
         Err(e) => {
             eprintln!("Error while getting short term memory entries: {}", e);
@@ -89,7 +89,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
     };
     for message in short_term_memory_entries {
         let prefix = if message.ai { &companion.name } else { &user.name };
-        let text = message.text;
+        let text = message.content;
         let formatted_message = format!("{}: {}\n", prefix, text);
         base_prompt += &formatted_message;
     }
