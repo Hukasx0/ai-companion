@@ -16,12 +16,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Info } from "lucide-react"
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
 export function EditData() {
   return (
     <Tabs defaultValue="companion">
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="companion">Companion</TabsTrigger>
         <TabsTrigger value="user">User</TabsTrigger>
+        <TabsTrigger value="config">Config</TabsTrigger>
       </TabsList>
       <TabsContent value="companion">
         <Card className="bg-background border-none">
@@ -104,6 +113,48 @@ export function EditData() {
             <div className="space-y-1">
               <Label htmlFor="userPersona" className="flex flex-row gap-2">Your persona <Info /> (personality, look, backstory etc)</Label>
               <Textarea id="userPersona" defaultValue="{{user}} is chatting with {{char}} using ai-companion web user interface" />
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <Button>Save changes</Button>
+          </CardFooter>
+        </Card>
+      </TabsContent>
+      <TabsContent value="config">
+        <Card className="bg-background border-none" defaultValue={"cpu"}>
+          <CardHeader>
+            <CardTitle>Config</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="space-y-1">
+              <Label htmlFor="username">Device</Label>
+              <Select>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="CPU" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cpu">CPU</SelectItem>
+                  <SelectItem value="gpu">GPU</SelectItem>
+                  <SelectItem value="metal">Metal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="userPersona" className="flex flex-row gap-2">Path to your Large Language Model (LLM) <Info/></Label>
+              <Input id="username" defaultValue="models/llama2-7b" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="username">Prompt template</Label>
+              <Select>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="default" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Default</SelectItem>
+                  <SelectItem value="llama2">Llama2</SelectItem>
+                  <SelectItem value="mistral">Mistral</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">

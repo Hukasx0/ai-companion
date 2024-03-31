@@ -1,4 +1,4 @@
-use crate::database::{Database, ConfigView, UserView, CompanionView};
+use crate::database::{Database, NewMessage, ConfigView, UserView, CompanionView};
 use crate::dialogue_tuning::DialogueTuning;
 use crate::long_term_mem::LongTermMem;
 
@@ -132,7 +132,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
     .split(&format!("\n{}: ", &companion.name))
     .next()
     .unwrap_or("");
-    match Database::insert_message(companion_text, true) {
+    match Database::insert_message(NewMessage { ai: true, content: companion_text.to_string() }) {
         Ok(_) => {},
         Err(e) => eprintln!("Error while adding message to database/short-term memory: {}", e),
     };
