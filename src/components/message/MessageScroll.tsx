@@ -22,9 +22,9 @@ export function MessageScroll() {
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`http://adres-twojego-api/messages?limit=${messageLimit}&start=${startIndex}`);
+      const response = await fetch(`/api/messages?limit=${messageLimit}&start=${startIndex}`);
       if (!response.ok) {
-        throw new Error('Wystąpił błąd podczas pobierania wiadomości');
+        throw new Error('');
       }
       const data = await response.json();
       data.forEach((message: any) => {

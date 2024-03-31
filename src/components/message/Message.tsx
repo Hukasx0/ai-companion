@@ -3,6 +3,8 @@ import { Pencil, RotateCw, Star, Trash2 } from "lucide-react";
 import { useUserData } from "../context/userContext";
 import { useCompanionData } from "../context/companionContext";
 
+import companionAvatar from "../../assets/companion_avatar-4rust.jpg";
+
 interface MessageProps {
   sent: boolean;
   regenerate: boolean;
@@ -36,7 +38,7 @@ const AiMessage = ({ content, created_at, regenerate }: MessageProps) => {
       <div className="chat-image avatar">
         <div className="w-10 rounded-full">
           <Avatar>
-            <AvatarImage src={companionData?.avatar_path || "https://avatars.githubusercontent.com/u/82332291?v=4"} alt="@Hukasx0" />
+            <AvatarImage src={companionData?.avatar_path || companionAvatar} alt="Companion Avatar" />
             <AvatarFallback>H</AvatarFallback>
           </Avatar>
         </div>
