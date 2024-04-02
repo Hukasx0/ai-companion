@@ -3,7 +3,7 @@ import { Pencil, RotateCw, Star, Trash2 } from "lucide-react";
 import { useUserData } from "../context/userContext";
 import { useCompanionData } from "../context/companionContext";
 
-import companionAvatar from "../../assets/companion_avatar-4rust.jpg";
+import companionAvatar from "../../assets/companion_avatar.jpg";
 
 interface MessageProps {
   sent: boolean;

@@ -1,4 +1,5 @@
-use rusqlite::{Connection, Result, Error};
+use rusqlite::{Connection, Error, Result};
+use rusqlite::types::{FromSql, FromSqlError, ValueRef};
 use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Local};
 
@@ -10,7 +11,12 @@ pub struct Message {
     pub id: i32,
     pub ai: bool,
     pub content: String,
-    pub created_at: DateTime<Local>,
+    pub created_at: String,
+}
+
+fn get_current_date() -> String {
+    let local: DateTime<Local> = Local::now();
+    local.format("%A %d.%m.%Y %H:%M").to_string()
 }
 
 #[derive(Serialize, Deserialize)]
@@ -66,11 +72,39 @@ pub enum Device {
     Metal,
 }
 
+impl FromSql for Device {
+    fn column_result(value: ValueRef<'_>) -> Result<Self, FromSqlError> {
+        match value {
+            ValueRef::Integer(i) => match i {
+                0 => Ok(Device::CPU),
+                1 => Ok(Device::GPU),
+                2 => Ok(Device::Metal),
+                _ => Err(FromSqlError::OutOfRange(i)),
+            },
+            _ => Err(FromSqlError::InvalidType),
+        }
+    }
+}
+
 #[derive(PartialEq)]
 pub enum PromptTemplate {
     Default,
     Llama2,
     Mistral
+}
+
+impl FromSql for PromptTemplate {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> Result<Self, FromSqlError> {
+        match value {
+            rusqlite::types::ValueRef::Integer(i) => match i {
+                0 => Ok(PromptTemplate::Default),
+                1 => Ok(PromptTemplate::Llama2),
+                2 => Ok(PromptTemplate::Mistral),
+                _ => Err(FromSqlError::OutOfRange(i)),
+            },
+            _ => Err(FromSqlError::InvalidType),
+        }
+    }
 }
 
 struct Config {
@@ -96,7 +130,7 @@ impl Database {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ai BOOLEAN,
                 content TEXT,
-                created_at DATETIME
+                created_at TEXT
             )", []
         )?;
         con.execute(
@@ -133,12 +167,12 @@ impl Database {
             con.execute(
                 "INSERT INTO companion (name, persona, example_dialogue, first_message, long_term_mem, short_term_mem, roleplay, dialogue_tuning, avatar_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 &[
-                    "Companion",
-                    "I am an AI companion.",
-                    "Hello, my name is Companion. I am here to help you with your AI needs. How can I help you today?",
-                    "Hello, my name is Companion. I am here to help you with your AI needs. How can I help you today?",
+                    "Assistant",
+                    "{{char}} is an artificial intelligence chatbot designed to help {{user}}. {{char}} is an artificial intelligence created in ai-companion backend",
+                    "{{user}}: What is ai-companion?\n{{char}}: AI Companion is a open-source project, wrote in Rust, Typescript and React, that aims to provide users with their own personal AI chatbot on their computer. It allows users to engage in friendly and natural conversations with their AI, creating a unique and personalized experience. This software can also be used as a backend or API for other projects that require a personalised AI chatbot. Very light size, simple installation, simple configuration, quick cold start and ease of use are some of the strengths of AI Companion in comparison to other similar projects.\n{{user}}: Can you tell me about the creator of ai-companion?\n{{char}}: the creator of the ai-companion program is 'Hubert Kasperek', he is a young programmer from Poland who is mostly interested in web development and computer science concepts, he has account on GitHub under nickname \"Hukasx0\"",
+                    "Hello {{user}}, how can i help you today?",
+                    "2",
                     "5",
-                    "10",
                     "true",
                     "true",
                     "/assets/companion_avatar-4rust.jpg"
@@ -150,7 +184,7 @@ impl Database {
                 "INSERT INTO user (name, persona, avatar_path) VALUES (?, ?, ?)",
                 &[
                     "User",
-                    "I am an AI user.",
+                    "{{user}} is chatting with {{char}} using ai-companion web user interface",
                     "/assets/user_avatar-4rust.jpg"
                 ]
             )?;
@@ -160,9 +194,9 @@ impl Database {
             con.execute(
                 "INSERT INTO messages (ai, content, created_at) VALUES (?, ?, ?)",
                 &[
-                    true.to_string(),
-                    first_message,
-                    Local::now()
+                    &true.to_string(),
+                    &first_message,
+                    &get_current_date()
                 ]
             )?;
         }
@@ -170,9 +204,9 @@ impl Database {
             con.execute(
                 "INSERT INTO config (device, llm_model_path, prompt_template) VALUES (?, ?, ?)",
                 &[
-                     Device.CPU,
-                    "",
-                    PromptTemplate::Default
+                    &(Device::CPU as i32).to_string(),
+                    "models/llama2-7b.gguf",
+                    &(PromptTemplate::Default as i32).to_string()
                 ]
             )?;
         } 
@@ -207,7 +241,7 @@ impl Database {
     pub fn get_x_messages(x: usize, index: usize) -> Result<Vec<Message>> {
         let con = Connection::open("companion_database.db")?;
         let mut stmt = con.prepare("SELECT id, ai, content, created_at FROM messages ORDER BY id DESC LIMIT ? OFFSET ?")?;
-        let rows = stmt.query_map([x], |row| {
+        let rows = stmt.query_map([x, index], |row| {
             Ok(Message {
                 id: row.get(0)?,
                 ai: row.get(1)?,
@@ -286,9 +320,9 @@ impl Database {
         con.execute(
             "INSERT INTO messages (ai, content, created_at) VALUES (?, ?, ?)",
             &[
-                message.ai,
-                message.content,
-                Local::now()
+                &message.ai.to_string(),
+                &message.content,
+                &get_current_date()
             ]
         )?;
         Ok(())
@@ -422,14 +456,14 @@ impl Database {
         Ok(row)
     }
 
-    pub fn change_config(config: Config) -> Result<(), Error> {
+    pub fn change_config(config: ConfigView) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
             "UPDATE config SET device = ?, llm_model_path = ? WHERE id = ?",
             &[
-                config.device,
-                config.llm_model_path,
-                0
+                &(config.device as i32).to_string(),
+                &config.llm_model_path,
+                "0"
             ]
         )?;
         Ok(())

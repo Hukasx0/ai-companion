@@ -1,4 +1,7 @@
-use crate::database::{Database, NewMessage, Message, ConfigView, UserView, CompanionView, PromptTemplate};
+use std::io::Write;
+use chrono::{DateTime, Local};
+
+use crate::database::{Database, NewMessage, Message, ConfigView, UserView, CompanionView, PromptTemplate, Device};
 use crate::dialogue_tuning::DialogueTuning;
 use crate::long_term_mem::LongTermMem;
 
@@ -10,6 +13,8 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
             return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error while connecting to tantivy"));
         }
     };
+    let local: DateTime<Local> = Local::now();
+    let formatted_date = local.format("* at %A %d.%m.%Y %H:%M *\n").to_string();
     let config: ConfigView = match Database::get_config() {
         Ok(config) => config,
         Err(e) => {
@@ -32,25 +37,42 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
         }
     };
 
-    let llama = llm::load::<llm::models::Llama>(
+    let llama_model_params = {
+        let mut params = llm::ModelParameters::default();
+        if config.device == Device::GPU || config.device == Device::Metal {
+            params.use_gpu = true;
+            params.gpu_layers = Some(20);
+        } else {
+            params.use_gpu = false;
+            params.gpu_layers = None;
+        }
+        params
+    };
+    
+    let llama = llm::load(
         std::path::Path::new(&config.llm_model_path),
         llm::TokenizerSource::Embedded,
-        llm::ModelParameters::default(),
-        llm::load_progress_callback_stdout
-    )
-    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to load llm model: {}", e.to_string())))?;
+        llama_model_params,
+        llm::load_progress_callback_stdout,
+    );
+   
+    let llama = match llama {
+        Ok(llama) => llama,
+        Err(e) => return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to load llm model: {}", e.to_string()))),
+    };
+
     let mut session = llama.start_session(Default::default());
     println!("Generating ai response...");
     let mut base_prompt: String;
     let mut rp: &str = "";
-    let mut tuned_dialogue: &str = "";
+    let mut tuned_dialogue: String = String::from("");
     if companion.roleplay {
         rp = "gestures and other non-verbal actions are written between asterisks (for example, *waves hello* or *moves closer*)";
     }
     if companion.dialogue_tuning {
         match DialogueTuning::get_random_dialogue() {
             Ok(dialogue) => {
-                tuned_dialogue = &format!("{}: {}\n{}: {}", &user.name, &dialogue.user_msg, &companion.name, &dialogue.ai_msg);
+                tuned_dialogue = format!("{}: {}\n{}: {}", &user.name, &dialogue.user_msg, &companion.name, &dialogue.ai_msg);
             }
             Err(_) => {}
         };
@@ -96,7 +118,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
     let mut end_of_generation = String::new();
     let eog = format!("\n{}:", user.name);
     let res = session.infer::<std::convert::Infallible>(
-        &llama,
+        llama.as_ref(),
         &mut rand::thread_rng(),
         &llm::InferenceRequest {
             prompt: llm::Prompt::Text(&format!("{}{}:", &base_prompt, companion.name)),
@@ -136,7 +158,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
         Ok(_) => {},
         Err(e) => eprintln!("Error while adding message to database/short-term memory: {}", e),
     };
-    match long_term_memory.add_entry(&format!("{}{}: {}\n{}: {}\n", formatted_date, "{{user}}", &text_prompt, "{{char}}", &companion_text)) {
+    match long_term_memory.add_entry(&format!("{}{}: {}\n{}: {}\n", formatted_date, "{{user}}", &prompt, "{{char}}", &companion_text)) {
         Ok(_) => {},
         Err(e) => eprintln!("Error while adding message to long-term memory: {}", e),
     };
