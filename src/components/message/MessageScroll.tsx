@@ -22,14 +22,11 @@ export function MessageScroll() {
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`/api/messages?limit=${messageLimit}&start=${startIndex}`);
+      const response = await fetch(`/api/message?limit=${messageLimit}&start=${startIndex}`);
       if (!response.ok) {
         throw new Error('');
       }
       const data = await response.json();
-      data.forEach((message: any) => {
-       // addMessage(message);
-      });
       setLoadMoreVisible(data.length === messageLimit);
     } catch (error) {
       console.error(error);
@@ -56,7 +53,7 @@ export function MessageScroll() {
         )}
         <div className="flex flex-col gap-5">
           {messages.map((message, index) => (
-            <Message key={index} sent={index % 2 === 0} regenerate={index === messages.length - 1} content={message.content} created_at={message.created_at} />
+            <Message key={index} received={message.ai} regenerate={index === messages.length - 1} content={message.content} created_at={message.created_at} />
           ))}
         </div>
       </div>

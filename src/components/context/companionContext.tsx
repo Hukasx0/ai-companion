@@ -1,9 +1,13 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { CompanionData } from '../interfaces/CompanionData';
 
-const CompanionDataContext = createContext<any>(null);
+interface CompanionDataProviderProps {
+  children: ReactNode;
+}
 
-export const CompanionDataProvider: React.FC = ({ children }) => {
+const CompanionDataContext = createContext<CompanionData | null>(null);
+
+export const CompanionDataProvider: React.FC<CompanionDataProviderProps> = ({ children }) => {
   const [companionData, setCompanionData] = useState<CompanionData | null>(null);
 
   useEffect(() => {

@@ -1,9 +1,13 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { UserData } from '../interfaces/UserData';
+
+interface UserDataProviderProps {
+  children: ReactNode;
+}
 
 const UserDataContext = createContext<UserData | null>(null);
 
-export const UserDataProvider: React.FC = ({ children }) => {
+export const UserDataProvider: React.FC<UserDataProviderProps> = ({ children }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
 
   useEffect(() => {

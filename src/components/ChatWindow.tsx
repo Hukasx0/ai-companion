@@ -6,6 +6,8 @@ import { Textarea } from "./ui/textarea";
 import { Menu, SendHorizontal } from "lucide-react";
 import { Button } from "./ui/button";
 
+import companionAvatar from "../assets/companion_avatar.jpg";
+
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -13,8 +15,11 @@ import {
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { useCompanionData } from "./context/companionContext";
 
 const ChatWindow = () => {
+  const companionData = useCompanionData();
+
     return (
         <>
         <div className='w-full flex justify-end'>
@@ -22,7 +27,7 @@ const ChatWindow = () => {
           </div>
           <div className='flex flex-row items-center gap-5'>
           <Avatar>
-            <AvatarImage src="https://avatars.githubusercontent.com/u/82332291?v=4" alt="@Hukasx0" />
+            <AvatarImage src={companionData?.avatar_path || companionAvatar} alt="Companion Avatar" />
             <AvatarFallback>H</AvatarFallback>
           </Avatar>
           <EditDataPopup />

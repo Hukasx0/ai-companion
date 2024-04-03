@@ -36,6 +36,11 @@ async fn project_logo() -> HttpResponse {
     HttpResponse::Ok().content_type("image/jpeg").body(&include_bytes!("../../dist/ai_companion_logo.jpg")[..])
 }
 
+#[get("/assets/companion_avatar-4rust.jpg")]
+async fn companion_avatar_img() -> HttpResponse {
+    HttpResponse::Ok().content_type("image/jpeg").body(&include_bytes!("../../dist/assets/companion_avatar-4rust.jpg")[..])
+}
+
 
 //              API
 
@@ -427,6 +432,7 @@ async fn main() -> std::io::Result<()> {
             .service(js)
             .service(css)
             .service(project_logo)
+            .service(companion_avatar_img)
             .service(message)
             .service(clear_messages)
             .service(message_id)

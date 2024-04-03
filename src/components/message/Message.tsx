@@ -5,8 +5,18 @@ import { useCompanionData } from "../context/companionContext";
 
 import companionAvatar from "../../assets/companion_avatar.jpg";
 
+interface MessageScrollProps {
+  received: boolean;
+}
+
+interface MessageScrollProps extends MessageProps {
+  regenerate: boolean;
+  content: string;
+  created_at: Date;
+}
+
+
 interface MessageProps {
-  sent: boolean;
   regenerate: boolean;
   content: string;
   created_at: Date;
@@ -18,7 +28,7 @@ const UserMessage = ({ content, created_at }: MessageProps) => {
   return (
     <div className='chat chat-end'>
       <div className="chat-header">
-        <time className="text-xs mr-3 opacity-50">{created_at.toLocaleTimeString()}</time>
+        <time className="text-xs mr-3 opacity-50">{new Date(created_at).toLocaleDateString()}</time>
         {userData?.name || "User"}
       </div>
       <div className="chat-bubble">{content}</div> 
@@ -29,6 +39,7 @@ const UserMessage = ({ content, created_at }: MessageProps) => {
     </div>
   );
 };
+
 
 const AiMessage = ({ content, created_at, regenerate }: MessageProps) => {
   const companionData = useCompanionData();
@@ -45,7 +56,7 @@ const AiMessage = ({ content, created_at, regenerate }: MessageProps) => {
       </div>
       <div className="chat-header">
         {companionData?.name || "Assistant"}
-        <time className="text-xs ml-3 opacity-50">{created_at.toLocaleTimeString()}</time>
+        <time className="text-xs ml-3 opacity-50">{new Date(created_at).toLocaleDateString()}</time>
       </div>
       {regenerate ? 
         <div className="flex flex-row gap-2 items-center">
@@ -64,10 +75,10 @@ const AiMessage = ({ content, created_at, regenerate }: MessageProps) => {
   );
 };
 
-export function Message({ sent, regenerate, content, created_at }: MessageProps) {
+export function Message({ received, regenerate, content, created_at }: MessageScrollProps) {
   return (
     <>
-      {sent ? <UserMessage sent={sent} content={content} created_at={created_at} regenerate={false} /> : <AiMessage sent={sent} content={content} created_at={created_at} regenerate={regenerate} />}
+      {received ? <AiMessage content={content} created_at={created_at} regenerate={regenerate} />: <UserMessage content={content} created_at={created_at} regenerate={false} /> }
     </>
   );
 }

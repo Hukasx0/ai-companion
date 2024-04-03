@@ -1,6 +1,9 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { MessageInterface } from '../interfaces/Message';
 
+interface MessagesProviderProps {
+  children: ReactNode;
+}
 
 interface MessagesContextType {
   messages: MessageInterface[];
@@ -17,7 +20,7 @@ export const useMessages = () => {
   return context;
 };
 
-export const MessagesProvider: React.FC = ({ children }) => {
+export const MessagesProvider: React.FC<MessagesProviderProps> = ({ children }) => {
   const [messages, setMessages] = useState<MessageInterface[]>([]);
 
   const addMessage = (message: MessageInterface) => {
@@ -32,7 +35,7 @@ export const MessagesProvider: React.FC = ({ children }) => {
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch('/api/messages');
+      const response = await fetch('/api/message?limit=50&start=0');
       if (!response.ok) {
         throw new Error('');
       }

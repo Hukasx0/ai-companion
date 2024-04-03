@@ -1,9 +1,13 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { ConfigInterface } from '../interfaces/Config';
+
+interface ConfigProviderProps {
+  children: ReactNode;
+}
 
 const ConfigContext = createContext<ConfigInterface | null>(null);
 
-export const ConfigProvider: React.FC = ({ children }) => {
+export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   const [config, setConfig] = useState<ConfigInterface | null>(null);
 
   useEffect(() => {

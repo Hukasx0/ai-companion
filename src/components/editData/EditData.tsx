@@ -16,6 +16,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Info } from "lucide-react"
 
+import companionAvatar from "../../assets/companion_avatar.jpg";
+
 import {
   Select,
   SelectContent,
@@ -23,8 +25,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useCompanionData } from "../context/companionContext"
 
 export function EditData() {
+  const companionData = useCompanionData();
+
   return (
     <Tabs defaultValue="companion">
       <TabsList className="grid w-full grid-cols-3">
@@ -44,7 +49,7 @@ export function EditData() {
           <div className="flex justify-center">
             <div className="space-y-1 self-center">
               <Avatar className="w-24 h-24">
-                <AvatarImage src="https://avatars.githubusercontent.com/u/82332291?v=4" alt="@Hukasx0" />
+                <AvatarImage src={companionData?.avatar_path || companionAvatar} alt="Companion Avatar" />
                 <AvatarFallback>H</AvatarFallback>
               </Avatar>
             </div>

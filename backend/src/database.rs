@@ -173,8 +173,8 @@ impl Database {
                     "Hello {{user}}, how can i help you today?",
                     "2",
                     "5",
-                    "true",
-                    "true",
+                    "1",
+                    "1",
                     "/assets/companion_avatar-4rust.jpg"
                 ]
             )?;
@@ -190,12 +190,25 @@ impl Database {
             )?;
         }
         if Database::is_table_empty("messages", &con)? {
-            let first_message: String = con.prepare("SELECT first_message FROM companion")?.query_row([], |row| row.get(0))?;
+            struct CompanionReturn {
+                name: String,
+                first_message: String
+            }
+            let companion_data = con.query_row("SELECT name, first_message FROM companion", [], |row| {
+                Ok(CompanionReturn {
+                    name: row.get(0)?,
+                    first_message: row.get(1)?
+                   }
+                )
+            })?;
+            let user_name: String = con.query_row("SELECT name, persona FROM user LIMIT 1", [], |row| {
+                Ok(row.get(0)?)
+            })?;
             con.execute(
                 "INSERT INTO messages (ai, content, created_at) VALUES (?, ?, ?)",
                 &[
-                    &true.to_string(),
-                    &first_message,
+                    "1",
+                    &companion_data.first_message.replace("{{char}}", &companion_data.name).replace("{{user}}", &user_name),
                     &get_current_date()
                 ]
             )?;
