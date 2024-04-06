@@ -11,11 +11,6 @@ pub struct CharacterCard {
 }
 
 impl CharacterCard {
-    pub fn load_character_json(json: &str) -> Self {
-        let char_data: CharacterCard = serde_json::from_str(json).expect("Error while parsing json string");
-        char_data
-    }
-
     pub fn load_character_card(bytes: &[u8]) -> Result<Self, Box<dyn std::error::Error>> {
         let decoder = png::Decoder::new(Cursor::new(bytes));
         let reader = decoder.read_info()?;

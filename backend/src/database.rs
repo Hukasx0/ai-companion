@@ -65,7 +65,7 @@ pub struct UserView {
     pub persona: String,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Serialize, Deserialize)]
 pub enum Device {
     CPU,
     GPU,
@@ -86,7 +86,7 @@ impl FromSql for Device {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Serialize, Deserialize)]
 pub enum PromptTemplate {
     Default,
     Llama2,
@@ -107,13 +107,16 @@ impl FromSql for PromptTemplate {
     }
 }
 
+/*
 struct Config {
     id: i32,
     device: Device,
     llm_model_path: String,
     prompt_template: PromptTemplate
 }
+*/
 
+#[derive(Serialize, Deserialize)]
 pub struct ConfigView {
     pub device: Device,
     pub llm_model_path: String,
@@ -233,7 +236,7 @@ impl Database {
         Ok(count == 0)
     }
 
-    pub fn get_messages() -> Result<Vec<Message>> {
+   /* pub fn get_messages() -> Result<Vec<Message>> {
         let con = Connection::open("companion_database.db")?;
         let mut stmt = con.prepare("SELECT id, ai, content, created_at FROM messages")?;
         let rows = stmt.query_map([], |row| {
@@ -249,7 +252,7 @@ impl Database {
             messages.push(row?);
         }
         Ok(messages)
-    }
+    } */
 
     pub fn get_x_messages(x: usize, index: usize) -> Result<Vec<Message>> {
         let con = Connection::open("companion_database.db")?;

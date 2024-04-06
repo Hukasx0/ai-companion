@@ -1,7 +1,7 @@
 use actix_web::{get, post, delete, put, App, web, HttpResponse, HttpServer};
 use futures_util::StreamExt as _;
 mod database;
-use database::{Database, Message, NewMessage, CompanionView, UserView};
+use database::{Database, Message, NewMessage, CompanionView, UserView, ConfigView};
 mod long_term_mem;
 use long_term_mem::LongTermMem;
 mod dialogue_tuning;
@@ -170,6 +170,7 @@ async fn companion_card(mut received: actix_web::web::Payload) -> HttpResponse {
             return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
         }
     };
+    let character_name = character_card.name.to_string();
     let mut avatar_file = match File::create("assets/avatar.png") {
         Ok(f) => f,
         Err(e) => {
@@ -184,14 +185,14 @@ async fn companion_card(mut received: actix_web::web::Payload) -> HttpResponse {
             return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
         }
     };
-    match Database::change_companion_avatar("assets/avatar.png") {
+    match Database::import_character_card(character_card, "assets/avatar.png") {
         Ok(_) => {},
         Err(e) => {
             eprintln!("Error while changing companion avatar using character card: {}", e);
             return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
         }
     };
-    println!("Character \"{}\" imported successfully!", character_card.name);
+    println!("Character \"{}\" imported successfully!", character_name);
     HttpResponse::Ok().body("Updated companion data via character card!")
 
 }
@@ -400,6 +401,32 @@ async fn regenerate_prompt(received: web::Json<Prompt>) -> HttpResponse {
     }
 }
 
+//              Config
+
+#[get("/api/config")]
+async fn config() -> HttpResponse {
+    let config = match Database::get_config() {
+        Ok(v) => v,
+        Err(e) => {
+            println!("Failed to get config: {}", e);
+            return HttpResponse::InternalServerError().body("Error while getting config, check logs for more information");
+        }
+    };
+    let config_json = serde_json::to_string(&config).unwrap_or(String::from("Error serializing config as JSON"));
+    HttpResponse::Ok().body(config_json)
+}
+
+#[post("/api/config")]
+async fn config_post(received: web::Json<ConfigView>) -> HttpResponse {
+    match Database::change_config(received.into_inner()) {
+        Ok(_) => HttpResponse::Ok().body("Config updated!"),
+        Err(e) => {
+            println!("Failed to update config: {}", e);
+            HttpResponse::InternalServerError().body("Error while updating config, check logs for more information")
+        }
+    }
+}
+
 //
 
 #[actix_web::main]
@@ -453,6 +480,8 @@ async fn main() -> std::io::Result<()> {
             .service(erase_tuning_message)
             .service(prompt_message)
             .service(regenerate_prompt)
+            .service(config)
+            .service(config_post)
     })
     .bind((hostname, port))?
     .run()
