@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useCompanionData } from "../context/companionContext"
+import { useCompanionData, updateCompanionData } from "../context/companionContext"
 
 import {
   Tooltip,
@@ -33,14 +33,40 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useUserData } from "../context/userContext"
-import { useConfigData } from "../context/configContext"
-import { showDevice } from "../interfaces/Config"
+import { updateUserData, useUserData } from "../context/userContext"
+import { updateConfigData, useConfigData } from "../context/configContext"
+import { ConfigInterface, showDevice } from "../interfaces/Config"
+import { useState } from "react"
+import { CompanionData } from "../interfaces/CompanionData"
+import { UserData } from "../interfaces/UserData"
 
 export function EditData() {
-  const companionData = useCompanionData();
-  const userData = useUserData();
-  const configData = useConfigData();
+  const companionData = useCompanionData() ?? {} as CompanionData;
+  const [companionFormData, setCompanionFormData] = useState<CompanionData>(companionData);
+
+  const userData = useUserData() ?? {} as UserData;
+  const [userFormData, setUserFormData] = useState<UserData>(userData);
+
+  const configData = useConfigData() ?? {} as ConfigInterface;
+  const [configFormData, setConfigFormData] = useState<ConfigInterface>(configData);
+
+  const handleCompanionSave = async () => {
+    if (companionFormData) {
+      await updateCompanionData(companionFormData);
+    }
+  };
+
+  const handleUserSave = async () => {
+    if (userFormData) {
+      await updateUserData(userFormData);
+    }
+  };
+
+  const handleConfigSave = async () => {
+    if (configFormData) {
+      await updateConfigData(configFormData);
+    }
+  };
 
   return (
     <Tabs defaultValue="companion" className="h-[65vh] overflow-y-auto">
@@ -68,7 +94,7 @@ export function EditData() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="companionName">Your companion name</Label>
-              <Input id="companionName" defaultValue={companionData?.name || "Assistant"} />
+              <Input id="companionName" value={companionFormData.name} onChange={(e) => setCompanionFormData({ ...companionFormData, name: e.target.value })} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="companionPersona" className="flex flex-row gap-2">Your companion's persona
@@ -81,26 +107,26 @@ export function EditData() {
                 </Tooltip>
               </TooltipProvider>
             </Label>
-              <Textarea className="min-h-[100px]" id="companionPersona" defaultValue={companionData?.persona || "I am an artificial intelligence chatbot created in ai-companion backend"} />
+              <Textarea className="min-h-[100px]" id="companionPersona" value={companionFormData.persona} onChange={(e) => setCompanionFormData({ ...companionFormData, persona: e.target.value })} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="companionDialogue">Example dialogue</Label>
-              <Textarea className="min-h-[100px]" id="companionDialogue" defaultValue={companionData?.example_dialogue || ""} />
+              <Textarea className="min-h-[100px]" id="companionDialogue" value={companionFormData.example_dialogue} onChange={(e) => setCompanionFormData({ ...companionFormData, example_dialogue: e.target.value })} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="companionFirstMessage">First message with which the AI will start a conversation</Label>
-              <Textarea className="min-h-[100px]" id="companionFirstMessage" defaultValue={companionData?.first_message || "Hello {{user}}, how can i help you?"} />
+              <Textarea className="min-h-[100px]" id="companionFirstMessage" value={companionFormData.first_message} onChange={(e) => setCompanionFormData({ ...companionFormData, first_message: e.target.value })} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="companionLongTermMemory" className="flex flex-row gap-2">long term memory entries <Info /></Label>
-              <Input id="companionLongTermMemory" type="number" defaultValue={companionData?.long_term_mem || 2} />
+              <Input id="companionLongTermMemory" type="number" value={companionFormData.long_term_mem} onChange={(e) => setCompanionFormData({ ...companionFormData, long_term_mem: parseInt(e.target.value) })} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="companionShortTermMemory" className="flex flex-row gap-2">short term memory entries <Info /></Label>
-              <Input id="companionShortTermMemory" type="number" defaultValue={companionData?.short_term_mem || 5} />
+              <Input id="companionShortTermMemory" type="number" value={companionFormData.short_term_mem} onChange={(e) => setCompanionFormData({ ...companionFormData, short_term_mem: parseInt(e.target.value) })} />
             </div>
             <div className="flex items-center space-x-2">
-                <Checkbox id="roleplay" checked={companionData?.roleplay} />
+                <Checkbox id="roleplay" checked={companionFormData.roleplay} onChange={() => setCompanionFormData({ ...companionFormData, roleplay: true })} />
                 <label
                     htmlFor="roleplay"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex flex-row gap-2"
@@ -109,7 +135,7 @@ export function EditData() {
                 </label>
             </div>
             <div className="flex items-center space-x-2">
-                <Checkbox id="dialogueTuning" checked={companionData?.dialogue_tuning} />
+                <Checkbox id="dialogueTuning" checked={companionFormData.dialogue_tuning} onChange={() => setCompanionFormData({ ...companionFormData, dialogue_tuning: true })}  />
                 <label
                     htmlFor="dialogueTuning"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex flex-row gap-2"
@@ -119,7 +145,7 @@ export function EditData() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <Button>Save changes</Button>
+            <Button onClick={handleCompanionSave}>Save changes</Button>
           </CardFooter>
         </Card>
       </TabsContent>
@@ -134,7 +160,7 @@ export function EditData() {
           <CardContent className="space-y-2">
             <div className="space-y-1">
               <Label htmlFor="username">Your name</Label>
-              <Input id="username" defaultValue={userData?.name || "User"} />
+              <Input id="username" value={userFormData.name} onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="userPersona" className="flex flex-row gap-2">Your persona
@@ -147,16 +173,16 @@ export function EditData() {
                   </Tooltip>
                 </TooltipProvider>
               </Label>
-              <Textarea className="min-h-[100px]" id="userPersona" defaultValue={userData?.persona || "{{user}} is chatting with {{char}} using ai-companion web user interface"} />
+              <Textarea className="min-h-[100px]" id="userPersona" value={userFormData.persona} onChange={(e) => setUserFormData({ ...userFormData, persona: e.target.value })} />
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <Button>Save changes</Button>
+            <Button onClick={handleUserSave}>Save changes</Button>
           </CardFooter>
         </Card>
       </TabsContent>
       <TabsContent value="config">
-        <Card className="bg-background border-none" defaultValue={"cpu"}>
+        <Card className="bg-background border-none">
           <CardHeader>
             <CardTitle>Config</CardTitle>
           </CardHeader>
@@ -176,7 +202,7 @@ export function EditData() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="userPersona" className="flex flex-row gap-2">Path to your Large Language Model (LLM) <Info/></Label>
-              <Input id="llmModelPath" defaultValue={configData?.llm_model_path || "models/llama2-7b"} />
+              <Input id="llmModelPath" value={configData.llm_model_path} onChange={(e) => setConfigFormData({ ...configData, llm_model_path: e.target.value })} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="promptTemplate">Prompt template</Label>
@@ -193,7 +219,7 @@ export function EditData() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <Button>Save changes</Button>
+            <Button onClick={handleConfigSave}>Save changes</Button>
           </CardFooter>
         </Card>
       </TabsContent>

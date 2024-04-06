@@ -8,6 +8,8 @@ import { UserDataProvider } from './components/context/userContext'
 import { CompanionDataProvider } from './components/context/companionContext'
 import { ConfigProvider } from './components/context/configContext'
 
+import { Toaster } from "@/components/ui/sonner"
+
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -18,6 +20,7 @@ function App() {
               <div className='max-container'>
                 <ChatWindow />
               </div>
+              <Toaster />
             </MessagesProvider>
           </CompanionDataProvider>
         </UserDataProvider>

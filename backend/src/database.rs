@@ -387,7 +387,7 @@ impl Database {
     pub fn edit_companion(companion: CompanionView) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "UPDATE companion SET name = ?, persona = ?, example_dialogue = ?, first_message = ?, long_term_mem = ?, short_term_mem = ?, roleplay = ?, dialogue_tuning = ?, avatar_path = ? WHERE id = ?",
+            "UPDATE companion SET name = ?, persona = ?, example_dialogue = ?, first_message = ?, long_term_mem = ?, short_term_mem = ?, roleplay = ?, dialogue_tuning = ?, avatar_path = ?",
             &[
                 &companion.name,
                 &companion.persona,
@@ -398,7 +398,6 @@ impl Database {
                 &companion.roleplay.to_string(),
                 &companion.dialogue_tuning.to_string(),
                 &companion.avatar_path,
-                "0"
             ]
         )?;
         Ok(())
@@ -437,10 +436,9 @@ impl Database {
     pub fn change_companion_avatar(avatar_path: &str) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "UPDATE companion SET avatar_path = ? WHERE id = ?",
+            "UPDATE companion SET avatar_path = ?",
             &[
                 avatar_path,
-                "0"
             ]
         )?;
         Ok(())
@@ -449,11 +447,10 @@ impl Database {
     pub fn edit_user(user: UserView) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "UPDATE user SET name = ?, persona = ? WHERE id = ?",
+            "UPDATE user SET name = ?, persona = ?",
             &[
                 &user.name,
                 &user.persona,
-                "0"
             ]
         )?;
         Ok(())
@@ -475,11 +472,10 @@ impl Database {
     pub fn change_config(config: ConfigView) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "UPDATE config SET device = ?, llm_model_path = ? WHERE id = ?",
+            "UPDATE config SET device = ?, llm_model_path = ?",
             &[
                 &(config.device as i32).to_string(),
                 &config.llm_model_path,
-                "0"
             ]
         )?;
         Ok(())

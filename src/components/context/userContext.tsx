@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { UserData } from '../interfaces/UserData';
+import { toast } from "sonner";
 
 interface UserDataProviderProps {
   children: ReactNode;
@@ -26,6 +27,7 @@ export const UserDataProvider: React.FC<UserDataProviderProps> = ({ children }) 
       return data;
     } catch (error) {
       console.error(error);
+      toast.error(`Error while fetching user data: ${error}`);
       return null;
     }
   };
@@ -39,4 +41,24 @@ export const UserDataProvider: React.FC<UserDataProviderProps> = ({ children }) 
 
 export const useUserData = () => {
   return useContext(UserDataContext);
+};
+
+export const updateUserData = async (userData: UserData) => {
+  try {
+    const response = await fetch('/api/user', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+    if (!response.ok) {
+      throw new Error('');
+    }
+    const response_text = await response.text();
+    toast.info(response_text);
+  } catch (error) {
+    console.error(error);
+    toast.error(`Error while sending user data to backend: ${error}`);
+  }
 };

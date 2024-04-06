@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { ConfigInterface } from '../interfaces/Config';
+import { toast } from "sonner";
 
 interface ConfigProviderProps {
   children: ReactNode;
@@ -26,6 +27,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
       return data;
     } catch (error) {
       console.error(error);
+      toast.error(`Error while fetching config data: ${error}`);
       return null;
     }
   };
@@ -39,4 +41,24 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
 export const useConfigData = () => {
   return useContext(ConfigContext);
+};
+
+export const updateConfigData = async (configData: ConfigInterface) => {
+  try {
+    const response = await fetch('/api/config', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(configData),
+    });
+    if (!response.ok) {
+      throw new Error('');
+    }
+    const response_text = await response.text();
+    toast.info(response_text);
+  } catch (error) {
+    console.error(error);
+    toast.error(`Error while sending config data to backend: ${error}`);
+  }
 };

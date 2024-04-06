@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { MessageInterface } from '../interfaces/Message';
+import { toast } from "sonner";
 
 interface MessagesProviderProps {
   children: ReactNode;
@@ -43,6 +44,7 @@ export const MessagesProvider: React.FC<MessagesProviderProps> = ({ children }) 
       return data;
     } catch (error) {
       console.error(error);
+      toast.error(`Error while fetching messages: ${error}`);
       return [];
     }
   };
