@@ -17,10 +17,58 @@ import {
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useCompanionData } from "./context/companionContext";
 import { CompanionData } from "./interfaces/CompanionData";
+import { useMessages } from "./context/messageContext";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const ChatWindow = () => {
   const companionDataContext = useCompanionData();
   const companionData: CompanionData = companionDataContext?.companionData ?? {} as CompanionData;
+
+  const { refreshMessages, pushMessage } = useMessages();
+
+  const [message, setMessage] = useState('');
+
+  const handleMessageChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(event.target.value);
+  };
+
+  const promptMessage = async () => {
+    try {
+      const sendPromise = await fetch('/api/prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: message }),
+      }).then(response => {
+        if (response.ok) {
+          refreshMessages();
+        }
+      });
+  
+      const clearPromise = new Promise<void>(resolve => {
+        setMessage('');
+        resolve();
+      });
+
+      const pushSentMessagePromise = new Promise<void>(resolve => {
+        pushMessage({
+          id: -1,
+          ai: false,
+          content: message,
+          created_at: new Date()
+        });
+        resolve();
+      });
+  
+      await Promise.all([sendPromise, clearPromise, pushSentMessagePromise]);
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error(`Error while sending a message: ${error}`);
+    }
+  };
 
     return (
         <>
@@ -48,8 +96,8 @@ const ChatWindow = () => {
                 <DropdownMenuItem>Impersonate</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
-          <Textarea  cols={1} placeholder="Type your message" />
-          <Button size={"sm"}><SendHorizontal /></Button>
+          <Textarea value={message} onChange={handleMessageChange} cols={1} placeholder="Type your message" />
+          <Button size={"sm"} onClick={promptMessage}><SendHorizontal /></Button>
           </div>
         </>
     )

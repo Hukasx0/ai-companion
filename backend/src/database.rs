@@ -334,9 +334,8 @@ impl Database {
     pub fn insert_message(message: NewMessage) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "INSERT INTO messages (ai, content, created_at) VALUES (?, ?, ?)",
+            &format!("INSERT INTO messages (ai, content, created_at) VALUES ({}, ?, ?)", message.ai),
             &[
-                &message.ai.to_string(),
                 &message.content,
                 &get_current_date()
             ]

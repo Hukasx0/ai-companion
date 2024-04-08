@@ -374,7 +374,15 @@ struct Prompt {
 
 #[post("/api/prompt")]
 async fn prompt_message(received: web::Json<Prompt>) -> HttpResponse {
-    match prompt(&received.into_inner().prompt) {
+    let prompt_message = received.into_inner().prompt.clone();
+    match Database::insert_message(NewMessage { ai: false, content: prompt_message.to_string() }) {
+        Ok(_) => {}
+        Err(e) => {
+            eprintln!("Failed to add message to database: {}", e);
+            return HttpResponse::InternalServerError().body("Error while adding message to database, check logs for more information");
+        }
+    };
+    match prompt(&prompt_message) {
         Ok(v) => HttpResponse::Ok().body(v),
         Err(e) => {
             println!("Failed to generate prompt: {}", e);

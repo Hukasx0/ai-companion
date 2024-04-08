@@ -9,6 +9,7 @@ interface MessagesProviderProps {
 interface MessagesContextType {
   messages: MessageInterface[];
   refreshMessages: () => void;
+  pushMessage: (message: MessageInterface) => void;
 }
 
 const MessagesContext = createContext<MessagesContextType | undefined>(undefined);
@@ -50,9 +51,13 @@ export const MessagesProvider: React.FC<MessagesProviderProps> = ({ children }) 
     setRefreshData(!refreshData);
   };
 
+  const pushMessage = (message: MessageInterface) => {
+    setMessages(prevMessages => [...prevMessages, message]);
+  };
+
 
   return (
-    <MessagesContext.Provider value={{ messages, refreshMessages }}>
+    <MessagesContext.Provider value={{ messages, refreshMessages, pushMessage }}>
       {children}
     </MessagesContext.Provider>
   );
