@@ -6,16 +6,22 @@ interface CompanionDataProviderProps {
   children: ReactNode;
 }
 
-const CompanionDataContext = createContext<CompanionData | null>(null);
+interface CompanionDataContextType {
+  companionData: CompanionData | null;
+  refreshCompanionData: () => void;
+}
+
+export const CompanionDataContext = createContext<CompanionDataContextType | null>(null);
 
 export const CompanionDataProvider: React.FC<CompanionDataProviderProps> = ({ children }) => {
   const [companionData, setCompanionData] = useState<CompanionData | null>(null);
+  const [refreshData, setRefreshData] = useState<boolean>(false);
 
   useEffect(() => {
     fetchCompanionData().then((data) => {
       setCompanionData(data);
     });
-  }, []);
+  }, [refreshData]);
 
   const fetchCompanionData = async () => {
     try {
@@ -32,9 +38,14 @@ export const CompanionDataProvider: React.FC<CompanionDataProviderProps> = ({ ch
     }
   };
 
+  const refreshCompanionData = () => {
+    setRefreshData(!refreshData);
+  };
+
+
 
   return (
-    <CompanionDataContext.Provider value={companionData}>
+    <CompanionDataContext.Provider value={{companionData, refreshCompanionData}}>
       {children}
     </CompanionDataContext.Provider>
   );

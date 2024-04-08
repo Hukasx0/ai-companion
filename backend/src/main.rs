@@ -416,7 +416,7 @@ async fn config() -> HttpResponse {
     HttpResponse::Ok().body(config_json)
 }
 
-#[post("/api/config")]
+#[put("/api/config")]
 async fn config_post(received: web::Json<ConfigView>) -> HttpResponse {
     match Database::change_config(received.into_inner()) {
         Ok(_) => HttpResponse::Ok().body("Config updated!"),

@@ -6,16 +6,22 @@ interface ConfigProviderProps {
   children: ReactNode;
 }
 
-const ConfigContext = createContext<ConfigInterface | null>(null);
+interface ConfigDataContextType {
+  config: ConfigInterface | null;
+  refreshConfigData: () => void;
+}
+
+const ConfigContext = createContext<ConfigDataContextType | null>(null);
 
 export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   const [config, setConfig] = useState<ConfigInterface | null>(null);
+  const [refreshData, setRefreshData] = useState<boolean>(false);
 
   useEffect(() => {
     fetchConfigData().then((data) => {
       setConfig(data);
     });
-  }, []);
+  }, [refreshData]);
 
   const fetchConfigData = async () => {
     try {
@@ -32,8 +38,13 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshConfigData = () => {
+    setRefreshData(!refreshData);
+  };
+
+
   return (
-    <ConfigContext.Provider value={config}>
+    <ConfigContext.Provider value={{config, refreshConfigData}}>
       {children}
     </ConfigContext.Provider>
   );

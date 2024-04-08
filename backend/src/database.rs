@@ -387,16 +387,12 @@ impl Database {
     pub fn edit_companion(companion: CompanionView) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "UPDATE companion SET name = ?, persona = ?, example_dialogue = ?, first_message = ?, long_term_mem = ?, short_term_mem = ?, roleplay = ?, dialogue_tuning = ?, avatar_path = ?",
+            &format!("UPDATE companion SET name = ?, persona = ?, example_dialogue = ?, first_message = ?, long_term_mem = {}, short_term_mem = {}, roleplay = {}, dialogue_tuning = {}, avatar_path = ?", companion.long_term_mem, companion.short_term_mem, companion.roleplay, companion.dialogue_tuning),
             &[
                 &companion.name,
                 &companion.persona,
                 &companion.example_dialogue,
                 &companion.first_message,
-                &companion.long_term_mem.to_string(),
-                &companion.short_term_mem.to_string(),
-                &companion.roleplay.to_string(),
-                &companion.dialogue_tuning.to_string(),
                 &companion.avatar_path,
             ]
         )?;

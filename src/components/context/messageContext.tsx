@@ -8,7 +8,7 @@ interface MessagesProviderProps {
 
 interface MessagesContextType {
   messages: MessageInterface[];
-  addMessage: (message: MessageInterface) => void;
+  refreshMessages: () => void;
 }
 
 const MessagesContext = createContext<MessagesContextType | undefined>(undefined);
@@ -23,16 +23,13 @@ export const useMessages = () => {
 
 export const MessagesProvider: React.FC<MessagesProviderProps> = ({ children }) => {
   const [messages, setMessages] = useState<MessageInterface[]>([]);
-
-  const addMessage = (message: MessageInterface) => {
-    setMessages(prevMessages => [...prevMessages, message]);
-  };
+  const [refreshData, setRefreshData] = useState<boolean>(false);
 
   useEffect(() => {
     fetchMessages().then((data) => {
       setMessages(data);
     });
-  }, []);
+  }, [refreshData]);
 
   const fetchMessages = async () => {
     try {
@@ -49,8 +46,13 @@ export const MessagesProvider: React.FC<MessagesProviderProps> = ({ children }) 
     }
   };
 
+  const refreshMessages = () => {
+    setRefreshData(!refreshData);
+  };
+
+
   return (
-    <MessagesContext.Provider value={{ messages, addMessage }}>
+    <MessagesContext.Provider value={{ messages, refreshMessages }}>
       {children}
     </MessagesContext.Provider>
   );

@@ -16,9 +16,11 @@ import {
   } from "@/components/ui/dropdown-menu"
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useCompanionData } from "./context/companionContext";
+import { CompanionData } from "./interfaces/CompanionData";
 
 const ChatWindow = () => {
-  const companionData = useCompanionData();
+  const companionDataContext = useCompanionData();
+  const companionData: CompanionData = companionDataContext?.companionData ?? {} as CompanionData;
 
     return (
         <>
@@ -27,7 +29,7 @@ const ChatWindow = () => {
           </div>
           <div className='flex flex-row items-center gap-5'>
           <Avatar>
-            <AvatarImage src={companionData?.avatar_path || companionAvatar} alt="Companion Avatar" />
+            <AvatarImage src={companionData.avatar_path || companionAvatar} alt="Companion Avatar" />
             <AvatarFallback>H</AvatarFallback>
           </Avatar>
           <EditDataPopup />

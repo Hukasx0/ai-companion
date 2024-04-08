@@ -6,16 +6,22 @@ interface UserDataProviderProps {
   children: ReactNode;
 }
 
-const UserDataContext = createContext<UserData | null>(null);
+interface UserDataContextType {
+  userData: UserData | null;
+  refreshUserData: () => void;
+}
+
+const UserDataContext = createContext<UserDataContextType | null>(null);
 
 export const UserDataProvider: React.FC<UserDataProviderProps> = ({ children }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [refreshData, setRefreshData] = useState<boolean>(false);
 
   useEffect(() => {
     fetchUserData().then((data) => {
       setUserData(data);
     });
-  }, []);
+  }, [refreshData]);
 
   const fetchUserData = async () => {
     try {
@@ -32,8 +38,13 @@ export const UserDataProvider: React.FC<UserDataProviderProps> = ({ children }) 
     }
   };
 
+  const refreshUserData = () => {
+    setRefreshData(!refreshData);
+  };
+
+
   return (
-    <UserDataContext.Provider value={userData}>
+    <UserDataContext.Provider value={{userData, refreshUserData}}>
       {children}
     </UserDataContext.Provider>
   );

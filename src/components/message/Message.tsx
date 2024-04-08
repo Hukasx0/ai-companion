@@ -4,6 +4,8 @@ import { useUserData } from "../context/userContext";
 import { useCompanionData } from "../context/companionContext";
 
 import companionAvatar from "../../assets/companion_avatar.jpg";
+import { CompanionData } from "../interfaces/CompanionData";
+import { UserData } from "../interfaces/UserData";
 
 interface MessageScrollProps {
   received: boolean;
@@ -23,13 +25,14 @@ interface MessageProps {
 }
 
 const UserMessage = ({ content, created_at }: MessageProps) => {
-  const userData = useUserData();
+  const userDataContext = useUserData();
+  const userData: UserData = userDataContext?.userData ?? {} as UserData;
 
   return (
     <div className='chat chat-end'>
       <div className="chat-header">
         <time className="text-xs mr-3 opacity-50">{new Date(created_at).toLocaleDateString()}</time>
-        {userData?.name || "User"}
+        {userData.name || "User"}
       </div>
       <div className="chat-bubble">{content}</div> 
       <div className="chat-footer opacity-50 flex flex-row gap-2 mt-1">
@@ -42,20 +45,21 @@ const UserMessage = ({ content, created_at }: MessageProps) => {
 
 
 const AiMessage = ({ content, created_at, regenerate }: MessageProps) => {
-  const companionData = useCompanionData();
+  const companionDataContext = useCompanionData();
+  const companionData: CompanionData = companionDataContext?.companionData ?? {} as CompanionData;
 
   return (
     <div className='chat chat-start'>
       <div className="chat-image avatar">
         <div className="w-10 rounded-full">
           <Avatar>
-            <AvatarImage src={companionData?.avatar_path || companionAvatar} alt="Companion Avatar" />
+            <AvatarImage src={companionData.avatar_path || companionAvatar} alt="Companion Avatar" />
             <AvatarFallback>H</AvatarFallback>
           </Avatar>
         </div>
       </div>
       <div className="chat-header">
-        {companionData?.name || "Assistant"}
+        {companionData.name || "Assistant"}
         <time className="text-xs ml-3 opacity-50">{new Date(created_at).toLocaleDateString()}</time>
       </div>
       {regenerate ? 

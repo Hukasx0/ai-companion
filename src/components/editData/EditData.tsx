@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useCompanionData, updateCompanionData } from "../context/companionContext"
+import { updateCompanionData,  useCompanionData } from "../context/companionContext"
 
 import {
   Tooltip,
@@ -41,13 +41,16 @@ import { CompanionData } from "../interfaces/CompanionData"
 import { UserData } from "../interfaces/UserData"
 
 export function EditData() {
-  const companionData = useCompanionData() ?? {} as CompanionData;
+  const companionDataContext = useCompanionData();
+  const companionData: CompanionData = companionDataContext?.companionData ?? {} as CompanionData;
   const [companionFormData, setCompanionFormData] = useState<CompanionData>(companionData);
 
-  const userData = useUserData() ?? {} as UserData;
+  const userDataContext = useUserData();
+  const userData: UserData = userDataContext?.userData ?? {} as UserData;
   const [userFormData, setUserFormData] = useState<UserData>(userData);
 
-  const configData = useConfigData() ?? {} as ConfigInterface;
+  const configContext = useConfigData();
+  const configData: ConfigInterface = configContext?.config ?? {} as ConfigInterface;
   const [configFormData, setConfigFormData] = useState<ConfigInterface>(configData);
 
   const handleCompanionSave = async () => {
@@ -145,7 +148,10 @@ export function EditData() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <Button onClick={handleCompanionSave}>Save changes</Button>
+            <Button onClick={() => {
+                handleCompanionSave();
+                companionDataContext?.refreshCompanionData();
+              }}>Save changes</Button>
           </CardFooter>
         </Card>
       </TabsContent>
@@ -177,7 +183,10 @@ export function EditData() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <Button onClick={handleUserSave}>Save changes</Button>
+            <Button onClick={() => {
+                handleUserSave();
+                userDataContext?.refreshUserData();
+              }}>Save changes</Button>
           </CardFooter>
         </Card>
       </TabsContent>
@@ -219,7 +228,10 @@ export function EditData() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <Button onClick={handleConfigSave}>Save changes</Button>
+            <Button onClick={() => {
+                handleConfigSave();
+                configContext?.refreshConfigData();
+              }}>Save changes</Button>
           </CardFooter>
         </Card>
       </TabsContent>
