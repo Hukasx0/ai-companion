@@ -72,7 +72,9 @@ const AiMessage = ({ content, created_at, regenerate }: MessageProps) => {
       }
       <div className="chat-footer opacity-50 flex flex-row gap-2 mt-1">
         <Pencil />
+        {regenerate ? 
         <Star />
+        : null}
         <Trash2 />
       </div>
     </div>

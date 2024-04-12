@@ -39,21 +39,34 @@ impl LongTermMem {
     }
 
     pub fn get_matches(&self, query_string: &str, limit: usize) -> Result<Vec<String>, TantivyError> {
-        let sanitized_query = query_string.chars().filter(|c| c.is_alphanumeric() || c.is_whitespace()).collect::<String>().to_lowercase();
+        let mut sanitized_query = query_string.replace("\n", " ");
+        sanitized_query = sanitized_query
+            .chars()
+            .filter(|c| c.is_alphanumeric() || c.is_whitespace())
+            .collect::<String>()
+            .to_lowercase();
+    
         let reader = self.index.reader()?;
         let searcher = reader.searcher();
         let qp = QueryParser::for_index(&self.index, vec![self.chat_field]);
-        let query = qp.parse_query(&sanitized_query)?;
+        let query = match qp.parse_query(&sanitized_query) {
+            Ok(q) => q,
+            Err(e) => return Err(TantivyError::from(e)),
+        };
+    
         if limit == 0 {
             return Ok(Vec::new());
         }
+    
         let matches: Vec<(f32, tantivy::DocAddress)> = searcher.search(&query, &TopDocs::with_limit(limit))?;
         let mut result: Vec<String> = Vec::new();
+    
         for (_, text_addr) in matches {
             let retrieved = searcher.doc(text_addr)?;
             let r = retrieved.get_first(self.chat_field).and_then(|val| val.as_text()).unwrap_or("");
             result.push(r.to_string());
         }
+    
         Ok(result)
     }
 

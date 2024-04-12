@@ -33,6 +33,13 @@ const ChatWindow = () => {
     setMessage(event.target.value);
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      promptMessage();
+    }
+  };
+
   const promptMessage = async () => {
     try {
       const sendPromise = await fetch('/api/prompt', {
@@ -96,7 +103,7 @@ const ChatWindow = () => {
                 <DropdownMenuItem>Impersonate</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
-          <Textarea value={message} onChange={handleMessageChange} cols={1} placeholder="Type your message" />
+          <Textarea value={message} onChange={handleMessageChange} cols={1} placeholder="Type your message" onKeyDown={handleKeyDown} />
           <Button size={"sm"} onClick={promptMessage}><SendHorizontal /></Button>
           </div>
         </>

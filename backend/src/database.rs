@@ -269,7 +269,7 @@ impl Database {
         for row in rows {
             messages.push(row?);
         }
-        Ok(messages)
+        Ok(messages.into_iter().rev().collect())
     }
 
     pub fn get_companion_data() -> Result<CompanionView> {
