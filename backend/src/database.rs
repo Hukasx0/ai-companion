@@ -346,9 +346,8 @@ impl Database {
     pub fn edit_message(id: i32, message: NewMessage) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "UPDATE messages SET ai = ?, content = ? WHERE id = ?",
+            &format!("UPDATE messages SET ai = {}, content = ? WHERE id = ?", message.ai),
             &[
-                &message.ai.to_string(),
                 &message.content,
                 &id.to_string()
             ]

@@ -53,7 +53,7 @@ export function MessageScroll() {
         )}
         <div className="flex flex-col gap-5">
           {messages.map((message, index) => (
-            <Message key={index} received={message.ai} regenerate={index === messages.length - 1} content={message.content} created_at={message.created_at} />
+            <Message key={index} received={message.ai} id={message.id} regenerate={index === messages.length - 1} content={message.content} created_at={message.created_at} />
           ))}
         </div>
       </div>

@@ -162,5 +162,5 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
         Ok(_) => {},
         Err(e) => eprintln!("Error while adding message to long-term memory: {}", e),
     };
-    Ok(companion_text.to_string())
+    Ok(companion_text.trim_start().to_string())
 }
