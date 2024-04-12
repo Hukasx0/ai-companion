@@ -272,6 +272,20 @@ impl Database {
         Ok(messages.into_iter().rev().collect())
     }
 
+    pub fn get_latest_message() -> Result<Message> {
+        let con = Connection::open("companion_database.db")?;
+        let mut stmt = con.prepare("SELECT id, ai, content, created_at FROM messages ORDER BY id DESC LIMIT 1")?;
+        let row = stmt.query_row([], |row| {
+            Ok(Message {
+                id: row.get(0)?,
+                ai: row.get(1)?,
+                content: row.get(2)?,
+                created_at: row.get(3)?,
+            })
+        })?;
+        Ok(row)
+    }
+
     pub fn get_companion_data() -> Result<CompanionView> {
         let con = Connection::open("companion_database.db")?;
         let mut stmt = con.prepare("SELECT name, persona, example_dialogue, first_message, long_term_mem, short_term_mem, roleplay, dialogue_tuning, avatar_path FROM companion LIMIT 1")?;
@@ -364,11 +378,16 @@ impl Database {
         Ok(())
     }
 
-    pub fn delete_latest_message() -> Result<(), Error> {
+    pub fn delete_latest_message() -> Result<(), rusqlite::Error> {
         let con = Connection::open("companion_database.db")?;
+        let last_message_id: i32 = con.query_row(
+            "SELECT id FROM messages ORDER BY id DESC LIMIT 1",
+            [],
+            |row| row.get(0)
+        )?;
         con.execute(
-            "DELETE FROM messages ORDER BY id DESC LIMIT 1",
-            []
+            "DELETE FROM messages WHERE id = ?",
+            [last_message_id]
         )?;
         Ok(())
     }

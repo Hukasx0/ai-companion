@@ -392,7 +392,7 @@ async fn prompt_message(received: web::Json<Prompt>) -> HttpResponse {
 }
 
 #[get("/api/prompt/regenerate")]
-async fn regenerate_prompt(received: web::Json<Prompt>) -> HttpResponse {
+async fn regenerate_prompt() -> HttpResponse {
     match Database::delete_latest_message() {
         Ok(_) => {},
         Err(e) => {
@@ -400,7 +400,14 @@ async fn regenerate_prompt(received: web::Json<Prompt>) -> HttpResponse {
             return HttpResponse::InternalServerError().body("Error while deleting latest message, check logs for more information");
         }
     }
-    match prompt(&received.into_inner().prompt) {
+    let prompt_msg: String = match Database::get_latest_message() {
+        Ok(v) => v.content,
+        Err(e) => {
+            println!("Failed to get latest message: {}", e);
+            return HttpResponse::InternalServerError().body("Error while getting latest message, check logs for more information");
+        }
+    };
+    match prompt(&prompt_msg) {
         Ok(v) => HttpResponse::Ok().body(v),
         Err(e) => {
             println!("Failed to re-generate prompt: {}", e);

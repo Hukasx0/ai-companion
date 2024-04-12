@@ -69,6 +69,22 @@ const UserMessage = ({ id, content, created_at }: MessageProps) => {
     setEditing(false);
   };
 
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/api/message/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        refreshMessages();
+      } else {
+        console.error('Failed to delete message');
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    }
+  };
+
   return (
     <div className='chat chat-end'>
       <div className="chat-header">
@@ -91,7 +107,7 @@ const UserMessage = ({ id, content, created_at }: MessageProps) => {
         ) : (
           <>
             <button onClick={handleEdit}><Pencil /></button>
-            <Trash2 />
+            <button onClick={handleDelete}><Trash2 /></button>
           </>
         )}
       </div>
@@ -141,6 +157,57 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
     setEditing(false);
   };
 
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/api/message/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        refreshMessages();
+      } else {
+        console.error('Failed to delete message');
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    }
+  };
+
+  const handleTuning = async () => {
+    try {
+      const response = await fetch('/api/memory/dialogueTuning', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        refreshMessages();
+      } else {
+        console.error('Failed to add tuning message');
+      }
+    } catch (error) {
+      console.error('Error adding tuning message:', error);
+    }
+  };
+
+  const handleRegenerate = async () => {
+    try {
+      const response = await fetch('/api/prompt/regenerate', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        refreshMessages();
+      } else {
+        console.error('Failed to regenerate prompt');
+      }
+    } catch (error) {
+      console.error('Error regenerating prompt:', error);
+    }
+  };
+
 
   return (
     <div className='chat chat-start'>
@@ -165,7 +232,7 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
               content
             )}
             </div> 
-            {!editing && <RotateCw /> }
+            {!editing && <button onClick={handleRegenerate}><RotateCw /></button> }
         </div>
         :
         <div className="chat-bubble">
@@ -185,8 +252,8 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
         ) : (
           <>
             <button onClick={handleEdit}><Pencil /></button>
-            {regenerate && <Star />}
-            <Trash2 />
+            {regenerate && <button onClick={handleTuning}><Star /></button>}
+            <button onClick={handleDelete}><Trash2 /></button>
           </>
         )}
       </div>
