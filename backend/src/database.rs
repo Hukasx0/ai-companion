@@ -1,5 +1,5 @@
-use rusqlite::{Connection, Error, Result};
-use rusqlite::types::{FromSql, FromSqlError, ValueRef};
+use rusqlite::{Connection, Error, Result, ToSql};
+use rusqlite::types::{FromSql, FromSqlError, ValueRef, ToSqlOutput};
 use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Local};
 
@@ -75,13 +75,30 @@ pub enum Device {
 impl FromSql for Device {
     fn column_result(value: ValueRef<'_>) -> Result<Self, FromSqlError> {
         match value {
-            ValueRef::Integer(i) => match i {
-                0 => Ok(Device::CPU),
-                1 => Ok(Device::GPU),
-                2 => Ok(Device::Metal),
-                _ => Err(FromSqlError::OutOfRange(i)),
-            },
+            ValueRef::Text(i) => {
+                match std::str::from_utf8(i) {
+                    Ok(s) => {
+                        match s {
+                            "CPU" => Ok(Device::CPU),
+                            "GPU" => Ok(Device::GPU),
+                            "Metal" => Ok(Device::Metal),
+                            _ => Err(FromSqlError::OutOfRange(0)),
+                        }
+                    }
+                    Err(e) => Err(FromSqlError::Other(Box::new(e))),
+                }
+            }
             _ => Err(FromSqlError::InvalidType),
+        }
+    }
+}
+
+impl ToSql for Device {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        match self {
+            Device::CPU => Ok(ToSqlOutput::from("CPU")),
+            Device::GPU => Ok(ToSqlOutput::from("GPU")),
+            Device::Metal => Ok(ToSqlOutput::from("Metal")),
         }
     }
 }
@@ -96,16 +113,34 @@ pub enum PromptTemplate {
 impl FromSql for PromptTemplate {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> Result<Self, FromSqlError> {
         match value {
-            rusqlite::types::ValueRef::Integer(i) => match i {
-                0 => Ok(PromptTemplate::Default),
-                1 => Ok(PromptTemplate::Llama2),
-                2 => Ok(PromptTemplate::Mistral),
-                _ => Err(FromSqlError::OutOfRange(i)),
-            },
+            ValueRef::Text(i) => {
+                match std::str::from_utf8(i) {
+                    Ok(s) => {
+                        match s {
+                            "Default" => Ok(PromptTemplate::Default),
+                            "Llama2" => Ok(PromptTemplate::Llama2),
+                            "Mistral" => Ok(PromptTemplate::Mistral),
+                            _ => Err(FromSqlError::OutOfRange(0)),
+                        }
+                    }
+                    Err(e) => Err(FromSqlError::Other(Box::new(e))),
+                }
+            }
             _ => Err(FromSqlError::InvalidType),
         }
     }
 }
+
+impl ToSql for PromptTemplate {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        match self {
+            PromptTemplate::Default => Ok(ToSqlOutput::from("Default")),
+            PromptTemplate::Llama2 => Ok(ToSqlOutput::from("Llama2")),
+            PromptTemplate::Mistral => Ok(ToSqlOutput::from("Mistral")),
+        }
+    }
+}
+
 
 /*
 struct Config {
@@ -121,6 +156,13 @@ pub struct ConfigView {
     pub device: Device,
     pub llm_model_path: String,
     pub prompt_template: PromptTemplate
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ConfigModify {
+    pub device: String,
+    pub llm_model_path: String,
+    pub prompt_template: String
 }
 
 pub struct Database {}
@@ -161,9 +203,9 @@ impl Database {
         con.execute(
             "CREATE TABLE IF NOT EXISTS config (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                device INTEGER,
+                device TEXT,
                 llm_model_path TEXT,
-                prompt_template INTEGER
+                prompt_template TEXT
             )", []
         )?;
         if Database::is_table_empty("companion", &con)? {
@@ -220,9 +262,9 @@ impl Database {
             con.execute(
                 "INSERT INTO config (device, llm_model_path, prompt_template) VALUES (?, ?, ?)",
                 &[
-                    &(Device::CPU as i32).to_string(),
-                    "models/llama2-7b.gguf",
-                    &(PromptTemplate::Default as i32).to_string()
+                    &Device::CPU as &dyn ToSql,
+                    &"models/llama2-7b.gguf",
+                    &PromptTemplate::Default as &dyn ToSql
                 ]
             )?;
         } 
@@ -482,13 +524,28 @@ impl Database {
         Ok(row)
     }
 
-    pub fn change_config(config: ConfigView) -> Result<(), Error> {
+    pub fn change_config(config: ConfigModify) -> Result<(), Error> {
+        let device = match config.device.as_str() {
+            "CPU" => Device::CPU,
+            "GPU" => Device::GPU,
+            "Metal" => Device::Metal,
+            _ => return Err(rusqlite::Error::InvalidParameterName("Invalid device type".to_string())),
+        };
+    
+        let prompt_template = match config.prompt_template.as_str() {
+            "Default" => PromptTemplate::Default,
+            "Llama2" => PromptTemplate::Llama2,
+            "Mistral" => PromptTemplate::Mistral,
+            _ => return Err(rusqlite::Error::InvalidParameterName("Invalid prompt template type".to_string())),
+        };
+    
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "UPDATE config SET device = ?, llm_model_path = ?",
+            "UPDATE config SET device = ?, llm_model_path = ?, prompt_template = ?",
             &[
-                &(config.device as i32).to_string(),
+                &device as &dyn ToSql,
                 &config.llm_model_path,
+                &prompt_template as &dyn ToSql,
             ]
         )?;
         Ok(())

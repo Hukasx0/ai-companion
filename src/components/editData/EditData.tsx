@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "../ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Info } from "lucide-react"
 
 import companionAvatar from "../../assets/companion_avatar.jpg";
@@ -129,23 +128,34 @@ export function EditData() {
               <Input id="companionShortTermMemory" type="number" value={companionFormData.short_term_mem} onChange={(e) => setCompanionFormData({ ...companionFormData, short_term_mem: parseInt(e.target.value) })} />
             </div>
             <div className="flex items-center space-x-2">
-                <Checkbox id="roleplay" checked={companionFormData.roleplay} onChange={() => setCompanionFormData({ ...companionFormData, roleplay: true })} />
-                <label
-                    htmlFor="roleplay"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex flex-row gap-2"
-                >
-                    Roleplay <Info/>
-                </label>
-            </div>
-            <div className="flex items-center space-x-2">
-                <Checkbox id="dialogueTuning" checked={companionFormData.dialogue_tuning} onChange={() => setCompanionFormData({ ...companionFormData, dialogue_tuning: true })}  />
-                <label
-                    htmlFor="dialogueTuning"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex flex-row gap-2"
-                >
-                    Dialogue tuning <Info />
-                </label>
-            </div>
+            <input
+              type="checkbox"
+              className="peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+              checked={companionFormData.roleplay}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompanionFormData({ ...companionFormData, roleplay: e.target.checked })}
+            />
+            <label
+              htmlFor="roleplay"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex flex-row gap-2"
+            >
+              Roleplay <Info/>
+            </label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              className="peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+              id="dialogueTuning"
+              checked={companionFormData.dialogue_tuning}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompanionFormData({ ...companionFormData, dialogue_tuning: e.target.checked })}
+            />
+            <label
+              htmlFor="dialogueTuning"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex flex-row gap-2"
+            >
+              Dialogue tuning <Info />
+            </label>
+          </div>
           </CardContent>
           <CardFooter className="flex justify-center">
             <Button onClick={() => {
@@ -199,15 +209,15 @@ export function EditData() {
             <div className="space-y-1">
               <Label htmlFor="username">Device</Label>
               <Select>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue defaultValue={showDevice(configData?.device)} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cpu">CPU</SelectItem>
-                  <SelectItem value="gpu">GPU</SelectItem>
-                  <SelectItem value="metal">Metal</SelectItem>
-                </SelectContent>
-              </Select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue defaultValue={showDevice(configData?.device)} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cpu">CPU</SelectItem>
+                <SelectItem value="gpu">GPU</SelectItem>
+                <SelectItem value="metal">Metal</SelectItem>
+              </SelectContent>
+            </Select>
             </div>
             <div className="space-y-1">
               <Label htmlFor="userPersona" className="flex flex-row gap-2">Path to your Large Language Model (LLM) <Info/></Label>

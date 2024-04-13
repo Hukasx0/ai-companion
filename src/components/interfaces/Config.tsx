@@ -16,7 +16,7 @@ export function showDevice(d: Device | undefined): string {
             return "metal";
         }
     }
-    return "cpu";
+    return "";
 };
 
 

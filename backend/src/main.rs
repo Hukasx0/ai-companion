@@ -1,7 +1,7 @@
 use actix_web::{get, post, delete, put, App, web, HttpResponse, HttpServer};
 use futures_util::StreamExt as _;
 mod database;
-use database::{Database, Message, NewMessage, CompanionView, UserView, ConfigView};
+use database::{Database, Message, NewMessage, CompanionView, UserView, ConfigModify};
 mod long_term_mem;
 use long_term_mem::LongTermMem;
 mod dialogue_tuning;
@@ -432,7 +432,7 @@ async fn config() -> HttpResponse {
 }
 
 #[put("/api/config")]
-async fn config_post(received: web::Json<ConfigView>) -> HttpResponse {
+async fn config_post(received: web::Json<ConfigModify>) -> HttpResponse {
     match Database::change_config(received.into_inner()) {
         Ok(_) => HttpResponse::Ok().body("Config updated!"),
         Err(e) => {
