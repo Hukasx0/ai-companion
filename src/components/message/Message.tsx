@@ -9,6 +9,7 @@ import { UserData } from "../interfaces/UserData";
 import { useState } from "react";
 import { useMessages } from "../context/messageContext";
 import { Textarea } from "../ui/textarea";
+import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 interface MessageScrollProps {
   received: boolean;
@@ -106,8 +107,26 @@ const UserMessage = ({ id, content, created_at }: MessageProps) => {
           </>
         ) : (
           <>
-            <button onClick={handleEdit}><Pencil /></button>
-            <button onClick={handleDelete}><Trash2 /></button>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                    <button onClick={handleEdit}><Pencil /></button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>Edit message</p>
+                    </TooltipContent>
+                  </Tooltip>
+              </TooltipProvider>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                    <button onClick={handleDelete}><Trash2 /></button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>Delete message</p>
+                    </TooltipContent>
+                  </Tooltip>
+              </TooltipProvider>
           </>
         )}
       </div>
@@ -232,7 +251,18 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
               content
             )}
             </div> 
-            {!editing && <button onClick={handleRegenerate}><RotateCw /></button> }
+            {!editing && 
+              <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button onClick={handleRegenerate}><RotateCw /></button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Regenerate message</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              }
         </div>
         :
         <div className="chat-bubble">
@@ -251,9 +281,38 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
           </>
         ) : (
           <>
-            <button onClick={handleEdit}><Pencil /></button>
-            {regenerate && <button onClick={handleTuning}><Star /></button>}
-            <button onClick={handleDelete}><Trash2 /></button>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                    <button onClick={handleEdit}><Pencil /></button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>Edit message</p>
+                    </TooltipContent>
+                  </Tooltip>
+              </TooltipProvider>
+            {regenerate && 
+              <TooltipProvider>
+              <Tooltip>
+                  <TooltipTrigger asChild>
+                  <button onClick={handleTuning}><Star /></button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Add dialogue to dialogue tuning</p>
+                  </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            }
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                    <button onClick={handleDelete}><Trash2 /></button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>Delete message</p>
+                    </TooltipContent>
+                  </Tooltip>
+              </TooltipProvider>
           </>
         )}
       </div>

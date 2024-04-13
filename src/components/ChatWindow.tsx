@@ -19,6 +19,7 @@ import { CompanionData } from "./interfaces/CompanionData";
 import { useMessages } from "./context/messageContext";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 const ChatWindow = () => {
   const companionDataContext = useCompanionData();
@@ -143,7 +144,16 @@ const ChatWindow = () => {
             </DropdownMenuContent>
         </DropdownMenu>
         <Textarea value={isImpersonating ? companionMessage : userMessage} onChange={handleMessageChange} cols={1} placeholder={isImpersonating ? `🥸 Type your message as ${companionData?.name}` : "Type your message"} onKeyDown={handleKeyDown} />
-          <Button size={"sm"} onClick={() => {isImpersonating ? sendMessageAsAi() : promptMessage()}}><SendHorizontal /></Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size={"sm"} onClick={() => {isImpersonating ? sendMessageAsAi() : promptMessage()}}><SendHorizontal /></Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{isImpersonating ? `Send message as ${companionData?.name}` : "Send message"}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
           </div>
         </>
     )
