@@ -14,7 +14,7 @@ use crate::llm::prompt;
 
 use std::fs;
 use std::fs::File;
-use std::io::Write;
+use std::io::{Write, Read};
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -39,6 +39,21 @@ async fn project_logo() -> HttpResponse {
 #[get("/assets/companion_avatar-4rust.jpg")]
 async fn companion_avatar_img() -> HttpResponse {
     HttpResponse::Ok().content_type("image/jpeg").body(&include_bytes!("../../dist/assets/companion_avatar-4rust.jpg")[..])
+}
+
+#[get("/assets/avatar.png")]
+async fn companion_avatar_custom() -> actix_web::Result<actix_web::HttpResponse> {
+    match File::open("assets/avatar.png") {
+        Ok(mut file) => {
+            let mut buffer = Vec::new();
+            file.read_to_end(&mut buffer)?;
+
+            Ok(actix_web::HttpResponse::Ok()
+                .content_type("image/png")
+                .body(buffer))
+        }
+        Err(_) => Err(actix_web::error::ErrorNotFound("File not found")),
+    }
 }
 
 
@@ -263,7 +278,6 @@ async fn companion_avatar(mut received: actix_web::web::Payload) -> HttpResponse
     HttpResponse::Ok().body("Companion avatar changed!")
 }
 
-
 //              User
 
 #[get("/api/user")]
@@ -475,6 +489,7 @@ async fn main() -> std::io::Result<()> {
             .service(css)
             .service(project_logo)
             .service(companion_avatar_img)
+            .service(companion_avatar_custom)
             .service(message)
             .service(clear_messages)
             .service(message_id)

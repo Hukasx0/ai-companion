@@ -127,7 +127,7 @@ const ChatWindow = () => {
           <div className='flex flex-row items-center gap-5'>
           <Avatar>
             <AvatarImage src={companionData.avatar_path || companionAvatar} alt="Companion Avatar" />
-            <AvatarFallback>H</AvatarFallback>
+            <AvatarFallback>AI</AvatarFallback>
           </Avatar>
           <EditDataPopup />
           </div>

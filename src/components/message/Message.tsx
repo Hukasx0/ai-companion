@@ -234,7 +234,7 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
         <div className="w-10 rounded-full">
           <Avatar>
             <AvatarImage src={companionData.avatar_path || companionAvatar} alt="Companion Avatar" />
-            <AvatarFallback>H</AvatarFallback>
+            <AvatarFallback>AI</AvatarFallback>
           </Avatar>
         </div>
       </div>

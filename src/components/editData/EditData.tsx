@@ -38,11 +38,14 @@ import { ConfigInterface, Device, PromptTemplate } from "../interfaces/Config"
 import { useState } from "react"
 import { CompanionData } from "../interfaces/CompanionData"
 import { UserData } from "../interfaces/UserData"
+import { toast } from "sonner"
 
 export function EditData() {
   const companionDataContext = useCompanionData();
   const companionData: CompanionData = companionDataContext?.companionData ?? {} as CompanionData;
   const [companionFormData, setCompanionFormData] = useState<CompanionData>(companionData);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState(companionData.avatar_path || companionAvatar);
 
   const userDataContext = useUserData();
   const userData: UserData = userDataContext?.userData ?? {} as UserData;
@@ -70,6 +73,42 @@ export function EditData() {
     }
   };
 
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const selectedFile = files[0];
+      setAvatarFile(selectedFile);
+      setAvatarPreview(URL.createObjectURL(selectedFile));
+    }
+  };
+
+  const handleAvatarUpload = async () => {
+    if (avatarFile) {
+      try {
+        const formData = new FormData();
+        formData.append("avatar", avatarFile);
+        const response = await fetch("/api/companion/avatar", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'image/png',
+        },
+          body: avatarFile,
+        });
+        if (response.ok) {
+          toast.success("Companion avatar changed successfully!");
+          companionDataContext?.refreshCompanionData();
+        } else {
+          toast.error("Failed to change companion avatar");
+        }
+      } catch (error) {
+        console.error("Error uploading avatar:", error);
+        toast.error(`Error uploading avatar: ${error}`);
+      }
+    } else {
+      toast.warning("Please select an avatar file to upload");
+    }
+  };
+
   return (
     <Tabs defaultValue="companion" className="h-[65vh] overflow-y-auto">
       <TabsList className="grid w-full grid-cols-3">
@@ -88,12 +127,23 @@ export function EditData() {
           <CardContent className="space-y-2 ">
           <div className="flex justify-center">
             <div className="space-y-1 self-center">
-              <Avatar className="w-24 h-24">
-                <AvatarImage src={companionData?.avatar_path || companionAvatar} alt="Companion Avatar" />
-                <AvatarFallback>H</AvatarFallback>
-              </Avatar>
+              <label htmlFor="avatar" className="cursor-pointer">
+                <Avatar className="w-24 h-24">
+                  <AvatarImage src={avatarPreview} alt="Companion Avatar" />
+                  <AvatarFallback>AI</AvatarFallback>
+                </Avatar>
+                <input
+                  id="avatar"
+                  type="file"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+              </label>
             </div>
-            </div>
+          </div>
+          <div className="flex justify-center">
+            <Button onClick={handleAvatarUpload}>Upload</Button>
+          </div>
             <div className="space-y-1">
               <Label htmlFor="companionName">Your companion name</Label>
               <Input id="companionName" value={companionFormData.name} onChange={(e) => setCompanionFormData({ ...companionFormData, name: e.target.value })} />
