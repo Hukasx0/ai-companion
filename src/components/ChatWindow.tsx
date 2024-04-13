@@ -56,7 +56,7 @@ const ChatWindow = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: message }),
+        body: JSON.stringify({ prompt: userMessage }),
       }).then(response => {
         if (response.ok) {
           refreshMessages();
