@@ -14,7 +14,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
-import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useCompanionData } from "./context/companionContext";
 import { CompanionData } from "./interfaces/CompanionData";
 import { useMessages } from "./context/messageContext";
@@ -29,14 +28,23 @@ const ChatWindow = () => {
 
   const [message, setMessage] = useState('');
 
+  const [userMessage, setUserMessage] = useState('');
+  const [companionMessage, setCompanionMessage] = useState('');
+  const [isImpersonating, setIsImpersonating] = useState(false);
+  const [prevUserMessage, setPrevUserMessage] = useState('');
+
   const handleMessageChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(event.target.value);
+    if (isImpersonating) {
+      setCompanionMessage(event.target.value);
+    } else {
+      setUserMessage(event.target.value);
+    }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      promptMessage();
+      isImpersonating ? sendMessageAsAi() : promptMessage();
     }
   };
 
@@ -77,6 +85,39 @@ const ChatWindow = () => {
     }
   };
 
+  const sendMessageAsAi = async () => {
+    try {
+      const sendPromise = await fetch('/api/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ai: true, content: companionMessage }),
+      });
+      
+      if (sendPromise.ok) {
+        await refreshMessages();
+        setUserMessage('');
+        setCompanionMessage('');
+        setIsImpersonating(false);
+      }
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error(`Error while sending a message: ${error}`);
+    }
+  };
+
+  const toggleImpersonateMode = () => {
+    setIsImpersonating(!isImpersonating);
+    if (!isImpersonating) {
+      setPrevUserMessage(userMessage);
+      setUserMessage('');
+    } else {
+      setUserMessage(prevUserMessage);
+    }
+  };
+
     return (
         <>
         <div className='w-full flex justify-end'>
@@ -98,13 +139,11 @@ const ChatWindow = () => {
             </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top">
-                <DropdownMenuItem>Regenerate</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Impersonate</DropdownMenuItem>
+                <DropdownMenuItem onClick={toggleImpersonateMode}>{isImpersonating ? 'Stop impersonating' : 'Impersonate'}</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
-          <Textarea value={message} onChange={handleMessageChange} cols={1} placeholder="Type your message" onKeyDown={handleKeyDown} />
-          <Button size={"sm"} onClick={promptMessage}><SendHorizontal /></Button>
+        <Textarea value={isImpersonating ? companionMessage : userMessage} onChange={handleMessageChange} cols={1} placeholder={isImpersonating ? `🥸 Type your message as ${companionData?.name}` : "Type your message"} onKeyDown={handleKeyDown} />
+          <Button size={"sm"} onClick={() => {isImpersonating ? sendMessageAsAi() : promptMessage()}}><SendHorizontal /></Button>
           </div>
         </>
     )
