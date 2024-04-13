@@ -440,6 +440,28 @@ impl Database {
             "DELETE FROM messages",
             []
         )?;
+        struct CompanionReturn {
+            name: String,
+            first_message: String
+        }
+        let companion_data = con.query_row("SELECT name, first_message FROM companion", [], |row| {
+            Ok(CompanionReturn {
+                name: row.get(0)?,
+                first_message: row.get(1)?
+               }
+            )
+        })?;
+        let user_name: String = con.query_row("SELECT name, persona FROM user LIMIT 1", [], |row| {
+            Ok(row.get(0)?)
+        })?;
+        con.execute(
+            "INSERT INTO messages (ai, content, created_at) VALUES (?, ?, ?)",
+            &[
+                "1",
+                &companion_data.first_message.replace("{{char}}", &companion_data.name).replace("{{user}}", &user_name),
+                &get_current_date()
+            ]
+        )?;
         Ok(())
     }
 
@@ -465,8 +487,8 @@ impl Database {
             &[
                 &companion.name,
                 &companion.description,
-                &companion.first_mes,
-                &companion.mes_example
+                &companion.mes_example,
+                &companion.first_mes
             ]
         )?;
         Ok(())
@@ -479,8 +501,8 @@ impl Database {
             &[
                 &companion.name,
                 &companion.description,
-                &companion.first_mes,
                 &companion.mes_example,
+                &companion.first_mes,
                 image_path
             ]
         )?;

@@ -39,6 +39,7 @@ import { useState } from "react"
 import { CompanionData } from "../interfaces/CompanionData"
 import { UserData } from "../interfaces/UserData"
 import { toast } from "sonner"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
 
 export function EditData() {
   const companionDataContext = useCompanionData();
@@ -146,6 +147,92 @@ export function EditData() {
     }
   };
 
+  const [characterJsonFile, setCharacterJsonFile] = useState<File | null>(null);
+
+  const handleCharacterJsonChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const selectedFile = files[0];
+      setCharacterJsonFile(selectedFile);
+    }
+  };
+
+  const handleCharacterJsonUpload = async () => {
+    if (characterJsonFile) {
+      try {
+        const response = await fetch("/api/companion/characterJson", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: characterJsonFile,
+        });
+        if (response.ok) {
+          toast.success("Character JSON uploaded successfully!");
+          companionDataContext?.refreshCompanionData();
+        } else {
+          toast.error("Failed to upload character JSON");
+        }
+      } catch (error) {
+        console.error("Error uploading character JSON:", error);
+        toast.error(`Error uploading character JSON: ${error}`);
+      }
+    } else {
+      toast.warning("Please select a character JSON file to upload");
+    }
+  };
+
+  const handleEraseDialogueTuning = async () => {
+    try {
+      const response = await fetch("/api/memory/dialogueTuning", {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        toast.success("Character dialogue tuning cleared successfully!");
+        companionDataContext?.refreshCompanionData();
+      } else {
+        toast.error("Failed to erase dialogue tuning");
+      }
+    } catch (error) {
+      toast.error(`Error while erasing dialogue tuning: ${error}`);
+    }
+  };
+
+  const handleEraseLongTerm = async () => {
+    try {
+      const response = await fetch("/api/memory/longTerm", {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        toast.success("Long term memory cleared successfully!");
+        companionDataContext?.refreshCompanionData();
+      } else {
+        toast.error("Failed to erase long term memory");
+      }
+    } catch (error) {
+      toast.error(`Error while erasing long term memory: ${error}`);
+    }
+  };
+
+  const handleClearMessages = async () => {
+    try {
+      const response = await fetch("/api/message", {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        toast.success("Chat log cleared successfully!");
+        companionDataContext?.refreshCompanionData();
+      } else {
+        toast.error("Failed to clear chat log");
+      }
+    } catch (error) {
+      toast.error(`Error while clearing chat log: ${error}`);
+    }
+  };
+
   return (
     <Tabs defaultValue="companion" className="h-[65vh] overflow-y-auto">
       <TabsList className="grid w-full grid-cols-3">
@@ -174,12 +261,13 @@ export function EditData() {
                   type="file"
                   className="hidden"
                   onChange={handleAvatarChange}
+                  accept="image/*"
                 />
               </label>
             </div>
           </div>
           <div className="flex justify-center">
-            <Button onClick={handleAvatarUpload}>Upload</Button>
+            <Button onClick={handleAvatarUpload}>Upload avatar</Button>
           </div>
             <div className="space-y-1">
               <Label htmlFor="companionName">Your companion name</Label>
@@ -243,10 +331,56 @@ export function EditData() {
               Dialogue tuning <Info />
             </label>
           </div>
-          <div className="flex flex-row">
+          <div className="flex flex-row gap-2">
             <Input type="file" accept="image/png" onChange={handleCharacterCardChange} />
             <Button onClick={handleCharacterCardUpload}>Upload Character Card</Button>
           </div>
+          <div className="flex flex-row gap-2">
+            <Input type="file" accept=".json" onChange={handleCharacterJsonChange} />
+            <Button onClick={handleCharacterJsonUpload}>Upload Character JSON</Button>
+          </div>
+          <Dialog>
+            <DialogTrigger><Button>Erase dialogue tuning</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you absolutely sure?</DialogTitle>
+                <DialogDescription>
+                All entries added to dialogue tuning will be cleared (this action cannot be undone).
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button onClick={handleEraseDialogueTuning}>Erase dialogue tuning</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog>
+            <DialogTrigger><Button>Erase long term memory</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you absolutely sure?</DialogTitle>
+                <DialogDescription>
+                All entries added to long term memory will be cleared (this action cannot be undone).
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+              <Button onClick={handleEraseLongTerm}>Erase long term memory</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog>
+            <DialogTrigger><Button>Clear chat log</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you absolutely sure?</DialogTitle>
+                <DialogDescription>
+                The entire chat log and short-term memory will be cleared and the character's first message will be loaded (this action cannot be undone).
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+              <Button onClick={handleClearMessages}>Clear chat log</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           </CardContent>
           <CardFooter className="flex justify-center">
             <Button onClick={() => {
