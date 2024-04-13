@@ -109,6 +109,43 @@ export function EditData() {
     }
   };
 
+  const [characterCardFile, setCharacterCardFile] = useState<File | null>(null);
+
+  const handleCharacterCardChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const selectedFile = files[0];
+      setCharacterCardFile(selectedFile);
+    }
+  };
+
+  const handleCharacterCardUpload = async () => {
+    if (characterCardFile) {
+      try {
+        const formData = new FormData();
+        formData.append("character_card", characterCardFile);
+        const response = await fetch("/api/companion/card", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'image/png',
+        },
+          body: characterCardFile,
+        });
+        if (response.ok) {
+          toast.success("Companion card uploaded successfully!");
+          companionDataContext?.refreshCompanionData();
+        } else {
+          toast.error("Failed to upload character card");
+        }
+      } catch (error) {
+        console.error("Error uploading character card:", error);
+        toast.error(`Error uploading character card: ${error}`);
+      }
+    } else {
+      toast.warning("Please select an character card (.png) file to upload");
+    }
+  };
+
   return (
     <Tabs defaultValue="companion" className="h-[65vh] overflow-y-auto">
       <TabsList className="grid w-full grid-cols-3">
@@ -205,6 +242,10 @@ export function EditData() {
             >
               Dialogue tuning <Info />
             </label>
+          </div>
+          <div className="flex flex-row">
+            <Input type="file" accept="image/png" onChange={handleCharacterCardChange} />
+            <Button onClick={handleCharacterCardUpload}>Upload Character Card</Button>
           </div>
           </CardContent>
           <CardFooter className="flex justify-center">

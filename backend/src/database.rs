@@ -461,7 +461,7 @@ impl Database {
     pub fn import_character_json(companion: CharacterCard) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "INSERT INTO companion (name, persona, example_dialogue, first_message) VALUES (?, ?, ?, ?)",
+            "UPDATE companion SET name = ?, persona = ?, example_dialogue = ?, first_message = ?",
             &[
                 &companion.name,
                 &companion.description,
@@ -475,7 +475,7 @@ impl Database {
     pub fn import_character_card(companion: CharacterCard, image_path: &str) -> Result<(), Error> {
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "INSERT INTO companion (name, persona, example_dialogue, first_message, avatar_path) VALUES (?, ?, ?, ?, ?)",
+            "UPDATE companion SET name = ?, persona = ?, example_dialogue = ?, first_message = ?, avatar_path = ?",
             &[
                 &companion.name,
                 &companion.description,
