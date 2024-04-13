@@ -1,35 +1,34 @@
-import './App.scss'
-import { useEffect, useState } from "react";
-import Companion_element from './components/Companion';
-import Footer from './components/Footer';
-import ChatWindow from './components/ChatWindow';
+import './App.css'
+
+import { ThemeProvider } from "@/components/theme-provider"
+import Footer from './components/Footer'
+import ChatWindow from './components/ChatWindow'
+import { MessagesProvider } from './components/context/messageContext'
+import { UserDataProvider } from './components/context/userContext'
+import { CompanionDataProvider } from './components/context/companionContext'
+import { ConfigProvider } from './components/context/configContext'
+
+import { Toaster } from "@/components/ui/sonner"
 
 function App() {
-  const [companionData, setCompanionData] = useState<CompanionData>();
-
-  useEffect(() => {
-      const fetchData = async () => {
-          try {
-              const get_data = await fetch(`${window.location.href}api/companionData`);
-              const data = await get_data.text();
-              const json_data = JSON.parse(data);
-              setCompanionData(json_data);
-          } catch (error) {
-              console.log('Error while fetching chat messages: ', error);
-          }
-      };
-  
-      fetchData();
-  }, []);
   return (
-    <>
-      <main className='h-screen'>
-        {Companion_element(companionData, setCompanionData)}
-        {ChatWindow(companionData)}
-      </main>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <ConfigProvider>
+        <UserDataProvider>
+          <CompanionDataProvider>
+            <MessagesProvider>
+              <div className='max-container'>
+                <ChatWindow />
+              </div>
+              <Toaster />
+            </MessagesProvider>
+          </CompanionDataProvider>
+        </UserDataProvider>
+      </ConfigProvider>
       <Footer />
-    </>
+    </ThemeProvider>
   )
 }
+
 
 export default App

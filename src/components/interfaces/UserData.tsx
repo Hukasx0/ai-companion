@@ -1,5 +1,4 @@
-interface UserData {
-    id?: number;
+export interface UserData {
     name?: string;
     persona?: string;
 }
