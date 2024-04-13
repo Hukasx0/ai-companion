@@ -1,29 +1,13 @@
-interface Device {
-    CPU: number;
-    GPU: number;
-    Metal: number;
+export enum Device {
+    CPU = "CPU",
+    GPU = "GPU",
+    Metal = "Metal"
 }
 
-export function showDevice(d: Device | undefined): string {
-    if (d) {
-        if (d.CPU) {
-            return "cpu";
-        }
-        if (d.GPU) {
-            return "gpu";
-        }
-        if (d.Metal) {
-            return "metal";
-        }
-    }
-    return "";
-};
-
-
-enum PromptTemplate {
-    Default = "default",
-    Llama2 = "llama2",
-    Mistral = "mistral"
+export enum PromptTemplate {
+    Default = "Default",
+    Llama2 = "Llama2",
+    Mistral = "Mistral"
 }
 
 export interface ConfigInterface {

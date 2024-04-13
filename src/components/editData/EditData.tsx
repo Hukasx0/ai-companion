@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/tooltip"
 import { updateUserData, useUserData } from "../context/userContext"
 import { updateConfigData, useConfigData } from "../context/configContext"
-import { ConfigInterface, showDevice } from "../interfaces/Config"
+import { ConfigInterface, Device, PromptTemplate } from "../interfaces/Config"
 import { useState } from "react"
 import { CompanionData } from "../interfaces/CompanionData"
 import { UserData } from "../interfaces/UserData"
@@ -208,31 +208,31 @@ export function EditData() {
           <CardContent className="space-y-2">
             <div className="space-y-1">
               <Label htmlFor="username">Device</Label>
-              <Select>
+              <Select onValueChange={(e) => setConfigFormData({ ...configFormData, device: e as Device })} defaultValue={configFormData?.device}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue defaultValue={showDevice(configData?.device)} />
+                <SelectValue placeholder="Select a device to run the LLM model" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cpu">CPU</SelectItem>
-                <SelectItem value="gpu">GPU</SelectItem>
-                <SelectItem value="metal">Metal</SelectItem>
+                <SelectItem value="CPU">CPU</SelectItem>
+                <SelectItem value="GPU">GPU</SelectItem>
+                <SelectItem value="Metal">Metal</SelectItem>
               </SelectContent>
             </Select>
             </div>
             <div className="space-y-1">
               <Label htmlFor="userPersona" className="flex flex-row gap-2">Path to your Large Language Model (LLM) <Info/></Label>
-              <Input id="llmModelPath" value={configData.llm_model_path} onChange={(e) => setConfigFormData({ ...configData, llm_model_path: e.target.value })} />
+              <Input id="llmModelPath" value={configFormData.llm_model_path} onChange={(e) => setConfigFormData({ ...configData, llm_model_path: e.target.value })} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="promptTemplate">Prompt template</Label>
-              <Select>
+              <Select onValueChange={(e) => setConfigFormData({ ...configFormData, prompt_template: e  as PromptTemplate })} defaultValue={configFormData?.prompt_template}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="default" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="default">Default</SelectItem>
-                  <SelectItem value="llama2">Llama2</SelectItem>
-                  <SelectItem value="mistral">Mistral</SelectItem>
+                  <SelectItem value="Default">Default</SelectItem>
+                  <SelectItem value="Llama2">Llama2</SelectItem>
+                  <SelectItem value="Mistral">Mistral</SelectItem>
                 </SelectContent>
               </Select>
             </div>
