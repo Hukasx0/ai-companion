@@ -233,6 +233,27 @@ export function EditData() {
     }
   };
 
+  const handleExportCharacterJson = async () => {
+    try {
+      const response = await fetch("/api/companion/characterJson");
+      if (response.ok) {
+        const json = await response.json();
+        const jsonString = JSON.stringify(json);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "companion.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        console.error("Failed to export companion as JSON");
+      }
+    } catch (error) {
+      console.error("Error exporting companion as JSON:", error);
+    }
+  };
+
   return (
     <Tabs defaultValue="companion" className="h-[65vh] overflow-y-auto">
       <TabsList className="grid w-full grid-cols-3">
@@ -302,6 +323,9 @@ export function EditData() {
               <Label htmlFor="companionShortTermMemory" className="flex flex-row gap-2">short term memory entries <Info /></Label>
               <Input id="companionShortTermMemory" type="number" value={companionFormData.short_term_mem} onChange={(e) => setCompanionFormData({ ...companionFormData, short_term_mem: parseInt(e.target.value) })} />
             </div>
+            <div className="flex flex-row items-center justify-center">
+              <button onClick={handleExportCharacterJson}>Export companion data as JSON</button>
+            </div>
             <div className="flex items-center space-x-2">
             <input
               type="checkbox"
@@ -339,48 +363,50 @@ export function EditData() {
             <Input type="file" accept=".json" onChange={handleCharacterJsonChange} />
             <Button onClick={handleCharacterJsonUpload}>Upload Character JSON</Button>
           </div>
+          <div className="flex flex-col justify-center items-center gap-2 flex-wrap my-2">
           <Dialog>
-            <DialogTrigger><Button>Erase dialogue tuning</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Are you absolutely sure?</DialogTitle>
-                <DialogDescription>
-                All entries added to dialogue tuning will be cleared (this action cannot be undone).
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button onClick={handleEraseDialogueTuning}>Erase dialogue tuning</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog>
-            <DialogTrigger><Button>Erase long term memory</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Are you absolutely sure?</DialogTitle>
-                <DialogDescription>
-                All entries added to long term memory will be cleared (this action cannot be undone).
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-              <Button onClick={handleEraseLongTerm}>Erase long term memory</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog>
-            <DialogTrigger><Button>Clear chat log</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Are you absolutely sure?</DialogTitle>
-                <DialogDescription>
-                The entire chat log and short-term memory will be cleared and the character's first message will be loaded (this action cannot be undone).
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-              <Button onClick={handleClearMessages}>Clear chat log</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              <DialogTrigger><Button className="grow">Erase dialogue tuning</Button></DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you absolutely sure?</DialogTitle>
+                  <DialogDescription>
+                  All entries added to dialogue tuning will be cleared (this action cannot be undone).
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button onClick={handleEraseDialogueTuning}>Erase dialogue tuning</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            <Dialog>
+              <DialogTrigger><Button className="grow">Erase long term memory</Button></DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you absolutely sure?</DialogTitle>
+                  <DialogDescription>
+                  All entries added to long term memory will be cleared (this action cannot be undone).
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                <Button onClick={handleEraseLongTerm}>Erase long term memory</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            <Dialog>
+              <DialogTrigger><Button className="grow">Clear chat log</Button></DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you absolutely sure?</DialogTitle>
+                  <DialogDescription>
+                  The entire chat log and short-term memory will be cleared and the character's first message will be loaded (this action cannot be undone).
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                <Button onClick={handleClearMessages}>Clear chat log</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
           </CardContent>
           <CardFooter className="flex justify-center">
             <Button onClick={() => {
