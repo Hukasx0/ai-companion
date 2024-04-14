@@ -315,6 +315,9 @@ export function EditData() {
               <Label htmlFor="companionFirstMessage">First message with which the AI will start a conversation</Label>
               <Textarea className="min-h-[100px]" id="companionFirstMessage" value={companionFormData.first_message} onChange={(e) => setCompanionFormData({ ...companionFormData, first_message: e.target.value })} />
             </div>
+            <div className="flex flex-row items-center justify-center">
+              <button onClick={handleExportCharacterJson}>Export companion data as JSON</button>
+            </div>
             <div className="space-y-1">
               <Label htmlFor="companionLongTermMemory" className="flex flex-row gap-2">long term memory entries <Info /></Label>
               <Input id="companionLongTermMemory" type="number" value={companionFormData.long_term_mem} onChange={(e) => setCompanionFormData({ ...companionFormData, long_term_mem: parseInt(e.target.value) })} />
@@ -322,9 +325,6 @@ export function EditData() {
             <div className="space-y-1">
               <Label htmlFor="companionShortTermMemory" className="flex flex-row gap-2">short term memory entries <Info /></Label>
               <Input id="companionShortTermMemory" type="number" value={companionFormData.short_term_mem} onChange={(e) => setCompanionFormData({ ...companionFormData, short_term_mem: parseInt(e.target.value) })} />
-            </div>
-            <div className="flex flex-row items-center justify-center">
-              <button onClick={handleExportCharacterJson}>Export companion data as JSON</button>
             </div>
             <div className="flex items-center space-x-2">
             <input
