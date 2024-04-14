@@ -73,7 +73,7 @@ const ChatWindow = () => {
           id: -1,
           ai: false,
           content: message,
-          created_at: new Date()
+          created_at: "now",
         });
         resolve();
       });

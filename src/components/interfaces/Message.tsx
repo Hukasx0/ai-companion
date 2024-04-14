@@ -2,5 +2,5 @@ export interface MessageInterface {
     id: number;
     ai: boolean;
     content: string;
-    created_at: Date;
+    created_at: string;
 }

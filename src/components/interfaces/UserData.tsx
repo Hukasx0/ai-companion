@@ -1,4 +1,4 @@
 export interface UserData {
-    name?: string;
-    persona?: string;
+    name: string;
+    persona: string;
 }

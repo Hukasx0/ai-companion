@@ -18,7 +18,7 @@ interface MessageScrollProps {
 interface MessageScrollProps extends MessageProps {
   regenerate: boolean;
   content: string;
-  created_at: Date;
+  created_at: string;
 }
 
 
@@ -26,7 +26,7 @@ interface MessageProps {
   id: number;
   regenerate: boolean;
   content: string;
-  created_at: Date;
+  created_at: string;
 }
 
 const UserMessage = ({ id, content, created_at }: MessageProps) => {
@@ -89,7 +89,7 @@ const UserMessage = ({ id, content, created_at }: MessageProps) => {
   return (
     <div className='chat chat-end'>
       <div className="chat-header">
-        <time className="text-xs mr-3 opacity-50">{new Date(created_at).toLocaleDateString()}</time>
+        <time className="text-xs mr-3 opacity-50">{created_at}</time>
         {userData.name || "User"}
       </div>
       <div className="chat-bubble">
@@ -240,7 +240,7 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
       </div>
       <div className="chat-header">
         {companionData.name || "Assistant"}
-        <time className="text-xs ml-3 opacity-50">{new Date(created_at).toLocaleDateString()}</time>
+        <time className="text-xs ml-3 opacity-50">{created_at}</time>
       </div>
       {regenerate ? 
         <div className="flex flex-row gap-2 items-center">

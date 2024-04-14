@@ -1,4 +1,4 @@
 export interface NewMessage {
-    ai?: boolean;
-    content?: string;
+    ai: boolean;
+    content: string;
 }
