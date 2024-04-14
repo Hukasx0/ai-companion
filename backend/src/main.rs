@@ -466,22 +466,24 @@ async fn main() -> std::io::Result<()> {
 
     match Database::new() {
         Ok(_) => { }
-        Err(e) => eprintln!("⚠️ Failed to connect to sqlite database: {}", e),
+        Err(e) => eprintln!("⚠️ Failed to connect to sqlite database: {}\n", e),
     }
 
     match LongTermMem::connect() {
         Ok(_) => { }
-        Err(e) => eprintln!("⚠️ Failed to connect to tantivy: {}", e),
+        Err(e) => eprintln!("⚠️ Failed to connect to tantivy: {}\n", e),
     }
 
     match DialogueTuning::create() {
         Ok(_) => { }
-        Err(e) => eprintln!("⚠️ Failed to create dialogue tuning table in sqlite database: {}", e),
+        Err(e) => eprintln!("⚠️ Failed to create dialogue tuning table in sqlite database: {}\n", e),
     }
 
-    println!("\nAI Companion v1 successfully launched! 🚀\n");
+    println!("AI Companion v1 successfully launched! 🚀\n");
 
-    println!("Started Rust backend server at:\n -> http://{}:{}/", hostname, port);
+    println!("Listening on:\n  -> http://{}:{}/", hostname, port);
+    println!("  -> http://localhost:{}/\n", port);
+    println!("https://github.com/Hukasx0/ai-companion\n   By Hubert \"Hukasx0\" Kasperek\n");
     HttpServer::new(|| {
         App::new()
             .service(index)
