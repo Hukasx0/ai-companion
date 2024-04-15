@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useMessages } from "../context/messageContext";
 import { Textarea } from "../ui/textarea";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { toast } from "sonner";
 
 interface MessageScrollProps {
   received: boolean;
@@ -57,10 +58,13 @@ const UserMessage = ({ id, content, created_at }: MessageProps) => {
       if (response.ok) {
         setEditing(false);
         refreshMessages();
+        toast.success('Message updated successfully');
       } else {
+        toast.error('Failed to update message');
         console.error('Failed to update message');
       }
     } catch (error) {
+      toast.error(`Error updating message: ${error}`);
       console.error('Error updating message:', error);
     }
   };
@@ -78,10 +82,13 @@ const UserMessage = ({ id, content, created_at }: MessageProps) => {
 
       if (response.ok) {
         refreshMessages();
+        toast.success('Message deleted successfully');
       } else {
+        toast.error('Failed to delete message');
         console.error('Failed to delete message');
       }
     } catch (error) {
+      toast.error(`Error deleting message: ${error}`);
       console.error('Error deleting message:', error);
     }
   };
@@ -163,10 +170,13 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
       if (response.ok) {
         setEditing(false);
         refreshMessages();
+        toast.success('Message updated successfully');
       } else {
+        toast.error('Failed to update message');
         console.error('Failed to update message');
       }
     } catch (error) {
+      toast.error(`Error updating message: ${error}`);
       console.error('Error updating message:', error);
     }
   };
@@ -184,10 +194,13 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
 
       if (response.ok) {
         refreshMessages();
+        toast.success('Message deleted successfully');
       } else {
+        toast.error('Failed to delete message');
         console.error('Failed to delete message');
       }
     } catch (error) {
+      toast.error(`Error deleting message: ${error}`);
       console.error('Error deleting message:', error);
     }
   };
@@ -200,10 +213,13 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
 
       if (response.ok) {
         refreshMessages();
+        toast.success('Successfully added two previous messages as dialogue tuning');
       } else {
+        toast.error('Failed to add tuning message');
         console.error('Failed to add tuning message');
       }
     } catch (error) {
+      toast.error(`Error adding tuning message: ${error}`);
       console.error('Error adding tuning message:', error);
     }
   };
@@ -220,9 +236,11 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
       if (response.ok) {
         refreshMessages();
       } else {
+        toast.error('Failed to regenerate prompt');
         console.error('Failed to regenerate prompt');
       }
     } catch (error) {
+      toast.error(`Error regenerating prompt: ${error}`);
       console.error('Error regenerating prompt:', error);
     }
   };

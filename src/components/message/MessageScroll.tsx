@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message } from "./Message";
 import { useMessages } from "../context/messageContext";
+import { toast } from 'sonner';
 
 export function MessageScroll() {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -29,6 +30,7 @@ export function MessageScroll() {
       const data = await response.json();
       setLoadMoreVisible(data.length === messageLimit);
     } catch (error) {
+      toast.error(`Error while fetching messages: ${error}`);
       console.error(error);
     }
   };

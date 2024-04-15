@@ -100,6 +100,7 @@ export function EditData() {
           companionDataContext?.refreshCompanionData();
         } else {
           toast.error("Failed to change companion avatar");
+          console.error("Failed to change companion avatar");
         }
       } catch (error) {
         console.error("Error uploading avatar:", error);
@@ -107,6 +108,7 @@ export function EditData() {
       }
     } else {
       toast.warning("Please select an avatar file to upload");
+      console.warn("Please select an avatar file to upload");
     }
   };
 
@@ -137,6 +139,7 @@ export function EditData() {
           companionDataContext?.refreshCompanionData();
         } else {
           toast.error("Failed to upload character card");
+          console.error("Failed to upload character card");
         }
       } catch (error) {
         console.error("Error uploading character card:", error);
@@ -144,6 +147,7 @@ export function EditData() {
       }
     } else {
       toast.warning("Please select an character card (.png) file to upload");
+      console.warn("Please select an character card (.png) file to upload");
     }
   };
 
@@ -193,9 +197,11 @@ export function EditData() {
         companionDataContext?.refreshCompanionData();
       } else {
         toast.error("Failed to erase dialogue tuning");
+        console.error("Failed to erase dialogue tuning");
       }
     } catch (error) {
       toast.error(`Error while erasing dialogue tuning: ${error}`);
+      console.error("Error while erasing dialogue tuning:", error);
     }
   };
 
@@ -210,9 +216,11 @@ export function EditData() {
         companionDataContext?.refreshCompanionData();
       } else {
         toast.error("Failed to erase long term memory");
+        console.error("Failed to erase long term memory");
       }
     } catch (error) {
       toast.error(`Error while erasing long term memory: ${error}`);
+      console.error("Error while erasing long term memory:", error);
     }
   };
 
@@ -227,9 +235,11 @@ export function EditData() {
         companionDataContext?.refreshCompanionData();
       } else {
         toast.error("Failed to clear chat log");
+        console.error("Failed to clear chat log");
       }
     } catch (error) {
       toast.error(`Error while clearing chat log: ${error}`);
+      console.error("Error while clearing chat log:", error);
     }
   };
 
@@ -247,9 +257,11 @@ export function EditData() {
         a.click();
         URL.revokeObjectURL(url);
       } else {
+        toast.error("Failed to export companion as JSON");
         console.error("Failed to export companion as JSON");
       }
     } catch (error) {
+      toast.error(`Error exporting companion as JSON: ${error}`);
       console.error("Error exporting companion as JSON:", error);
     }
   };
