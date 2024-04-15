@@ -308,11 +308,11 @@ export function EditData() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="companionPersona" className="flex flex-row gap-2">Your companion's persona
-                <TooltipProvider>
+                <TooltipProvider delayDuration={0}>
                   <Tooltip>
-                    <TooltipTrigger> <Info /></TooltipTrigger>
+                    <TooltipTrigger className="cursor-default"> <Info /></TooltipTrigger>
                     <TooltipContent>
-                      <p>(personality, look, backstory etc)</p>
+                      <p>personality, look, backstory etc</p>
                     </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -331,11 +331,29 @@ export function EditData() {
               <button onClick={handleExportCharacterJson}>Export companion data as JSON</button>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="companionLongTermMemory" className="flex flex-row gap-2">long term memory entries <Info /></Label>
+              <Label htmlFor="companionLongTermMemory" className="flex flex-row gap-2">long term memory entries
+              <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger className="cursor-default"> <Info /></TooltipTrigger>
+                    <TooltipContent>
+                      <p>how much the ai has to recall things from long-term memory at a time</p>
+                    </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              </Label>
               <Input id="companionLongTermMemory" type="number" value={companionFormData.long_term_mem} onChange={(e) => setCompanionFormData({ ...companionFormData, long_term_mem: parseInt(e.target.value) })} />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="companionShortTermMemory" className="flex flex-row gap-2">short term memory entries <Info /></Label>
+              <Label htmlFor="companionShortTermMemory" className="flex flex-row gap-2">short term memory entries
+              <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger className="cursor-default"> <Info /></TooltipTrigger>
+                    <TooltipContent>
+                      <p>how many recent messages to remind ai at once</p>
+                    </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              </Label>
               <Input id="companionShortTermMemory" type="number" value={companionFormData.short_term_mem} onChange={(e) => setCompanionFormData({ ...companionFormData, short_term_mem: parseInt(e.target.value) })} />
             </div>
             <div className="flex items-center space-x-2">
@@ -349,7 +367,15 @@ export function EditData() {
               htmlFor="roleplay"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex flex-row gap-2"
             >
-              Roleplay <Info/>
+              Roleplay
+              <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-default"> <Info /></TooltipTrigger>
+                      <TooltipContent>
+                        <p>if checked, messages may contain gestures and other non-verbal actions written between asterisks (for example *waves hello* or *moves closer*)</p>
+                      </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
             </label>
           </div>
           <div className="flex items-center space-x-2">
@@ -364,7 +390,15 @@ export function EditData() {
               htmlFor="dialogueTuning"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex flex-row gap-2"
             >
-              Dialogue tuning <Info />
+              Dialogue tuning
+              <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-default"> <Info /></TooltipTrigger>
+                      <TooltipContent>
+                        <p>if checked, then the generated messages will resemble those for which you clicked the star icon</p>
+                      </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
             </label>
           </div>
           <div className="flex flex-row gap-2">
@@ -443,11 +477,11 @@ export function EditData() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="userPersona" className="flex flex-row gap-2">Your persona
-                <TooltipProvider>
+                <TooltipProvider delayDuration={0}>
                     <Tooltip>
-                      <TooltipTrigger> <Info /></TooltipTrigger>
+                      <TooltipTrigger className="cursor-default"> <Info /></TooltipTrigger>
                       <TooltipContent>
-                        <p>(personality, look, backstory etc)</p>
+                        <p>personality, look, backstory etc</p>
                       </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -483,7 +517,16 @@ export function EditData() {
             </Select>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="userPersona" className="flex flex-row gap-2">Path to your Large Language Model (LLM) <Info/></Label>
+              <Label htmlFor="userPersona" className="flex flex-row gap-2">Path to your Large Language Model (LLM)
+              <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-default"> <Info /></TooltipTrigger>
+                      <TooltipContent>
+                        <p>path on the server to the llm model file with the .gguf extension</p>
+                      </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                </Label>
               <Input id="llmModelPath" value={configFormData.llm_model_path} onChange={(e) => setConfigFormData({ ...configData, llm_model_path: e.target.value })} />
             </div>
             <div className="space-y-1">
