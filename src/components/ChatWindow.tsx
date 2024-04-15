@@ -27,8 +27,6 @@ const ChatWindow = () => {
 
   const { refreshMessages, pushMessage } = useMessages();
 
-  const [message, setMessage] = useState('');
-
   const [userMessage, setUserMessage] = useState('');
   const [companionMessage, setCompanionMessage] = useState('');
   const [isImpersonating, setIsImpersonating] = useState(false);
@@ -51,35 +49,38 @@ const ChatWindow = () => {
 
   const promptMessage = async () => {
     try {
-      const sendPromise = await fetch('/api/prompt', {
+      const sendPromise = fetch('/api/prompt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ prompt: userMessage }),
-      }).then(response => {
-        if (response.ok) {
-          refreshMessages();
-        }
       });
   
       const clearPromise = new Promise<void>(resolve => {
-        setMessage('');
+        setUserMessage('');
         resolve();
       });
-
+  
       const pushSentMessagePromise = new Promise<void>(resolve => {
         pushMessage({
           id: -1,
           ai: false,
-          content: message,
+          content: userMessage,
           created_at: "now",
         });
+        pushMessage({
+          id: -2,
+          ai: true,
+          content: `${companionData.name} is typing...`,
+          created_at: "",
+        })
         resolve();
       });
   
       await Promise.all([sendPromise, clearPromise, pushSentMessagePromise]);
-
+      refreshMessages();
+  
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error(`Error while sending a message: ${error}`);

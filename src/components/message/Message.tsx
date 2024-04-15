@@ -148,6 +148,8 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
 
   const { refreshMessages } = useMessages();
 
+  const [displayedContent, setDisplayedContent] = useState(content);
+
   const [editing, setEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
   const [originalContent, setOriginalContent] = useState(content);
@@ -225,7 +227,9 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
   };
 
   const handleRegenerate = async () => {
+    const oc = displayedContent;
     try {
+      setDisplayedContent("Regenerating a message...");
       const response = await fetch('/api/prompt/regenerate', {
         method: 'GET',
         headers: {
@@ -235,13 +239,16 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
 
       if (response.ok) {
         refreshMessages();
+        setDisplayedContent(await response.text());
       } else {
         toast.error('Failed to regenerate prompt');
         console.error('Failed to regenerate prompt');
+        setDisplayedContent(oc);
       }
     } catch (error) {
       toast.error(`Error regenerating prompt: ${error}`);
       console.error('Error regenerating prompt:', error);
+      setDisplayedContent(oc);
     }
   };
 
@@ -266,7 +273,7 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
             {editing ? (
               <Textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} />
             ) : (
-              content
+              displayedContent
             )}
             </div> 
             {!editing && 
@@ -287,7 +294,7 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
           {editing ? (
             <Textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} />
           ) : (
-            content
+            displayedContent
           )}
         </div> 
       }
