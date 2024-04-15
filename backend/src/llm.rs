@@ -89,8 +89,8 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
     }
     else {
         base_prompt = 
-        format!("<<SYS>>\nYou are {}, {}\nyou are talking with {}, {} is {}\n{}\n[INST]\n{}\n{}\n[/INST]",
-                companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), user.name, user.name, user.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), rp, companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), &tuned_dialogue);
+        format!("<s>[INST]Text transcript of a conversation between {} and {}. {}\n{}'s Persona: {}\n{}'s Persona: {}[/INST]\n<s>[INST]\n{}[/INST]\n<s>[INST]\n{}\n[/INST]\n",
+        user.name, companion.name, rp, user.name, user.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), &tuned_dialogue);
     }
     let long_term_memory_entries: Vec<String> = match long_term_memory.get_matches(prompt, companion.long_term_mem) {
         Ok(entries) => entries,
@@ -100,7 +100,15 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
         }
     };
     for entry in long_term_memory_entries {
-        base_prompt += &entry.replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
+        if config.prompt_template == PromptTemplate::Llama2 {
+            base_prompt += &format!("[INST]{}[/INST]\n", entry).replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
+        }
+        else if config.prompt_template == PromptTemplate::Mistral {
+            base_prompt += &format!("<s>[INST]{}[/INST]\n", entry).replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
+        }
+        else {
+            base_prompt += &entry.replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
+        }
     }
     let short_term_memory_entries: Vec<Message> = match Database::get_x_messages(companion.short_term_mem, 0) {
         Ok(entries) => entries,
@@ -113,7 +121,25 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
         let prefix = if message.ai { &companion.name } else { &user.name };
         let text = message.content;
         let formatted_message = format!("{}: {}\n", prefix, text);
-        base_prompt += &formatted_message;
+        if config.prompt_template == PromptTemplate::Llama2 {
+            if !message.ai {
+                base_prompt += &format!("[INST]{}", formatted_message);
+            }
+            else {
+                base_prompt += &format!("{}[/INST]\n", formatted_message);
+            }
+        }
+        else if config.prompt_template == PromptTemplate::Mistral {
+            if !message.ai {
+                base_prompt += &format!("<s>[INST]{}", formatted_message);
+            }
+            else {
+                base_prompt += &format!("{}[/INST]\n", formatted_message);
+            }
+        }
+        else {
+            base_prompt += &formatted_message;
+        }
     }
     let mut end_of_generation = String::new();
     let eog = format!("\n{}:", user.name);
@@ -121,7 +147,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
         llama.as_ref(),
         &mut rand::thread_rng(),
         &llm::InferenceRequest {
-            prompt: llm::Prompt::Text(&format!("{}{}:", &base_prompt, companion.name)),
+            prompt: llm::Prompt::Text(&format!("{}{}: ", &base_prompt, companion.name)),
             parameters: &llm::InferenceParameters::default(),
             play_back_previous_tokens: false,
             maximum_token_count: None,
@@ -132,10 +158,12 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
                 llm::InferenceResponse::SnapshotToken(_) => {/*print!("{token}");*/}
                 llm::InferenceResponse::PromptToken(_) => {/*print!("{token}");*/}
                 llm::InferenceResponse::InferredToken(token) => {
-                    //x = x.clone()+&token;
+                    //  x = x.clone()+&token;
                     end_of_generation.push_str(&token);
                     print!("{token}");
-                    if end_of_generation.contains(&eog) || end_of_generation.contains("[/INST]") || end_of_generation.contains("<</SYS>>") {
+                    if end_of_generation.contains(&eog) || end_of_generation.contains("[/INST]") || end_of_generation.contains("<</SYS>>") ||
+                       end_of_generation.contains("[s]") ||
+                       end_of_generation.contains(&format!("{}:", &companion.name)) || end_of_generation.contains(&format!("{}:", &user.name)) {
                         return Ok(llm::InferenceFeedback::Halt);          
                     }
                 }
@@ -145,7 +173,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
             Ok(llm::InferenceFeedback::Continue)
         }
     );
-    let x: String = end_of_generation.replace(&eog, "").replace("[/INST]", "").replace("<</SYS>>", "");
+    let x: String = end_of_generation.replace(&eog, "").replace("[INST]", "").replace("[/INST]", "").replace("<</SYS>>", "").replace("<s>", "").replace("</s>", "");
     match res {
         Ok(result) => println!("\n\nInference stats:\n{result}"),
         Err(err) => println!("\n{err}"),
