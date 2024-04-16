@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Pencil, RotateCw, Star, Trash2 } from "lucide-react";
+import { Pencil, RotateCw, ThumbsUp, Trash2 } from "lucide-react";
 import { useUserData } from "../context/userContext";
 import { useCompanionData } from "../context/companionContext";
 
@@ -114,7 +114,7 @@ const UserMessage = ({ id, content, created_at }: MessageProps) => {
           </>
         ) : (
           <>
-            <TooltipProvider>
+            <TooltipProvider delayDuration={250}>
                 <Tooltip>
                     <TooltipTrigger asChild>
                     <button onClick={handleEdit}><Pencil /></button>
@@ -124,7 +124,7 @@ const UserMessage = ({ id, content, created_at }: MessageProps) => {
                     </TooltipContent>
                   </Tooltip>
               </TooltipProvider>
-            <TooltipProvider>
+            <TooltipProvider delayDuration={250}>
                 <Tooltip>
                     <TooltipTrigger asChild>
                     <button onClick={handleDelete}><Trash2 /></button>
@@ -277,7 +277,7 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
             )}
             </div> 
             {!editing && 
-              <TooltipProvider>
+              <TooltipProvider delayDuration={350}>
                 <Tooltip>
                     <TooltipTrigger asChild>
                       <button onClick={handleRegenerate}><RotateCw /></button>
@@ -306,7 +306,7 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
           </>
         ) : (
           <>
-            <TooltipProvider>
+            <TooltipProvider delayDuration={250}>
                 <Tooltip>
                     <TooltipTrigger asChild>
                     <button onClick={handleEdit}><Pencil /></button>
@@ -317,18 +317,18 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
                   </Tooltip>
               </TooltipProvider>
             {regenerate && 
-              <TooltipProvider>
+              <TooltipProvider delayDuration={250}>
               <Tooltip>
                   <TooltipTrigger asChild>
-                  <button onClick={handleTuning}><Star /></button>
+                  <button onClick={handleTuning}><ThumbsUp /></button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    <p>Add dialogue to dialogue tuning</p>
+                    <p>Good response</p>
                   </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
             }
-            <TooltipProvider>
+            <TooltipProvider delayDuration={250}>
                 <Tooltip>
                     <TooltipTrigger asChild>
                     <button onClick={handleDelete}><Trash2 /></button>

@@ -395,7 +395,7 @@ export function EditData() {
                     <Tooltip>
                       <TooltipTrigger className="cursor-default"> <Info /></TooltipTrigger>
                       <TooltipContent>
-                        <p>if checked, then the generated messages will resemble those for which you clicked the star icon</p>
+                        <p>if checked, the generated messages will resemble those for which you clicked the "good response" button below them</p>
                       </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
