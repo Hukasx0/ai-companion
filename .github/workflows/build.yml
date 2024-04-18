@@ -100,8 +100,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Install CUDA toolkit
         uses: Jimver/cuda-toolkit@v0.2.11
@@ -116,10 +114,6 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Check
-        run: cargo check --verbose
-        working-directory: backend/
-
       - name: Build with CUDA
         run: cargo build --verbose --features cuda
         working-directory: backend/
@@ -130,17 +124,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-
-      - name: Check
-        run: cargo check --verbose
-        working-directory: backend/
 
       - name: Build with Metal
         run: cargo build --verbose --features metal
@@ -152,8 +140,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Install CLBlast
         run: sudo apt install libclblast-dev
@@ -162,10 +148,6 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-
-      - name: Check
-        run: cargo check --verbose
-        working-directory: backend/
 
       - name: Build with OpenCL
         run: cargo build --verbose --features clblast
