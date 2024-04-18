@@ -35,7 +35,7 @@ jobs:
           toolchain: stable
 
       - name: Build Backend (Rust)
-        run: cargo build --release
+        run: cargo build --verbose
         working-directory: backend/
 
   windows:
@@ -65,5 +65,105 @@ jobs:
           toolchain: stable
 
       - name: Build Backend (Rust)
-        run: cargo build --release
+        run: cargo build --verbose
         working-directory: backend/
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (React)
+        run: npm install
+
+      - name: Build React
+        run: npm run build
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.65.0
+          override: true
+
+      - name: Build
+        run: cargo build --verbose
+
+  cuda:
+    name: Build with CUDA support
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install CUDA toolkit
+        uses: Jimver/cuda-toolkit@v0.2.11
+        with:
+          cuda: "12.2.0"
+          method: "network"
+          non-cuda-sub-packages: '["libcublas","libcublas-dev"]'
+          sub-packages: '["nvcc","compiler","libraries","libraries-dev","cudart","cudart-dev"]'
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.65.0
+          override: true
+
+      - name: Check
+        run: cargo check --verbose
+
+      - name: Build with CUDA
+        run: cargo build --verbose --features cuda
+
+  metal:
+    name: Build with Metal support
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.65.0
+          override: true
+
+      - name: Check
+        run: cargo check --verbose
+
+      - name: Build with Metal
+        run: cargo build --verbose --features metal
+
+  opencl:
+    name: Build with OpenCL support
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install CLBlast
+        run: sudo apt install libclblast-dev
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.65.0
+          override: true
+
+      - name: Check
+        run: cargo check --verbose
+
+      - name: Build with OpenCL
+        run: cargo build --verbose --features clblast
