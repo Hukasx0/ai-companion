@@ -120,6 +120,7 @@ jobs:
 
       - name: Check
         run: cargo check --verbose
+        working-directory: backend/
 
       - name: Build with CUDA
         run: cargo build --verbose --features cuda
@@ -142,6 +143,7 @@ jobs:
 
       - name: Check
         run: cargo check --verbose
+        working-directory: backend/
 
       - name: Build with Metal
         run: cargo build --verbose --features metal
@@ -167,6 +169,7 @@ jobs:
 
       - name: Check
         run: cargo check --verbose
+        working-directory: backend/
 
       - name: Build with OpenCL
         run: cargo build --verbose --features clblast
