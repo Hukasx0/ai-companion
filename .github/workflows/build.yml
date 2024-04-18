@@ -109,13 +109,24 @@ jobs:
           non-cuda-sub-packages: '["libcublas","libcublas-dev"]'
           sub-packages: '["nvcc","compiler","libraries","libraries-dev","cudart","cudart-dev"]'
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (React)
+        run: npm install
+
+      - name: Build React
+        run: npm run build
+
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
 
       - name: Build with CUDA
-        run: cargo build --verbose --features cuda
+        run: cargo build --verbose --features cublas
         working-directory: backend/
 
   metal:
@@ -124,6 +135,17 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (React)
+        run: npm install
+
+      - name: Build React
+        run: npm run build
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
@@ -143,6 +165,17 @@ jobs:
 
       - name: Install CLBlast
         run: sudo apt install libclblast-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (React)
+        run: npm install
+
+      - name: Build React
+        run: npm run build
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
