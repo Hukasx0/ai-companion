@@ -96,29 +96,43 @@ jobs:
 
   cuda:
     name: Build with CUDA support
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+      
+      - name: Install Dependencies (React)
+        run: npm install
 
-      - name: Install CUDA toolkit
-        uses: Jimver/cuda-toolkit@v0.2.11
+      - name: Build React
+        run: npm run build
+
+      - uses: Jimver/cuda-toolkit@v0.2.11
+        name: Install CUDA toolkit on Linux
+        if: matrix.os == 'ubuntu-latest'
+        id: cuda-toolkit-linux
         with:
           cuda: "12.2.0"
           method: "network"
           non-cuda-sub-packages: '["libcublas","libcublas-dev"]'
           sub-packages: '["nvcc","compiler","libraries","libraries-dev","cudart","cudart-dev"]'
 
+      - uses: Jimver/cuda-toolkit@v0.2.11
+        name: Install CUDA toolkit on Windows
+        if: matrix.os == 'windows-latest'
+        id: cuda-toolkit-windows
+        with:
+          cuda: "12.2.0"
+          method: "local"
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-
-      - name: Install Dependencies (React)
-        run: npm install
-
-      - name: Build React
-        run: npm run build
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
@@ -158,24 +172,58 @@ jobs:
 
   opencl:
     name: Build with OpenCL support
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
-      - name: Install CLBlast
-        run: sudo apt install libclblast-dev
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
+      
       - name: Install Dependencies (React)
         run: npm install
 
       - name: Build React
         run: npm run build
+
+      - name: Install CLBlast on linux
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt install libclblast-dev
+
+      - name: Install vcpkg on windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          ./bootstrap-vcpkg.sh
+          ls -la
+        shell: bash
+
+      - name: Install OpenCL on windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          ${{ github.workspace }}\vcpkg\vcpkg.exe install opencl:x64-windows
+        shell: pwsh
+      
+      - name: Install CLBlast on windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          ${{ github.workspace }}\vcpkg\vcpkg.exe install clblast:x64-windows
+        shell: pwsh
+      
+      - name: Set Windows Environment Variables
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "CLBLAST_PATH=${{ github.workspace }}/vcpkg/packages/clblast_x64-windows" >> $GITHUB_ENV
+          echo "OPENCL_PATH=${{ github.workspace }}/vcpkg/packages/opencl_x64-windows" >> $GITHUB_ENV
+          echo "${{ github.workspace }}/vcpkg/packages/clblast_x64-windows/bin" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/vcpkg/packages/opencl_x64-windows/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
