@@ -1,0 +1,47 @@
+.chat-bubble {
+    ul {
+      list-style-type: disc;
+      margin-left: 1em;
+      margin-top: 0.5em;
+    }
+  
+    ol {
+      list-style-type: decimal;
+      margin-left: 1em;
+      margin-top: 0.5em;
+    }
+
+    li {
+      margin-bottom: 0.5em;
+    }
+
+    em {
+        color: hsl(var(--muted-foreground));
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+      }
+    
+      h1 {
+        font-size: 1.5em;
+      }
+    
+      h2 {
+        font-size: 1.25em;
+      }
+    
+      h3 {
+        font-size: 1.1em;
+      }
+
+      code {
+        display: block;
+        white-space: pre-wrap;
+        overflow-x: auto;
+        padding: 0.5em;
+        background-color: hsl(var(--card));
+        border-radius: 5px;
+      }
+}

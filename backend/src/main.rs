@@ -26,6 +26,11 @@ async fn js() -> HttpResponse {
     HttpResponse::Ok().content_type("application/javascript").body(include_str!("../../dist/assets/index-4rust.js"))
 }
 
+#[get("/assets/index-4rust2.js")]
+async fn js2() -> HttpResponse {
+    HttpResponse::Ok().content_type("application/javascript").body(include_str!("../../dist/assets/index-4rust2.js"))
+}
+
 #[get("/assets/index-4rust.css")]
 async fn css() -> HttpResponse {
     HttpResponse::Ok().content_type("text/css").body(include_str!("../../dist/assets/index-4rust.css"))
@@ -488,6 +493,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(index)
             .service(js)
+            .service(js2)
             .service(css)
             .service(project_logo)
             .service(companion_avatar_img)

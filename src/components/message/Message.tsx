@@ -6,11 +6,13 @@ import { useCompanionData } from "../context/companionContext";
 import companionAvatar from "../../assets/companion_avatar.jpg";
 import { CompanionData } from "../interfaces/CompanionData";
 import { UserData } from "../interfaces/UserData";
-import { useState } from "react";
+import { useEffect, useState, lazy } from "react";
 import { useMessages } from "../context/messageContext";
 import { Textarea } from "../ui/textarea";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { toast } from "sonner";
+
+const Markdown = lazy(() => import('react-markdown'));
 
 interface MessageScrollProps {
   received: boolean;
@@ -103,7 +105,7 @@ const UserMessage = ({ id, content, created_at }: MessageProps) => {
           {editing ? (
             <Textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} />
           ) : (
-            content
+            <Markdown>{content}</Markdown>
           )}
           </div> 
       <div className="chat-footer opacity-50 flex flex-row gap-2 mt-1">
@@ -153,6 +155,10 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
   const [editing, setEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
   const [originalContent, setOriginalContent] = useState(content);
+
+  useEffect(() => {
+    setDisplayedContent(content);
+  }, [content]);
 
   const handleEdit = () => {
     setOriginalContent(content);
@@ -273,7 +279,7 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
             {editing ? (
               <Textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} />
             ) : (
-              displayedContent
+              <Markdown>{displayedContent}</Markdown>
             )}
             </div> 
             {!editing && 
@@ -294,7 +300,7 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
           {editing ? (
             <Textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} />
           ) : (
-            displayedContent
+            <Markdown>{displayedContent}</Markdown>
           )}
         </div> 
       }
