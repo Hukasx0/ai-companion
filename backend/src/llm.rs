@@ -92,25 +92,28 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
         format!("<s>[INST]Text transcript of a conversation between {} and {}. {}\n{}'s Persona: {}\n{}'s Persona: {}[/INST]\n<s>[INST]\n{}[/INST]\n<s>[INST]\n{}\n[/INST]\n",
         user.name, companion.name, rp, user.name, user.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.name, companion.persona.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), companion.example_dialogue.replace("{{char}}", &companion.name).replace("{{user}}", &user.name), &tuned_dialogue);
     }
-    let long_term_memory_entries: Vec<String> = match long_term_memory.get_matches(prompt, companion.long_term_mem) {
-        Ok(entries) => entries,
-        Err(e) => {
-            eprintln!("Error while getting long term memory entries: {}", e);
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error while getting long term memory entries"));
-        }
-    };
-    for entry in long_term_memory_entries {
-        if config.prompt_template == PromptTemplate::Llama2 {
-            base_prompt += &format!("[INST]{}[/INST]\n", entry).replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
-        }
-        else if config.prompt_template == PromptTemplate::Mistral {
-            base_prompt += &format!("<s>[INST]{}[/INST]\n", entry).replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
-        }
-        else {
-            base_prompt += &entry.replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
+    if companion.long_term_mem > 0 {
+        let long_term_memory_entries: Vec<String> = match long_term_memory.get_matches(prompt, companion.long_term_mem) {
+            Ok(entries) => entries,
+            Err(e) => {
+                eprintln!("Error while getting long term memory entries: {}", e);
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error while getting long term memory entries"));
+            }
+        };
+        for entry in long_term_memory_entries {
+            if config.prompt_template == PromptTemplate::Llama2 {
+                base_prompt += &format!("[INST]{}[/INST]\n", entry).replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
+            }
+            else if config.prompt_template == PromptTemplate::Mistral {
+                base_prompt += &format!("<s>[INST]{}[/INST]\n", entry).replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
+            }
+            else {
+                base_prompt += &entry.replace("{{char}}", &companion.name).replace("{{user}}", &user.name);
+            }
         }
     }
-    let short_term_memory_entries: Vec<Message> = match Database::get_x_messages(companion.short_term_mem, 0) {
+    let short_term_memory_entries: Vec<Message> = match Database::get_x_messages(
+        if companion.short_term_mem > 0 { companion.short_term_mem } else { 1 }, 0) {
         Ok(entries) => entries,
         Err(e) => {
             eprintln!("Error while getting short term memory entries: {}", e);
