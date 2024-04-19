@@ -10,6 +10,8 @@ interface MessagesContextType {
   messages: MessageInterface[];
   refreshMessages: () => void;
   pushMessage: (message: MessageInterface) => void;
+  loadMoreMessages: () => void;
+  resetStart : () => void;
 }
 
 const MessagesContext = createContext<MessagesContextType | undefined>(undefined);
@@ -25,6 +27,7 @@ export const useMessages = () => {
 export const MessagesProvider: React.FC<MessagesProviderProps> = ({ children }) => {
   const [messages, setMessages] = useState<MessageInterface[]>([]);
   const [refreshData, setRefreshData] = useState<boolean>(false);
+  const [start, setStart] = useState<number>(0);
 
   useEffect(() => {
     fetchMessages().then((data) => {
@@ -34,7 +37,7 @@ export const MessagesProvider: React.FC<MessagesProviderProps> = ({ children }) 
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch('/api/message?limit=50&start=0');
+      const response = await fetch(`/api/message?limit=50&start=${start}`);
       if (!response.ok) {
         throw new Error('');
       }
@@ -55,9 +58,17 @@ export const MessagesProvider: React.FC<MessagesProviderProps> = ({ children }) 
     setMessages(prevMessages => [...prevMessages, message]);
   };
 
+  const loadMoreMessages = () => {
+    setStart(start + 50);
+    refreshMessages();
+  };
+
+  const resetStart = () => {
+    setStart(0);
+  }
 
   return (
-    <MessagesContext.Provider value={{ messages, refreshMessages, pushMessage }}>
+    <MessagesContext.Provider value={{ messages, refreshMessages, pushMessage, loadMoreMessages, resetStart }}>
       {children}
     </MessagesContext.Provider>
   );

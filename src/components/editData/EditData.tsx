@@ -57,7 +57,7 @@ export function EditData() {
   const configData: ConfigInterface = configContext?.config ?? {} as ConfigInterface;
   const [configFormData, setConfigFormData] = useState<ConfigInterface>(configData);
 
-  const { refreshMessages } = useMessages();
+  const { refreshMessages, resetStart } = useMessages();
 
   const handleCompanionSave = async () => {
     if (companionFormData) {
@@ -233,6 +233,7 @@ export function EditData() {
 
       if (response.ok) {
         toast.success("Chat log cleared successfully!");
+        resetStart();
         refreshMessages();
       } else {
         toast.error("Failed to clear chat log");
