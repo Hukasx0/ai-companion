@@ -14,9 +14,19 @@ pub struct Message {
     pub created_at: String,
 }
 
-fn get_current_date() -> String {
+pub fn get_current_date() -> String {
     let local: DateTime<Local> = Local::now();
     local.format("%A %d.%m.%Y %H:%M").to_string()
+}
+
+pub fn contains_time_question(text: &str) -> bool {
+    let time_related_keywords = ["time", "date", "hour", "day", "month", "year", "minute", "second", "morning", "afternoon", "evening", "night"];
+    for keyword in &time_related_keywords {
+        if text.contains(keyword) {
+            return true;
+        }
+    }
+    false
 }
 
 #[derive(Serialize, Deserialize)]

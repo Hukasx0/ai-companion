@@ -1,7 +1,7 @@
 use std::io::Write;
 use chrono::{DateTime, Local};
 
-use crate::database::{Database, NewMessage, Message, ConfigView, UserView, CompanionView, PromptTemplate, Device};
+use crate::database::{Database, NewMessage, Message, ConfigView, UserView, CompanionView, PromptTemplate, Device, get_current_date, contains_time_question};
 use crate::dialogue_tuning::DialogueTuning;
 use crate::long_term_mem::LongTermMem;
 
@@ -120,10 +120,15 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
             return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error while getting short term memory entries"));
         }
     };
+    let mut message_counter = 1;
+    let short_term_mem_len = short_term_memory_entries.len();
     for message in short_term_memory_entries {
         let prefix = if message.ai { &companion.name } else { &user.name };
         let text = message.content;
-        let formatted_message = format!("{}: {}\n", prefix, text);
+        let mut formatted_message = format!("{}: {}\n", prefix, text);
+        if message_counter == short_term_mem_len && contains_time_question(&formatted_message) {
+            formatted_message = format!("\n* it's currently {} *\n{}", get_current_date(), formatted_message);
+        }
         if config.prompt_template == PromptTemplate::Llama2 {
             if !message.ai {
                 base_prompt += &format!("[INST]{}", formatted_message);
@@ -143,6 +148,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
         else {
             base_prompt += &formatted_message;
         }
+        message_counter += 1;
     }
     let mut end_of_generation = String::new();
     let eog = format!("\n{}:", user.name);
