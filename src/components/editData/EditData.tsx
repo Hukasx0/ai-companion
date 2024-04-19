@@ -39,7 +39,8 @@ import { useState } from "react"
 import { CompanionData } from "../interfaces/CompanionData"
 import { UserData } from "../interfaces/UserData"
 import { toast } from "sonner"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
+import { useMessages } from "../context/messageContext"
 
 export function EditData() {
   const companionDataContext = useCompanionData();
@@ -55,6 +56,8 @@ export function EditData() {
   const configContext = useConfigData();
   const configData: ConfigInterface = configContext?.config ?? {} as ConfigInterface;
   const [configFormData, setConfigFormData] = useState<ConfigInterface>(configData);
+
+  const { refreshMessages } = useMessages();
 
   const handleCompanionSave = async () => {
     if (companionFormData) {
@@ -194,7 +197,6 @@ export function EditData() {
 
       if (response.ok) {
         toast.success("Character dialogue tuning cleared successfully!");
-        companionDataContext?.refreshCompanionData();
       } else {
         toast.error("Failed to erase dialogue tuning");
         console.error("Failed to erase dialogue tuning");
@@ -213,7 +215,6 @@ export function EditData() {
 
       if (response.ok) {
         toast.success("Long term memory cleared successfully!");
-        companionDataContext?.refreshCompanionData();
       } else {
         toast.error("Failed to erase long term memory");
         console.error("Failed to erase long term memory");
@@ -232,7 +233,7 @@ export function EditData() {
 
       if (response.ok) {
         toast.success("Chat log cleared successfully!");
-        companionDataContext?.refreshCompanionData();
+        refreshMessages();
       } else {
         toast.error("Failed to clear chat log");
         console.error("Failed to clear chat log");
@@ -285,10 +286,19 @@ export function EditData() {
           <div className="flex justify-center">
             <div className="space-y-1 self-center">
               <label htmlFor="avatar" className="cursor-pointer">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src={avatarPreview} alt="Companion Avatar" />
-                  <AvatarFallback>AI</AvatarFallback>
-                </Avatar>
+                <TooltipProvider delayDuration={350}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                    <Avatar className="w-24 h-24">
+                      <AvatarImage src={avatarPreview} alt="Companion Avatar" />
+                      <AvatarFallback>AI</AvatarFallback>
+                    </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>Select an image from disk</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <input
                   id="avatar"
                   type="file"
@@ -420,7 +430,9 @@ export function EditData() {
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button onClick={handleEraseDialogueTuning}>Erase dialogue tuning</Button>
+                  <DialogClose>
+                    <Button onClick={handleEraseDialogueTuning}>Erase dialogue tuning</Button>
+                  </DialogClose>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -434,7 +446,9 @@ export function EditData() {
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                <Button onClick={handleEraseLongTerm}>Erase long term memory</Button>
+                  <DialogClose>
+                    <Button onClick={handleEraseLongTerm}>Erase long term memory</Button>
+                  </DialogClose>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -448,7 +462,9 @@ export function EditData() {
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                <Button onClick={handleClearMessages}>Clear chat log</Button>
+                  <DialogClose>
+                    <Button onClick={handleClearMessages}>Clear chat log</Button>
+                  </DialogClose>
                 </DialogFooter>
               </DialogContent>
             </Dialog>

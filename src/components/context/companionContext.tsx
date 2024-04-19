@@ -18,7 +18,8 @@ export const CompanionDataProvider: React.FC<CompanionDataProviderProps> = ({ ch
   const [refreshData, setRefreshData] = useState<boolean>(false);
 
   useEffect(() => {
-    fetchCompanionData().then((data) => {
+    fetchCompanionData().then((data: CompanionData) => {
+      data.avatar_path = data.avatar_path + "?timestamp=" + new Date().getTime();
       setCompanionData(data);
     });
   }, [refreshData]);

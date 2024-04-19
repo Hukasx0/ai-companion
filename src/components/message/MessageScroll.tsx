@@ -2,42 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message } from "./Message";
 import { useMessages } from "../context/messageContext";
-import { toast } from 'sonner';
 
 export function MessageScroll() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messages } = useMessages();
-  const [loadMoreVisible, setLoadMoreVisible] = useState(true);
-  const [startIndex, setStartIndex] = useState(0);
-  const messageLimit = 50;
-
-  useEffect(() => {
-    fetchMessages();
-  }, []);
+  const [loadMoreVisible] = useState(true);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight - scrollRef.current.clientHeight;
     }
   }, [messages]);
-
-  const fetchMessages = async () => {
-    try {
-      const response = await fetch(`/api/message?limit=${messageLimit}&start=${startIndex}`);
-      if (!response.ok) {
-        throw new Error('');
-      }
-      const data = await response.json();
-      setLoadMoreVisible(data.length === messageLimit);
-    } catch (error) {
-      toast.error(`Error while fetching messages: ${error}`);
-      console.error(error);
-    }
-  };
-
-  const handleLoadMore = () => {
-    setStartIndex(startIndex + messageLimit);
-  };
 
   return (
     <ScrollArea
@@ -48,7 +23,7 @@ export function MessageScroll() {
         {loadMoreVisible && (
           <h4
             className="mb-4 text-sm font-medium leading-none text-center text-primary cursor-pointer"
-            onClick={handleLoadMore}
+           
           >
             Load previous messages
           </h4>

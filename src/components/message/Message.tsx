@@ -221,7 +221,7 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
 
       if (response.ok) {
         refreshMessages();
-        toast.success('Successfully added two previous messages as dialogue tuning');
+        toast.success('Successfully added this response as dialogue tuning');
       } else {
         toast.error('Failed to add tuning message');
         console.error('Failed to add tuning message');
