@@ -35,7 +35,7 @@ import {
 import { updateUserData, useUserData } from "../context/userContext"
 import { updateConfigData, useConfigData } from "../context/configContext"
 import { ConfigInterface, Device, PromptTemplate } from "../interfaces/Config"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CompanionData } from "../interfaces/CompanionData"
 import { UserData } from "../interfaces/UserData"
 import { toast } from "sonner"
@@ -85,6 +85,12 @@ export function EditData() {
       setAvatarPreview(URL.createObjectURL(selectedFile));
     }
   };
+
+  useEffect(() => {
+    if (companionDataContext) {
+      setCompanionFormData(companionDataContext.companionData as CompanionData);
+    }
+  }, [companionDataContext?.companionData]);
 
   const handleAvatarUpload = async () => {
     if (avatarFile) {
@@ -139,7 +145,7 @@ export function EditData() {
         });
         if (response.ok) {
           toast.success("Companion card uploaded successfully!");
-          companionDataContext?.refreshCompanionData();
+          await companionDataContext?.refreshCompanionData();
         } else {
           toast.error("Failed to upload character card");
           console.error("Failed to upload character card");
@@ -176,7 +182,7 @@ export function EditData() {
         });
         if (response.ok) {
           toast.success("Character JSON uploaded successfully!");
-          companionDataContext?.refreshCompanionData();
+          await companionDataContext?.refreshCompanionData();
         } else {
           toast.error("Failed to upload character JSON");
         }
