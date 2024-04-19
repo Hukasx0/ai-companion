@@ -212,15 +212,19 @@ async fn companion_card(mut received: actix_web::web::Payload) -> HttpResponse {
             return HttpResponse::InternalServerError().body("Error while importing character card, check logs for more information");
         }
     };
-    println!("Character \"{}\" imported successfully!", character_name);
+    println!("Character \"{}\" imported successfully! (from character card)", character_name);
     HttpResponse::Ok().body("Updated companion data via character card!")
 
 }
 
 #[post("/api/companion/characterJson")]
 async fn companion_character_json(received: web::Json<CharacterCard>) -> HttpResponse {
+    let character_name = received.name.to_string();
     match Database::import_character_json(received.into_inner()) {
-        Ok(_) => HttpResponse::Ok().body("Character json imported successfully!"),
+        Ok(_) => {
+            println!("Character \"{}\" imported successfully! (from character JSON)", character_name);
+            HttpResponse::Ok().body("Character json imported successfully!") 
+        },
         Err(e) => {
             println!("Failed to import character json: {}", e);
             HttpResponse::InternalServerError().body("Error while importing character json, check logs for more information")
