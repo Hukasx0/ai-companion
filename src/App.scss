@@ -1,3 +1,10 @@
+#change-avatar {
+  transition: filter 0.5s, transform 0.5s;
+  &:hover {
+    filter: grayscale(100%);
+  }
+}
+
 .chat-bubble {
     ul {
       list-style-type: disc;

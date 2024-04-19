@@ -291,7 +291,7 @@ export function EditData() {
                 <Tooltip>
                     <TooltipTrigger asChild>
                     <Avatar className="w-24 h-24">
-                      <AvatarImage src={avatarPreview} alt="Companion Avatar" />
+                      <AvatarImage id="change-avatar" src={avatarPreview} alt="Companion Avatar" />
                       <AvatarFallback>AI</AvatarFallback>
                     </Avatar>
                     </TooltipTrigger>
