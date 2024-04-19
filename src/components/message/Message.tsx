@@ -348,7 +348,7 @@ const AiMessage = ({ id, content, created_at, regenerate }: MessageProps) => {
 export function Message({ received, regenerate, id, content, created_at }: MessageScrollProps) {
   return (
     <>
-      {received ? <AiMessage content={content} id={id} created_at={created_at} regenerate={regenerate} />: <UserMessage content={content} id={id} created_at={created_at} regenerate={false} /> }
+      {received ? <AiMessage key={id} content={content} id={id} created_at={created_at} regenerate={regenerate} />: <UserMessage key={id} content={content} id={id} created_at={created_at} regenerate={false} /> }
     </>
   );
 }

@@ -166,7 +166,8 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
                     print!("{token}");
                     if end_of_generation.contains(&eog) || end_of_generation.contains("[/INST]") || end_of_generation.contains("<</SYS>>") ||
                        end_of_generation.contains("[s]") ||
-                       end_of_generation.contains(&format!("{}:", &companion.name)) || end_of_generation.contains(&format!("{}:", &user.name)) {
+                       end_of_generation.contains(&format!("{}:", &companion.name)) || end_of_generation.contains(&format!("{}:", &user.name)) ||
+                       end_of_generation.contains("<|user|>") {
                         return Ok(llm::InferenceFeedback::Halt);          
                     }
                 }
@@ -176,7 +177,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
             Ok(llm::InferenceFeedback::Continue)
         }
     );
-    let x: String = end_of_generation.replace(&eog, "").replace("[INST]", "").replace("[/INST]", "").replace("<</SYS>>", "").replace("<s>", "").replace("</s>", "");
+    let x: String = end_of_generation.replace(&eog, "").replace("[INST]", "").replace("[/INST]", "").replace("<</SYS>>", "").replace("<s>", "").replace("</s>", "").replace("<|user|>", "");
     match res {
         Ok(result) => println!("\n\nInference stats:\n{result}"),
         Err(err) => println!("\n{err}"),
