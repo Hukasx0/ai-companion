@@ -1,7 +1,7 @@
 const Footer = () => {
     return (
         <footer className="w-full absolute bottom-0 flex flex-row  justify-center text-sm md:text-md xl:text-xl">
-            <p><a href="https://github.com/Hukasx0/ai-companion">ai-companion v1</a> 2024 by <a href="https://github.com/Hukasx0/" className="text-primary">Hubert "Hukasx0" Kasperek</a></p>
+            <p><a className="hover:text-muted-foreground" href="https://github.com/Hukasx0/ai-companion">AI Companion v1</a> by <a href="https://github.com/Hukasx0/" className="text-primary hover:text-muted-foreground">Hubert "Hukasx0" Kasperek</a></p>
       </footer>
     )
 }
