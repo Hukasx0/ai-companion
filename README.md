@@ -1,17 +1,20 @@
 # AI companion v1
 
+## A single little binary that has all the features you need!
+
+AI Companion is a project that aims to provide a quick, simple, light and convenient way to create AI chatbots on your local computer, it does not require any external API, installation of any libraries, you simply install the binary file corresponding to your operating system and device, download the selected model and you can start using the tool as: WebUI for chatting with LLM, WebUI for roleplaying with an AI character, or use as an API for your other projects that require an AI chatbot.
+
+The project includes many unique features, such as short-term memory, CUDA, OpenCL and Metal support, long-term memory, dialogue tuning, time recognition, learning by chatting, ability to work as a REST API, reading character cards, easy-to-use WebUI allowing you to edit data, edit configuration, send, edit and delete messages.
+
+## Installation
+Download the binary appropriate for your operating system and device from [here](https://github.com/Hukasx0/ai-companion/releases/tag/1.0.0) (for example **ai-companion-windows-cuda.exe**), and then install llm model with **.gguf** extension (for example [this one](https://huggingface.co/TheBloke/zephyr-7B-beta-GGUF/resolve/main/zephyr-7b-beta.Q4_K_M.gguf?download=true)), next launch ai-companion binary file, open your web browser at **http://localhost:3000** and you will see AI Companion WebUI, next click the **gear icon** on the website, go to **config**, and replace **Path to your Large Language Model (LLM)** with path to your **.gguf** model on your drive, after doing it, you can start chatting with your companion!
+
 ![webui screenshot](https://raw.githubusercontent.com/Hukasx0/ai-companion/main/public/webui_screenshot.png)
 
 ![webui screenshot](https://raw.githubusercontent.com/Hukasx0/ai-companion/main/public/webui_screenshot2.png)
 
 ![License](https://img.shields.io/github/license/Hukasx0/ai-companion)
 ![Downloads](https://img.shields.io/github/downloads/Hukasx0/ai-companion/total)
-
-## A single little binary that has all the features you need!
-
-AI Companion is a project that aims to provide a quick, simple, light and convenient way to create AI chatbots on your local computer, it does not require any external API, installation of any libraries, you simply install the binary file corresponding to your operating system and device, download the selected model and you can start using the tool as: WebUI for chatting with LLM, WebUI for roleplaying with an AI character, or use as an API for your other projects that require an AI chatbot.
-
-The project includes many unique features, such as short-term memory, CUDA, OpenCL and Metal support, long-term memory, dialogue tuning, time recognition, learning by chatting, ability to work as a REST API, reading character cards, easy-to-use WebUI allowing you to edit data, edit configuration, send, edit and delete messages.
 
 ## Features
 - works locally - does not require API keys for other services, which makes it completely free to use (well, apart from electricity costs - your computer must work somehow), also does not require the Internet to work
@@ -30,9 +33,6 @@ files, and no need to fight with wrong library/interpreter/framework versions)
 - import and export messages via json
 - you can use {{char}} and {{user}} in companion's persona, example dialogue, first message and user persona (if you change username or companion name, you don't need to change these, it will automatically change)
 - time - AI Chatbot can obtain information about the current time from the computer, and its long-term memory can remember what days certain conversations took place
-
-## Installation
-Download the binary appropriate for your operating system and device from [here](https://github.com/Hukasx0/ai-companion/releases/tag/1.0.0) (for example **ai-companion-windows-cuda.exe**), and then install llm model with **.gguf** extension (for example [this one](https://huggingface.co/TheBloke/zephyr-7B-beta-GGUF/resolve/main/zephyr-7b-beta.Q4_K_M.gguf?download=true)), next launch ai-companion binary file, open your web browser at **http://localhost:3000** and you will see AI Companion WebUI, next click the **gear icon** on the website, go to **config**, and replace **Path to your Large Language Model (LLM)** with path to your **.gguf** model on your drive, after doing it, you can start chatting with your companion!
 
 ## Supported AI models
 small list of tested and working AI models:
