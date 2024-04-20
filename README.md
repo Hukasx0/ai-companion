@@ -19,7 +19,7 @@ Download the binary appropriate for your operating system and device from [here]
 ## Features
 - works locally - does not require API keys for other services, which makes it completely free to use (well, apart from electricity costs - your computer must work somehow), also does not require the Internet to work
 - privacy - all conversations are kept locally in the SQLite database, which means that your conversations or the characteristics of your AI stay only on your computer
-- [API](/blob/main/docs/api_docs.md) - you can use it as a backend for your other projects that requires LLMs, custom ai chatbots or custom ai characters
+- [API](/docs/api_docs.md) - you can use it as a backend for your other projects that requires LLMs, custom ai chatbots or custom ai characters
 - speed - wrote in Rust shows good efficiency when it comes to CPU, GPU (nothing slows your generation) and RAM (you don't need to use weaker ai models)
 - ease of use - everything can be changed in web user interface, and everything is compiled into a single binary file that can be launched on your machine (no need for playing with hundreds of confusing
 files, and no need to fight with wrong library/interpreter/framework versions)
@@ -42,7 +42,7 @@ small list of tested and working AI models:
 And many many other LLM models in .gguf format
 
 ## API documentation
-API documentation can be found [here](/blob/main/docs/api_docs.md)
+API documentation can be found [here](/docs/api_docs.md)
 
 ## Projects based on ai-companion Backend/API/Library
 - [local assistant](https://github.com/Hukasx0/local-assistant) - llm powered ai virtual assistant
