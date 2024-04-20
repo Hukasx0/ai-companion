@@ -421,12 +421,12 @@ The base URL for accessing the Companion API is `http://localhost:3000/api` or `
 
 - **URL:** `/prompt`
 - **Method:** `POST`
-- **Description:** Prompt the ai
+- **Description:** Prompt the ai, (message and response are saved in short-term, long-term memory and chat log)
 - **Request Body:**
   - `prompt` (string): Prompt to the AI
 - **Response:**
   - Status: 200 OK
-  - Body: None
+  - Body: generated text
 - **Example Request:**
   ```http
   POST /prompt
@@ -441,10 +441,10 @@ The base URL for accessing the Companion API is `http://localhost:3000/api` or `
 
 - **URL:** `/prompt/regenerate`
 - **Method:** `GET`
-- **Description:** Regenerate answer to your AI prompt
+- **Description:** Regenerate answer to your AI prompt (answer is saved in short-term, long-term memory and chat log)
 - **Response:**
   - Status: 200 OK
-  - Body: None
+  - Body: generated text
 - **Example Request:**
   ```http
   GET /prompt/regenerate
