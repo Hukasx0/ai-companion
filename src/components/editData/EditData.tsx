@@ -289,7 +289,7 @@ export function EditData() {
                 Change your companion data
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 ">
+          <CardContent className="space-y-6">
           <div className="flex justify-center">
             <div className="space-y-1 self-center">
               <label htmlFor="avatar" className="cursor-pointer">
@@ -317,7 +317,7 @@ export function EditData() {
             </div>
           </div>
           <div className="flex justify-center">
-            <Button onClick={handleAvatarUpload}>Upload avatar</Button>
+            <Button variant={"outline"} onClick={handleAvatarUpload}>Upload avatar</Button>
           </div>
             <div className="space-y-1">
               <Label htmlFor="companionName">Your companion name</Label>
@@ -419,21 +419,21 @@ export function EditData() {
             </label>
           </div>
           <div className="flex flex-row gap-2">
-            <Input type="file" accept="image/png" onChange={handleCharacterCardChange} />
-            <Button onClick={handleCharacterCardUpload}>Upload Character Card</Button>
+            <Input className="text-primary" type="file" accept="image/png" onChange={handleCharacterCardChange} />
+            <Button variant={"outline"} onClick={handleCharacterCardUpload}>Upload Character Card</Button>
           </div>
           <div className="flex flex-row gap-2">
-            <Input type="file" accept=".json" onChange={handleCharacterJsonChange} />
-            <Button onClick={handleCharacterJsonUpload}>Upload Character JSON</Button>
+            <Input className="text-primary" type="file" accept=".json" onChange={handleCharacterJsonChange} />
+            <Button variant={"outline"} onClick={handleCharacterJsonUpload}>Upload Character JSON</Button>
           </div>
-          <div className="flex flex-col justify-center items-center gap-2 flex-wrap my-2">
+          <div className="flex flex-col justify-center items-center gap-4 flex-wrap my-2">
           <Dialog>
-              <DialogTrigger><Button className="grow">Erase dialogue tuning</Button></DialogTrigger>
+              <DialogTrigger><Button variant={"outline"} className="grow">Erase dialogue tuning</Button></DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Are you absolutely sure?</DialogTitle>
                   <DialogDescription>
-                  All entries added to dialogue tuning will be cleared (this action cannot be undone).
+                  All entries added to dialogue tuning will be erased (this action cannot be undone).
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -444,12 +444,12 @@ export function EditData() {
               </DialogContent>
             </Dialog>
             <Dialog>
-              <DialogTrigger><Button className="grow">Erase long term memory</Button></DialogTrigger>
+              <DialogTrigger><Button variant={"outline"} className="grow">Erase long term memory</Button></DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Are you absolutely sure?</DialogTitle>
                   <DialogDescription>
-                  All entries added to long term memory will be cleared (this action cannot be undone).
+                  All entries added to long term memory will be erased (this action cannot be undone).
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -460,12 +460,12 @@ export function EditData() {
               </DialogContent>
             </Dialog>
             <Dialog>
-              <DialogTrigger><Button className="grow">Clear chat log</Button></DialogTrigger>
+              <DialogTrigger><Button variant={"outline"} className="grow">Clear chat log</Button></DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Are you absolutely sure?</DialogTitle>
                   <DialogDescription>
-                  The entire chat log and short-term memory will be cleared and the character's first message will be loaded (this action cannot be undone).
+                  The entire chat log and short-term memory will be erased and the character's first message will be loaded (this action cannot be undone).
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -477,7 +477,7 @@ export function EditData() {
             </Dialog>
           </div>
           </CardContent>
-          <CardFooter className="flex justify-center">
+          <CardFooter className="flex justify-center mt-3">
             <Button onClick={() => {
                 handleCompanionSave();
                 companionDataContext?.refreshCompanionData();
@@ -493,7 +493,7 @@ export function EditData() {
                 Change your data
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-6">
             <div className="space-y-1">
               <Label htmlFor="username">Your name</Label>
               <Input id="username" value={userFormData.name} onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })} />
@@ -525,7 +525,7 @@ export function EditData() {
           <CardHeader>
             <CardTitle>Config</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-6">
             <div className="space-y-1">
               <Label htmlFor="username">Device</Label>
               <Select onValueChange={(e) => setConfigFormData({ ...configFormData, device: e as Device })} defaultValue={configFormData?.device}>
