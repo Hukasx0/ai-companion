@@ -540,6 +540,11 @@ export function EditData() {
             </Select>
             </div>
             <div className="space-y-1">
+              <Label htmlFor="gpuLayers" className="flex flex-row gap-2">GPU Layers
+              </Label>
+              <Input id="gpuLayers" type="number" value={configFormData.gpu_layers} onChange={(e) => setConfigFormData({ ...configFormData, gpu_layers: parseInt(e.target.value) })} />
+            </div>
+            <div className="space-y-1">
               <Label htmlFor="userPersona" className="flex flex-row gap-2">Path to your Large Language Model (LLM)
               <TooltipProvider delayDuration={0}>
                     <Tooltip>

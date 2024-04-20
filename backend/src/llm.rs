@@ -41,7 +41,7 @@ pub fn prompt(prompt: &str) -> Result<String, std::io::Error> {
         let mut params = llm::ModelParameters::default();
         if config.device == Device::GPU || config.device == Device::Metal {
             params.use_gpu = true;
-            params.gpu_layers = Some(20);
+            params.gpu_layers = Some(config.gpu_layers);
         } else {
             params.use_gpu = false;
             params.gpu_layers = None;

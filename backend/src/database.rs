@@ -157,6 +157,7 @@ struct Config {
     id: i32,
     device: Device,
     llm_model_path: String,
+    gpu_layers: usize,
     prompt_template: PromptTemplate
 }
 */
@@ -165,6 +166,7 @@ struct Config {
 pub struct ConfigView {
     pub device: Device,
     pub llm_model_path: String,
+    pub gpu_layers: usize,
     pub prompt_template: PromptTemplate
 }
 
@@ -172,6 +174,7 @@ pub struct ConfigView {
 pub struct ConfigModify {
     pub device: String,
     pub llm_model_path: String,
+    pub gpu_layers: usize,
     pub prompt_template: String
 }
 
@@ -215,6 +218,7 @@ impl Database {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 device TEXT,
                 llm_model_path TEXT,
+                gpu_layers INTEGER,
                 prompt_template TEXT
             )", []
         )?;
@@ -270,7 +274,7 @@ impl Database {
         }
         if Database::is_table_empty("config", &con)? {
             con.execute(
-                "INSERT INTO config (device, llm_model_path, prompt_template) VALUES (?, ?, ?)",
+                "INSERT INTO config (device, llm_model_path, gpu_layers, prompt_template) VALUES (?, ?, 20, ?)",
                 &[
                     &Device::CPU as &dyn ToSql,
                     &"models/llama2-7b.gguf",
@@ -359,7 +363,7 @@ impl Database {
 
     pub fn get_companion_card_data() -> Result<CharacterCard> {
         let con = Connection::open("companion_database.db")?;
-        let mut stmt = con.prepare("SELECT name, persona, example_dialogue, first_message FROM companion LIMIT 1")?;
+        let mut stmt = con.prepare("SELECT name, persona, first_message, example_dialogue FROM companion LIMIT 1")?;
         let row = stmt.query_row([], |row| {
             Ok(CharacterCard {
                 name: row.get(0)?,
@@ -545,12 +549,13 @@ impl Database {
 
     pub fn get_config() -> Result<ConfigView> {
         let con = Connection::open("companion_database.db")?;
-        let mut stmt = con.prepare("SELECT device, llm_model_path, prompt_template FROM config LIMIT 1")?;
+        let mut stmt = con.prepare("SELECT device, llm_model_path, gpu_layers, prompt_template FROM config LIMIT 1")?;
         let row = stmt.query_row([], |row| {
             Ok(ConfigView {
                 device: row.get(0)?,
                 llm_model_path: row.get(1)?,
-                prompt_template: row.get(2)?
+                gpu_layers: row.get(2)?,
+                prompt_template: row.get(3)?
             })
         })?;
         Ok(row)
@@ -573,10 +578,11 @@ impl Database {
     
         let con = Connection::open("companion_database.db")?;
         con.execute(
-            "UPDATE config SET device = ?, llm_model_path = ?, prompt_template = ?",
+            "UPDATE config SET device = ?, llm_model_path = ?, gpu_layers = ?, prompt_template = ?",
             &[
                 &device as &dyn ToSql,
                 &config.llm_model_path,
+                &config.gpu_layers,
                 &prompt_template as &dyn ToSql,
             ]
         )?;
