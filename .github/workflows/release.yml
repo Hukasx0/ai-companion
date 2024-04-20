@@ -1,0 +1,235 @@
+name: Compile project as release and create artifacts
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (React)
+        run: npm install
+
+      - name: Build React
+        run: npm run build
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build Backend (Rust)
+        run: cargo build --release --verbose
+        working-directory: backend/
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ai-companion-linux
+          path: backend/target/release/ai-companion
+
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [x64]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (React)
+        run: npm install
+
+      - name: Build React
+        run: npm run build
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build Backend (Rust)
+        run: cargo build --release --verbose
+        working-directory: backend/
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ai-companion-windows
+          path: backend/target/release/ai-companion.exe
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (React)
+        run: npm install
+
+      - name: Build React
+        run: npm run build
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build
+        run: cargo build --release --verbose
+        working-directory: backend/
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ai-companion-macos
+          path: backend/target/release/ai-companion
+
+  cuda:
+    name: Build with CUDA support
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      
+      - name: Install Dependencies (React)
+        run: npm install
+
+      - name: Build React
+        run: npm run build
+
+      - uses: Jimver/cuda-toolkit@v0.2.11
+        name: Install CUDA toolkit on Linux
+        if: matrix.os == 'ubuntu-latest'
+        id: cuda-toolkit-linux
+        with:
+          cuda: "12.2.0"
+          method: "network"
+          non-cuda-sub-packages: '["libcublas","libcublas-dev"]'
+          sub-packages: '["nvcc","compiler","libraries","libraries-dev","cudart","cudart-dev"]'
+
+      - uses: Jimver/cuda-toolkit@v0.2.11
+        name: Install CUDA toolkit on Windows
+        if: matrix.os == 'windows-latest'
+        id: cuda-toolkit-windows
+        with:
+          cuda: "12.2.0"
+          method: "local"
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build with CUDA
+        run: cargo build --release --verbose --features cublas
+        working-directory: backend/
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ai-companion-${{ matrix.os }}-cuda
+          path: |
+            backend/target/release/ai-companion${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+
+  opencl:
+    name: Build with OpenCL support
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      
+      - name: Install Dependencies (React)
+        run: npm install
+
+      - name: Build React
+        run: npm run build
+
+      - name: Install CLBlast on linux
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt install libclblast-dev
+
+      - name: Install vcpkg on windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          ./bootstrap-vcpkg.sh
+          ls -la
+        shell: bash
+
+      - name: Install OpenCL on windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          ${{ github.workspace }}\vcpkg\vcpkg.exe install opencl:x64-windows
+        shell: pwsh
+      
+      - name: Install CLBlast on windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          ${{ github.workspace }}\vcpkg\vcpkg.exe install clblast:x64-windows
+        shell: pwsh
+      
+      - name: Set Windows Environment Variables
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "CLBLAST_PATH=${{ github.workspace }}/vcpkg/packages/clblast_x64-windows" >> $GITHUB_ENV
+          echo "OPENCL_PATH=${{ github.workspace }}/vcpkg/packages/opencl_x64-windows" >> $GITHUB_ENV
+          echo "${{ github.workspace }}/vcpkg/packages/clblast_x64-windows/bin" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/vcpkg/packages/opencl_x64-windows/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build with OpenCL
+        run: cargo build --release --verbose --features clblast
+        working-directory: backend/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ai-companion-${{ matrix.os }}-opencl
+          path: |
+            backend/target/release/ai-companion${{ matrix.os == 'windows-latest' && '.exe' || '' }}
