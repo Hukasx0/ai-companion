@@ -8,6 +8,9 @@
     "dev-rs": "tsc && vite build && cargo watch -C backend -x run",
     "build": "tsc && vite build",
     "build-full": "tsc && vite build && cargo build --release --manifest-path=backend/Cargo.toml",
+    "build-full-cuda": "tsc && vite build && cargo build --release --features cublas --manifest-path=backend/Cargo.toml",
+    "build-full-opencl": "tsc && vite build && cargo build --release --features clblast --manifest-path=backend/Cargo.toml",
+    "build-full-metal": "tsc && vite build && cargo build --release --features metal --manifest-path=backend/Cargo.toml",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
