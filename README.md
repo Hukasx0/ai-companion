@@ -19,7 +19,7 @@ Download the binary appropriate for your operating system and device from [here]
 ## Features
 - works locally - does not require API keys for other services, which makes it completely free to use (well, apart from electricity costs - your computer must work somehow), also does not require the Internet to work
 - privacy - all conversations are kept locally in the SQLite database, which means that your conversations or the characteristics of your AI stay only on your computer
-- API - you can use it as a backend for your other projects that requires LLMs, custom ai chatbots or custom ai characters
+- [API](/blob/main/docs/api_docs.md) - you can use it as a backend for your other projects that requires LLMs, custom ai chatbots or custom ai characters
 - speed - wrote in Rust shows good efficiency when it comes to CPU, GPU (nothing slows your generation) and RAM (you don't need to use weaker ai models)
 - ease of use - everything can be changed in web user interface, and everything is compiled into a single binary file that can be launched on your machine (no need for playing with hundreds of confusing
 files, and no need to fight with wrong library/interpreter/framework versions)
@@ -30,7 +30,6 @@ files, and no need to fight with wrong library/interpreter/framework versions)
 - feeding ai with custom data - using the API, it is possible to save to the AI's long-term memory, e.g. fragments of documents, articles, song lyrics, poems
 - roleplay - ai chatbot can (if enabled) perform actions between asterisks (*) e.g. *moves closer*, *waves hello*
 - you can load character files in .json or .png (character cards) format. For example, you can create your own using [this tool](https://github.com/Hukasx0/character-factory)
-- import and export messages via json
 - you can use {{char}} and {{user}} in companion's persona, example dialogue, first message and user persona (if you change username or companion name, you don't need to change these, it will automatically change)
 - time - AI Chatbot can obtain information about the current time from the computer, and its long-term memory can remember what days certain conversations took place
 
@@ -43,7 +42,7 @@ small list of tested and working AI models:
 And many many other LLM models in .gguf format
 
 ## API documentation
-API documentation can be found here
+API documentation can be found [here](/blob/main/docs/api_docs.md)
 
 ## Projects based on ai-companion Backend/API/Library
 - [local assistant](https://github.com/Hukasx0/local-assistant) - llm powered ai virtual assistant

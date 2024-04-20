@@ -277,7 +277,7 @@ impl Database {
                 "INSERT INTO config (device, llm_model_path, gpu_layers, prompt_template) VALUES (?, ?, 20, ?)",
                 &[
                     &Device::CPU as &dyn ToSql,
-                    &"models/llama2-7b.gguf",
+                    &"path/to/your/gguf/model.gguf",
                     &PromptTemplate::Default as &dyn ToSql
                 ]
             )?;

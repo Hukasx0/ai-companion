@@ -1,505 +1,457 @@
-# AI Companion API documentation
-AI companion can be used as a backend or API for projects that require a personalised AI chatbot/character.
+# AI Companion v1 API Documentation
 
-## Endpoint `/api/prompt`
+## Introduction
 
-Method: POST
+The Companion API allows users to send and receive messages, manage companion settings, and retrieve various data related to the companion, user or backend.
 
-Description: This endpoint sends a request to the AI with the provided prompt. Both the prompt and the prompt reply are stored in the AI's short-term and long-term memory.
+## Base URL
 
-Input parameters:
-JSON object containing the prompt
-- `prompt` (type `String`)
-```
-{
-    "prompt": <prompt text>           // string
-}
-```
+The base URL for accessing the Companion API is `http://localhost:3000/api` or `http://<your_ip_address>:3000/api`
 
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the following JSON body:
-```
-{
-    "id": 0,                            // int
-    "ai": true,                         // bool
-    "text": <ai generated reply>,       // string
-    "date": "now"                       // string
-}
-```
+## Endpoints
 
-## Endpoint `/api/regenerate_message`
+### 1. Messages
 
-Method: GET
+#### 1.1 Get Messages
 
-Description: removes the last ai response, and regenerates it again
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the following JSON body:
-```
-{
-    "id": 0,                            // int
-    "ai": true,                         // bool
-    "text": <ai generated reply>,       // string
-    "date": "now"                       // string
-}
-```
-
-## Endpoint `/api/messages`
-
-Method: GET
-
-Description: This endpoint retrieves all messages from the database.
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with a JSON array of `All messages` stored in the database.
-```
-[
+- **URL:** `/message`
+- **Method:** `GET`
+- **Description:** Retrieve a list of messages exchanged with the companion.
+- **Parameters:**
+  - `limit` (optional): The maximum number of messages to retrieve. Max is 50.
+  - `offset` (optional): The offset for paginating through messages.
+- **Response:**
+  - Status: 200 OK
+  - Body: Array of message objects.
+- **Example Request:**
+  ```http
+  GET /message?limit=50&offset=0
+  ```
+- **Example Response:**
+  ```json
+  [
     {
-        "id": <message_id>,             // int
-        "ai": <"true" or "false">,      // string
-        "text": <message_text>,         // string
-        "date": <date>                  // string
+      "id": 1,
+      "ai": true,
+      "content": "Hello there!",
+      "created_at": "Saturday 20.04.2024 17:49"
     },
-]
-```
-
-## Endpoint '/api/editMessage'
-
-Method: POST
-
-Description: This endpoint allows you to edit the text of the message, which may belong to ai or to the user
-
-Input parameters:
-JSON object containing new text and ID of the message
-- `new_text` (type: `String`)
-- `id` (type: `Int`)
-```
-{
-    "new_text": <new message text>,           // string
-    "id": <message id>,                       // int
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Removed message".
-
-## Endpoint `/api/clearMessages`
-
-Method: GET
-
-Description: This endpoint clears the chat log and ai short-term memory by deleting all messages from the database.
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Chat log cleared".
-
-## Endpoint `/api/removeMessage`
-
-Method: POST
-
-Description: This endpoint removes a specific message from the database and ai short-term memory based on the provided message ID.
-
-Input parameters:
-JSON object containing the message ID to be removed
-- `id` (type: `Int`)
-```
-{
-    "id": <id number>           // int
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Removed message".
-
-## Endpoint `/api/companionData`
-
-Method: GET
-
-Description: This endpoint retrieves all of companion data from the database.
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with a JSON representation of the companion data stored in the database.
-```
-{
-    "id": 1,                                                                                        // int
-    "name": "<companion name>",                                                                     // string
-    "persona": "<companion persona>",                                                               // string
-    "example_dialogue": "<example dialogue>",                                                       // string
-    "first_message": "<first message that ai sends>"                                                // string
-    "long_term_mem": "<number of things to recall from long-term memory>",                          // int
-    "short_term_mem": "<number of things to recall from short-term memory>",                        // int
-    "roleplay": "<1 or 0>",                                                                         // int (1 means enabled, 0 means disabled)
-    "avatar_path": "<path to companion avatar on a server>",                                        // string
-}
-```
-
-## Endpoint `/api/change/firstMessage`
-
-Method: POST
-
-Description: This endpoint updates the first message sent by ai in the database and ai memory.
-
-You can use {{char}} here - if you are referring to a character, or {{user}} - if you are referring to a user.
-
-Input parameters:
-JSON object containing the new first message
-- `first_message` (type: `String`)
-```
-{
-    "first_message": "<first message the AI ​​will send>"        // string
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Changed first message".
-
-## Endpoint `/api/change/companionName`
-
-Method: POST
-
-Description: This endpoint updates the name of the companion in the database and ai memory.
-
-Input parameters:
-JSON object containing the new companion name
-- `companion_name` (type: `String`)
-```
-{
-    "companion_name": "<new companion name>"                    // string
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Changed companion name".
-
-## Endpoint `/api/change/companionPersona`
-
-Method: POST
-
-Description: This endpoint updates the persona of the companion in the database and ai memory.
-
-You can use {{char}} here - if you are referring to a character, or {{user}} - if you are referring to a user.
-
-Input parameters:
-JSON object containing the new companion persona
-- `companion_persona` (type: `String`)
-```
-{
-    "companion_persona": "<new companion persona>"            // string
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Changed companion persona".
-
-## Endpoint `/api/change/companionExampleDialogue`
-
-Method: POST
-
-Description: This endpoint updates the example dialogue of the companion in the database and ai memory.
-
-You can use {{char}} here - if you are referring to a character, or {{user}} - if you are referring to a user.
-
-Input parameters:
-JSON object containing the new example dialogue
-- `example_dialogue` (type: `String`)
-```
-{
-    "example_dialogue": "<new example dialogue>"            // string
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Changed companion example dialogue".
-
-## Endpoint `/api/change/longTermMemory`
-
-Method: POST
-
-Description: This endpoint changes the amount of things to recall from long-term memory.
-
-Input parameters:
-JSON object containing the limit of long-term memory
-- `limit` (type: `Int`)
-```
-{
-    "limit": "<number of things to recall from long-term memory>"            // int
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Changed long term memory limit for ai".
-
-## Endpoint `/api/change/shortTermMemory`
-
-Method: POST
-
-Description: This endpoint changes the amount of things to recall from short-term memory - previously sent (generated by ai) or received (sent by user) messages.
-
-Input parameters:
-JSON object containing the limit of short-term memory
-- `limit` (type: `Int`)
-```
-{
-    "limit": "<number of things to recall from short-term memory>"           // int
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Changed short term memory limit for ai".
-
-## Endpoint `/api/change/roleplay`
-
-Method: POST
-
-Description: This endpoint changes ai ability to do roleplay actions (e.g. *moves closer*, *walks away*).
-
-Input parameters:
-JSON object containing enabling/disabling roleplay
-- `enable` (type: `Boolean`)
-```
-{
-    "enable": <true | false>                                              // boolean
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Changed short term memory limit for ai".
-
-## Endpoint `/api/change/companionData`
-
-Method: POST
-
-Description: This endpoint updates the data of the companion in the database and ai memory.
-
-Input parameters:
-JSON object containing the new companion data.
-- `id` (type: `Int`) - always set to 0
-- `name` (type `String`) - new companion name
-- `persona` (type `String`) - new companion persona (You can use {{char}} here - if you are referring to a character, or {{user}} - if you are referring to a user.)
-- `example_dialogue` (type `String`) - new example dialogue (ai will use it to mimic writing style) (You can use {{char}} here - if you are referring to a character, or {{user}} - if you are referring to a user.)
-- `first_message` (type `String`) - new first message sent by ai (You can use {{char}} here - if you are referring to a character, or {{user}} - if you are referring to a user.)
-- `long_term_mem` (type: `Int`) - how many things ai needs to recall from long-term memory
-- `short_term_mem` (type: `Int`) - how many things ai needs to recall from short-term memory (how much previous messages sent or received ai will remember)
-- `roleplay` (type: `Boolean`) - do you want the ai to do roleplay actions (e.g. *moves closer*, *walks away*)
-```
-{
-    "id": 0,                                                    // int
-    "name": "<new companion name>",                             // string
-    "persona": "<new companion persona>",                       // string
-    "example_dialogue": "<new example dialogue>",               // string
-    "first_message": "<first message the AI ​​will send>"         // string
-    "long_term_mem": <number of things to recall>,              // int
-    "short_term_mem": <number of things to recall>,             // int
-    "roleplay": <true | false>                                  // boolean
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Data of your AI companion has been changed".
-
-## Endpoint `/api/change/userName`
-
-Method: POST
-
-Description: This endpoint updates the name of user in the database and ai memory.
-
-Input parameters:
-JSON object containing new username
-- `user_name` (type: `String`)
-```
-{
-    "user_name": "<new username>"        // string
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Changed user name".
-
-## Endpoint `/api/change/userPersona`
-
-Method: POST
-
-Description: This endpoint updates the persona of user in the database and ai memory.
-
-You can use {{char}} here - if you are referring to a character, or {{user}} - if you are referring to a user.
-
-Input parameters:
-JSON object containing the new user persona
-- `user_persona` (type: `String`)
-```
-{
-    "user_persona": "<new user persona>"        // string
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Changed user persona".
-
-## Endpoint `/api/change/userData`
-
-Method: POST
-
-Description: This endpoint updates the data of user in the database.
-
-Input parameters:
-- `id` (type: `Int`) - always set to 0
-- `name` (type `String`) - new username
-- `persona` (type `String`) - new user persona (You can use {{char}} here - if you are referring to a character, or {{user}} - if you are referring to a user.)
-```
-{
-    "id": 0,                                // int
-    "name": "<new username>",               // string
-    "persona": "<new user persona>"         // string
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the message "Data of user has been changed".
-
-## Endpoint `/api/addData`
-
-Method: POST
-
-Description: This endpoint allows you to save data to the AI's long-term memory.
-
-Input parameters:
-JSON object containing text that will be saved in AI's long term memory
-- `text` (type: `String`)
-```
-{
-    "text": <some text>                   // string
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Added custom data to AI long term memory".
-
-## Endpoint `/api/erase/longTermMemory`
-
-Method: GET
-
-Description: This endpoint removes everything from the long-term memory of the AI.
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Erased AI's long term memory".
-
-## Endpoint `/api/change/companionAvatar`
-
-Method: POST
-
-Description: This endpoint allows you to change avatar of your ai companion.
-
-request (in any programming language/tool) must be equivalent to this:
-```
-curl -X POST -H "Content-Type: image/png" -T avatar.png http://localhost:3000/api/change/companionAvatar
-```
-
-where:
-
-`avatar.png` - is the name of your avatar file
-
-`http://localhost:3000/api/change/companionAvatar` - is the server url + port + endpoint
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Changed avatar of your ai companion".
-
-## Endpoint `/api/import/characterJson`
-
-Method: POST
-Description: This endpoint allows you to import your companion data via json (you can create character json here https://zoltanai.github.io/character-editor/ or search on some website that contains character json files).
-
-Input parameters:
-JSON object containing text that will be saved in AI's long term memory
-- `name` (type: `String`)
-- `description` (type: `String`)
-- `first_mes` (type: `String`)
-- `mes_example` (type: `String`)
-```
-{
-    "name": "<character name>",                                                                   // string
-    "description": "<character description>",                                                     // string
-    "first_mes": "<first message that will be sent by ai>",                                       // string
-    "mes_example": "<example dialogue (ai will use it to mimic writing style)>",                  // string
-}
-```
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Data of your ai companion has been changed".
-
-## Endpoint `/api/import/characterCard`
-
-Method: POST
-
-Description: This endpoint allows you to import your companion data via character card (mostly png file) (you can create character json here https://zoltanai.github.io/character-editor/ or search on some website that contains character cards).
-
-request (in any programming language/tool) must be equivalent to this:
-```
-curl -X POST -H "Content-Type: image/png" -T card.png http://localhost:3000/api/import/characterCard
-```
-
-where:
-
-`card.png` - is the name of your character card file
-
-`http://localhost:3000/api/import/characterCard` - is the server url + port + endpoint
-
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Data of your ai companion has been changed".
-
-## Endpoint `/api/import/messagesJson`
-
-Method: POST
-Description: This endpoint allows you to import messages (sent by user and/or ai) to short-term and long-term memory.
-
-Input parameters:
-JSON object containing messages, that will be saved in ai's long-term and short-term memory.
-- `messages` (type: `[{"ai": boolean, "text": string}]`)
-```
-{
-  "messages": [                     // array
     {
-      "ai": <true | false>,         // boolean
-      "text": <text of a message>   // string
-    },
-    // ... can be one or more messages
+      "id": 2,
+      "ai": false,
+      "content": "Hi, can you help me with something?",
+      "created_at": "Saturday 20.04.2024 19:02"
+    }
   ]
-}
-```
+  ```
 
-Response (if everything was successful):
-- Returns HTTP status code 200 (OK) with the plain text message "Imported messages to your ai companion memory".
+#### 1.2 Erase messages
+- **URL:** `/message`
+- **Method:** `DELETE`
+- **Description:** Delete every message saved in short-term memory and chat log
+- **Response:**
+  - Status: 200 OK
+  - Body: Chat log cleared!
+- **Example Request:**
+  ```http
+  DELETE /message
+  ```
 
-## Endpoint `/api/messagesJson`
 
-Method: GET
+#### 1.3 Add Message
 
-Description: This endpoint allows you to export messages from ai's short-term memory to json format (you can use this later to import messages in `/api/import/messagesJson`)
+- **URL:** `/message`
+- **Method:** `POST`
+- **Description:** Add a message to the database (without prompting the AI).
+- **Request Body:**
+  - `ai` (boolean): Indicates whether the message is from the AI (true) or user (false).
+  - `content` (string): The content of the message.
+- **Response:**
+  - Status: 200 OK
+  - Body: Message added!
+- **Example Request:**
+  ```http
+  POST /message
+  Content-Type: application/json
 
-Response (if everything was successful):
-JSON object containing messages from ai's short-term memory.
-```
-{
-  "messages": [                     // array
+  {
+    "ai": true,
+    "content": "Message sent by AI"
+  }
+  ```
+
+#### 1.4 Get message by ID
+
+- **URL:** `/message/{id}`
+- **Method:** `GET`
+- **Description:** Retrieve a message by its ID
+- **Path Parameters:**
+  - `id` (integer): The ID of the message
+- **Response:**
+  - Status: 200 OK
+  - Body: message object
+- **Example Request:**
+  ```http
+  GET /message/2
+  ```
+- **Example Response:**
+  ```json
     {
-      "ai": <true | false>,         // boolean
-      "text": <text of a message>   // string
-    },
-    // ... can be one or more messages
-  ]
-}
-```
+      "id": 2,
+      "ai": false,
+      "content": "Hi, can you help me with something?",
+      "created_at": "Saturday 20.04.2024 19:02"
+    }
+  ```
 
-## Endpoint '/api/characterJson'
+#### 1.5 Edit Message
 
-Method: GET
+- **URL:** `/message/{id}`
+- **Method:** `PUT`
+- **Description:** Edit a message by its ID
+- **Path Parameters:**
+  - `id` (integer): The ID of the message to edit
+- **Request Body:**
+  - `ai` (boolean): Indicates whether the message is from the AI (true) or user (false).
+  - `content` (string): The content of the message.
+- **Response:**
+  - Status: 200 OK
+  - Body: Message edited at id {id}
+- **Example Request:**
+  ```http
+  PUT /message/{id}
+  Content-Type: application/json
 
-Description: This endpoint allows you to extract companion data in the form of JSON
+  {
+    "ai": true,
+    "content": "Message sent by AI"
+  }
+  ```
 
-Response (if everything was successful):
-```
-{
-  "name": <companion's name>,                            // string
-  "description": <companion's description>,              // string
-  "first_mes": <companion's first message>,              // string
-  "mes_example": <companion's example messages>          // string
-}
-```
+#### 1.6 Delete Message
+
+- **URL:** `/message/{id}`
+- **Method:** `DELETE`
+- **Description:** Delete a message by its ID.
+- **Path Parameters:**
+  - `id` (integer): The ID of the message to delete.
+- **Response:**
+  - Status: 200 OK
+  - Body: Message deleted at id {id}
+- **Example Request:**
+  ```http
+  DELETE /message/1
+  ```
+
+### 2. Companion data
+
+#### 2.1 Get Companion data
+
+- **URL:** `/companion`
+- **Method:** `GET`
+- **Description:** Retrieve information about the companion.
+- **Response:**
+  - Status: 200 OK
+  - Body: Companion object.
+- **Example Request:**
+  ```http
+  GET /companion
+  ```
+- **Example Response:**
+  ```json
+  {
+    "name": "Assistant",
+    "persona": "Friendly assistant",
+    "example_dialogue": "",
+    "first_message": "Hello world!",
+    "long_term_mem": 2,
+    "short_term_mem": 5,
+    "roleplay": true,
+    "dialogue_tuning": false,
+    "avatar_path": "/assets/companion_avatar-4rust.jpg"
+  }
+  ```
+
+#### 2.2 Update Companion data
+
+- **URL:** `/companion`
+- **Method:** `PUT`
+- **Description:** Update information about the companion.
+- **Request Body:**
+  - `name` (string): The name of the companion.
+  - `persona` (string): The persona or description of the companion.
+  - `example_dialogue` (string): Example dialogue for the companion.
+  - `first_message` (string): First message sent by companion
+  - `long_term_mem` (number): The number of entries that the AI ​​should recall from long-term memory during a conversation
+  - `short_term_mem` (number): The number of entries that the AI ​​should recall from short-term memory during a conversation
+  - `roleplay` (boolean): Should the AI ​​perform non-verbal actions between asterisks, e.g. *moves closer*, *waves hello*
+  - `dialogue_tuning` (boolean): Should ai use message tuning
+  - `avatar_path` (string): Path to the companion's avatar image.
+- **Response:**
+  - Status: 200 OK
+  - Body: Companion data edited!
+- **Example Request:**
+  ```http
+  PUT /companion
+  Content-Type: application/json
+
+  {
+    "name": "Companion",
+    "persona": "New companion",
+    "example_dialogue": "",
+    "first_message": "Hello friend!",
+    "long_term_mem": 0,
+    "short_term_mem": 2,
+    "roleplay": false,
+    "dialogue_tuning": true,
+    "avatar_path": "/assets/companion_avatar-4rust.jpg"
+  }
+  ```
+
+#### 2.3 Update Companion data via character card (.png) file
+
+- **URL:** `/companion/card`
+- **Method:** `POST`
+- **Description:** Update information about the companion via character card file (you can create character files, e.g. using [this tool](https://github.com/Hukasx0/character-factory)).
+- **Response:**
+  - Status: 200 OK
+  - Body: Updated companion data via character card!
+- **Example Request:**
+  ```sh
+  curl -X POST -H "Content-Type: image/png" -T card.png http://localhost:3000/api/companion/card
+  ```
+
+#### 2.4 Update Companion data via character JSON data
+
+- **URL:** `/companion/characterJson`
+- **Method:** `POST`
+- **Description:** Update information about the companion via character json (you can create character json, e.g. using [this tool](https://github.com/Hukasx0/character-factory)).
+- **Request Body:**
+  - `name` (string): The name of the companion.
+  - `description` (string): The persona or description of the companion.
+  - `first_mes` (string): First message sent by companion
+  - `mes_example` (string): Example dialogue for the companion.
+- **Response:**
+  - Status: 200 OK
+  - Body: Character json imported successfully!
+- **Example Request:**
+  ```http
+  PUT /companion/characterJson
+  Content-Type: application/json
+
+  {
+    "name": "Companion",
+    "description": "New companion",
+    "first_mes": "Hello friend!",
+    "mes_example": "",
+  }
+  ```
+
+#### 2.5 Update Companion avatar
+
+- **URL:** `/companion/avatar`
+- **Method:** `POST`
+- **Description:** Update companion avatar image
+- **Response:**
+  - Status: 200 OK
+  - Body: Companion avatar changed!
+- **Example Request:**
+  ```sh
+  curl -X POST -H "Content-Type: image/png" -T avatar.png http://localhost:3000/api/companion/avatar
+  ```
+
+### 3. User data
+
+#### 3.1 Get User data
+
+- **URL:** `/user`
+- **Method:** `GET`
+- **Description:** Retrieve information about the user.
+- **Response:**
+  - Status: 200 OK
+  - Body: User object.
+- **Example Request:**
+  ```http
+  GET /user
+  ```
+- **Example Response:**
+  ```json
+  {
+    "name": "User",
+    "persona": "User description"
+  }
+  ```
+
+#### 3.2 Update User data
+
+- **URL:** `/user`
+- **Method:** `PUT`
+- **Description:** Update information about the user.
+- **Request Body:**
+  - `name` (string): The name of the user.
+  - `persona` (string): The persona or description of the user.
+- **Response:**
+  - Status: 200 OK
+  - Body: User data edited!
+- **Example Request:**
+  ```http
+  PUT /user
+  Content-Type: application/json
+
+  {
+    "name": "John Doe",
+    "persona": "Programmer that wants to use ai-companion as api for his project"
+  }
+  ```
+
+### 4. Configuration
+
+#### 4.1 Get Configuration
+
+- **URL:** `/config`
+- **Method:** `GET`
+- **Description:** Retrieve configuration settings for the companion backend.
+- **Response:**
+  - Status: 200 OK
+  - Body: Configuration settings object.
+- **Example Request:**
+  ```http
+  GET /config
+  ```
+- **Example Response:**
+  ```json
+  {
+    "device": "CPU",
+    "llm_model_path": "/path/to/model.gguf",
+    "gpu_layers": 20,
+    "prompt_template": "Default"
+  }
+  ```
+
+#### 4.2 Update Configuration
+
+- **URL:** `/config`
+- **Method:** `PUT`
+- **Description:** Update configuration settings for the companion backend.
+- **Request Body:**
+  - `device` (string) ("CPU" || "GPU" || "Metal"): The device used for processing (CPU, GPU, Metal).
+  - `llm_model_path` (string): Path to the language model.
+  - `gpu_layers` (integer): Number of GPU layers.
+  - `prompt_template` (string) ("Default" || "Llama2" || "Mistral"): Prompt template for generating responses (Default, Llama2, Mistral).
+- **Response:**
+  - Status: 200 OK
+  - Body: Config updated!
+- **Example Request:**
+  ```http
+  PUT /config
+  Content-Type: application/json
+
+  {
+    "device": "GPU",
+    "llm_model_path": "/path/to/model.gguf",
+    "gpu_layers": 30,
+    "prompt_template": "Mistral"
+  }
+  ```
+
+### 5. Memory
+
+#### 5.1 Add entry to long-term memory
+
+- **URL:** `/memory/longTerm`
+- **Method:** `POST`
+- **Description:** Add data to ai long-term memory
+- **Request Body:**
+  - `entry` (string): Information that you want to save in your companion's long-term memory, I recommend breaking large pieces of text into parts
+- **Response:**
+  - Status: 200 OK
+  - Body: Long term memory entry added!
+- **Example Request:**
+  ```http
+  PUT /memory/longTerm
+  Content-Type: application/json
+
+  {
+    "entry": "AI Companion is a project that aims to provide a quick, simple, light and convenient way to create AI chatbots on your local computer"
+  }
+  ```
+
+#### 5.2 Erase long-term memory
+
+- **URL:** `/memory/longTerm`
+- **Method:** `DELETE`
+- **Description:** Clear long term memory.
+- **Response:**
+  - Status: 200 OK
+  - Body: Long term memory cleared!
+- **Example Request:**
+  ```http
+  DELETE /memory/longTerm
+  ```
+
+#### 5.3 Add last dialogue to dialogue tuning
+
+- **URL:** `/memory/dialogueTuning`
+- **Method:** `POST`
+- **Description:** Adds the user's previous message and AI's response as dialogue tuning
+- **Response:**
+  - Status: 200 OK
+  - Body: Saved previous dialogue as template dialogue
+- **Example Request:**
+  ```http
+  POST /memory/dialogueTuing
+  ```
+
+#### 5.4 Erase dialogue tuning entries
+
+  - **URL:** `/memory/dialogueTuning`
+- **Method:** `DELETE`
+- **Description:** Clear all dialogue tuning entries.
+- **Response:**
+  - Status: 200 OK
+  - Body: Dialogue tuning memory cleared!
+- **Example Request:**
+  ```http
+  DELETE /memory/dialogueTuning
+  ```
+
+### 6. Prompting
+
+#### 6.1 Update Configuration
+
+- **URL:** `/prompt`
+- **Method:** `POST`
+- **Description:** Prompt the ai
+- **Request Body:**
+  - `prompt` (string): Prompt to the AI
+- **Response:**
+  - Status: 200 OK
+  - Body: None
+- **Example Request:**
+  ```http
+  POST /prompt
+  Content-Type: application/json
+
+  {
+    "prompt": "what time is it currently?"
+  }
+  ```
+
+#### 6.2 Update Configuration
+
+- **URL:** `/prompt/regenerate`
+- **Method:** `GET`
+- **Description:** Regenerate answer to your AI prompt
+- **Response:**
+  - Status: 200 OK
+  - Body: None
+- **Example Request:**
+  ```http
+  GET /prompt/regenerate
+  ```
+
+---
+
+AI Companion v1
+
+2024 Hubert Kasperek
