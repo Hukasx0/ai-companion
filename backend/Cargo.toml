@@ -10,7 +10,7 @@ winres = "0.1.12"
 
 [dependencies]
 actix-web = "4.5.1"
-futures-util = "0.3.30"
+futures-util = "0.3.31"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
 rusqlite = { version = "0.31.0", features = ["bundled", "chrono"] }
